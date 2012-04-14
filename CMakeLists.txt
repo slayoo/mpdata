@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.6) # for simplified if-constructs
 
 set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -Ofast -DNDEBUG" CACHE STRING "Release options." FORCE)
-set(CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -DBZ_DEBUG" CACHE STRING "Debug options." FORCE)
+set(CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -g -DBZ_DEBUG" CACHE STRING "Debug options." FORCE)
+
+set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -Ofast" CACHE STRING "Release options." FORCE)
+set(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-form -g" CACHE STRING "Debug options." FORCE)
 
 if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release"))
   message(FATAL_ERROR "Please specify the build type, i.e.:
@@ -12,8 +15,9 @@ endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "Makefile;CMakeCache.txt;cmake_install.cmake;CMakeFiles;")
 
-project(egu2012 CXX)
-add_executable(egu2012 egu2012.cpp)
+project(egu2012 CXX Fortran)
+add_executable(egu2012-cpp egu2012.cpp)
+add_executable(egu2012-for egu2012.f)
 
 include(CheckCXXSourceCompiles) 
 include(CheckCXXSourceRuns)
@@ -42,7 +46,7 @@ if (NOT Blitz_Configured_With_The_Same_Compiler)
   )
 endif() 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") 
-  target_link_libraries(egu2012 "-lblitz")
+  target_link_libraries(egu2012-cpp "-lblitz")
 endif()
 
 # OpenMP (Not using CMake's FIND_PACKAGE(OpenMP) as it relies on C compiler rather than C++ one)
@@ -76,5 +80,5 @@ if(NOT Find_NetCDF)
     ")
 else()
   set(USE_NETCDF ${Find_NetCDF})
-  target_link_libraries(egu2012 ${CMAKE_REQUIRED_LIBRARIES})
+  target_link_libraries(egu2012-cpp ${CMAKE_REQUIRED_LIBRARIES})
 endif() 
