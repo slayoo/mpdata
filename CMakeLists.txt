@@ -1,23 +1,29 @@
 cmake_minimum_required(VERSION 2.6) # for simplified if-constructs
 
-set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -Ofast -DNDEBUG" CACHE STRING "Release options." FORCE)
-set(CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -g -DBZ_DEBUG" CACHE STRING "Debug options." FORCE)
-
-set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -Ofast" CACHE STRING "Release options." FORCE)
-set(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-form -g" CACHE STRING "Debug options." FORCE)
-
 if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release"))
   message(FATAL_ERROR "Please specify the build type, i.e.:
-    \$ cmake . -DCMAKE_BUILD_TYPE=Debug   \# (CXX_FLAGS=\"\$CXXFLAGS ${CMAKE_CXX_FLAGS_DEBUG}\")
+    \$ cmake . -DCMAKE_BUILD_TYPE=Debug
     or
-    \$ cmake . -DCMAKE_BUILD_TYPE=Release \# (CXX_FLAGS=\"\$CXXFLAGS ${CMAKE_CXX_FLAGS_RELEASE}\")")
+    \$ cmake . -DCMAKE_BUILD_TYPE=Release 
+  ")
 endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "Makefile;CMakeCache.txt;cmake_install.cmake;CMakeFiles;")
 
 project(egu2012 CXX Fortran)
-add_executable(egu2012-cpp egu2012.cpp)
+
+### Fortran stuff:
 add_executable(egu2012-for egu2012.f)
+target_link_libraries(egu2012-for "-lnetcdff")
+
+set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -Ofast" CACHE STRING "Release options." FORCE)
+set(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-form -g" CACHE STRING "Debug options." FORCE)
+
+### C++ stuff:
+add_executable(egu2012-cpp egu2012.cpp)
+
+set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -Ofast -DNDEBUG" CACHE STRING "Release options." FORCE)
+set(CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -g -DBZ_DEBUG" CACHE STRING "Debug options." FORCE)
 
 include(CheckCXXSourceCompiles) 
 include(CheckCXXSourceRuns)

@@ -22,7 +22,7 @@ typedef blitz::TinyVector<rng_t, ndim> tv_t;
 
 // netCDF-4 for input and output
 #include <netcdf>
-typedef long unsigned int siz_t;
+typedef size_t siz_t;
 typedef std::vector<siz_t> pos_t;
 
 // some helper constructs
@@ -111,7 +111,7 @@ int main(int ac, char* av[]) {
 
   // reading in simulation parameters from the netCDF file
   if (ac != 2) error(av[0] << " expects one argument - a netCDF file name")
-  siz_t nt, nx, ny, np, no;
+  int nt, nx, ny, np, no;
   real_t Cx, Cy;
   netCDF::NcFile nf(std::string(av[1]), netCDF::NcFile::write);
   netCDF::NcVar nv = nf.getVar("psi");
@@ -150,7 +150,7 @@ int main(int ac, char* av[]) {
   // reading the initial condition (due to presence of haloes the data to be stored 
   // is not contiguous, hence looping over one dimension) dims = {t,x,y}
   for (
-    pos_t ncdf_off({0,0,0}), ncdf_cnt({1,1,size_t(ny)}); 
+    pos_t ncdf_off({0,0,0}), ncdf_cnt({1,1,siz_t(ny)}); 
     ncdf_off[1] < nx; 
     ++ncdf_off[1]
   ) nv.getVar(ncdf_off, ncdf_cnt, psi[0](ncdf_off[1], rng_t(0,ny)).dataFirst());
@@ -176,7 +176,7 @@ int main(int ac, char* av[]) {
 
     // outputting
     if ((t % no) == 0) for (
-      pos_t ncdf_off({t/no,0,0}), ncdf_cnt({1,1,ny}); 
+      pos_t ncdf_off({siz_t(t/no),0,0}), ncdf_cnt({1,1,siz_t(ny)}); 
       ncdf_off[1] < nx; 
       ++ncdf_off[1]
     ) nv.putVar(ncdf_off, ncdf_cnt, psi[n+1](ncdf_off[1], rng_t(0,ny)).dataFirst());

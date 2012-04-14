@@ -1,1 +1,10 @@
-see http://meetingorganizer.copernicus.org/EGU2012/EGU2012-680.pdf
+for outline see: http://meetingorganizer.copernicus.org/EGU2012/EGU2012-680.pdf
+
+tested on Debian sid with:
+- gcc-snapshot (for C++11 compliant g++)
+- gfortran (default version to be compatible with packaged .mod files)
+
+$ export FC="gfortran -I/usr/include/"
+$ export CXX=/usr/lib/gcc-snapshot/bin/g++
+$ cmake . -DCMAKE_BUILD_TYPE=Release 
+$ make
