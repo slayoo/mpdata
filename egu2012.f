@@ -2,7 +2,7 @@ program egu2012
   use netcdf
   implicit none
 
-  ! Fortran does not allow an array po pointers but it allows an array of derived types
+  ! Fortran does not allow an array of pointers but it allows an array of derived types
   type :: arr_t
     real, dimension(:,:), pointer :: arr
   end type 
