@@ -1,16 +1,17 @@
 import numpy as np 
 import subprocess
 from scipy.io.netcdf import netcdf_file
+import time
 
 for lang in ('cpp','for') :
   # simulation parameters (via the netCDF global attributes)
   ncfile = 'data-' + lang + '.nc'
   nc = netcdf_file(ncfile, mode='w')
   nc.np = 1
-  nc.nx = 3
-  nc.ny = 4
-  nc.no = 1
-  nc.nt = 10
+  nc.nx = 1000
+  nc.ny = 1000
+  nc.no = 100
+  nc.nt = 100
   nc.Cx = .5
   nc.Cy = .5
 
@@ -22,9 +23,13 @@ for lang in ('cpp','for') :
 
   # closing the file, running the solver and reopening the file
   nc.close()
+  
+  t0 = time.time()
   subprocess.check_call(('./egu2012-' + lang, ncfile))
+  print time.time() - t0
+  
   nc = netcdf_file(ncfile, mode='r')
 
   # plotting the result
-  for t in range(nc.nt / nc.no + 1):
-    print nc.variables['psi'][t,:,:]
+  #for t in range(nc.nt / nc.no + 1):
+  #  print nc.variables['psi'][t,:,:]
