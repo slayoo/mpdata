@@ -6,16 +6,30 @@ module hack
 end module
 
 module adv
+  use hack
   implicit none
 
-  type adv_t
+  type, abstract :: adv_t
     integer :: ntlev = 2, halo = 1
     contains
     procedure, public :: left_halo
     procedure, public :: rght_halo
     procedure, public :: left_edge
     procedure, public :: rght_edge
+    procedure(op_proto), public, deferred :: op
   end type 
+
+  abstract interface 
+    subroutine op_proto(this, psi, vel, i, j, n)
+      import :: adv_t
+      import :: arr_t
+      class(adv_t), intent(in) :: this
+      type(arr_t), intent(inout), pointer :: psi(:)
+      type(arr_t), intent(in), pointer :: vel(:)
+      integer, intent(in), dimension(:) :: i, j
+      integer, intent(in) :: n
+    end subroutine
+  end interface 
 
   contains
 
