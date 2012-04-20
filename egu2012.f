@@ -11,7 +11,7 @@ module adv
 
   type, abstract :: adv_t
     integer :: ntlev = 2, halo = 1
-    contains
+    contains   
     procedure, public :: left_halo
     procedure, public :: rght_halo
     procedure, public :: left_edge
