@@ -16,13 +16,14 @@ project(egu2012 CXX Fortran)
 add_executable(egu2012-for egu2012.f)
 target_link_libraries(egu2012-for "-lnetcdff")
 
-set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -Ofast" CACHE STRING "Release options." FORCE)
+set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -Ofast -fwhole-file" CACHE STRING "Release options." FORCE)
 set(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-form -g -Warray-bounds" CACHE STRING "Debug options." FORCE)
 
 ### C++ stuff:
 add_executable(egu2012-cpp egu2012.cpp)
 
-set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -Ofast -DNDEBUG" CACHE STRING "Release options." FORCE)
+#set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -Ofast -DNDEBUG" CACHE STRING "Release options." FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -O3 -DNDEBUG" CACHE STRING "Release options." FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -g -DBZ_DEBUG" CACHE STRING "Debug options." FORCE)
 
 include(CheckCXXSourceCompiles) 

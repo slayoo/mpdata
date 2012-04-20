@@ -20,14 +20,14 @@ module adv
   end type 
 
   abstract interface 
-    subroutine op_proto(this, psi, vel, i, j, n)
+    subroutine op_proto(this, psi, vel, i, j, n, d)
       import :: adv_t
       import :: arr_t
       class(adv_t), intent(in) :: this
       type(arr_t), intent(inout), pointer :: psi(:)
       type(arr_t), intent(in), pointer :: vel(:)
       integer, intent(in), dimension(:) :: i, j
-      integer, intent(in) :: n
+      integer, intent(in) :: n, d
     end subroutine
   end interface 
 
@@ -77,6 +77,9 @@ module adv_upstream
   contains 
 
   ! eq. (3 a-d) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480)
+  ! statement functions are obsolete and do not support array-valued arguments
+  ! vector-indexing results in copying the argument, hence restoring to preprocessor :(
+  ! preprocessor function-like macros do not work...
   function F(this, psi_l, psi_r, U)
     class(adv_upstream_t), intent(in) :: this
     real, intent(in), dimension(:,:) :: psi_l
@@ -88,17 +91,33 @@ module adv_upstream
   end function
 
   ! eq. (2) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
-  subroutine op(this, psi, vel, i, j, n)
+  subroutine op(this, psi, vel, i, j, n, d)
     class(adv_upstream_t), intent(in) :: this
     type(arr_t), intent(inout), pointer :: psi(:)
     type(arr_t), intent(in), pointer :: vel(:)
     integer, intent(in), dimension(:) :: i, j
-    integer, intent(in) :: n
+    integer, intent(in) :: n, d
+    
+    select case (d)
+      case (1)
+        psi( n+1 )%X( i,j ) = psi( n+1 )%X( i,j ) - (                           & 
+          this%F(psi( n )%X( i,  j ), psi( n )%X( i+1,j ), vel(0)%X( i,j+1 )) - & !TODO: phalf, dimension
+          this%F(psi( n )%X( i-1,j ), psi( n )%X( i,  j ), vel(0)%X( i,j-0 ))   & !TODO: mhalf, dimension
+        )
+      case (2)
+        psi( n+1 )%X( i,j ) = psi( n+1 )%X( i,j ) - (                           & 
+          this%F(psi( n )%X( i,j   ), psi( n )%X( i,j+1 ), vel(0)%X( i,j+1 )) - & !TODO: phalf, dimension
+          this%F(psi( n )%X( i,j-1 ), psi( n )%X( i,j   ), vel(0)%X( i,j-0 ))   & !TODO: mhalf, dimension
+        )
+      case default 
+        stop
+    end select
 
-    psi( n+1 )%X( i,j ) = psi( n+1 )%X( i,j ) - (                           & 
-      this%F(psi( n )%X( i,  j ), psi( n )%X( i+1,j ), vel(0)%X( i+1,j )) - & !TODO: phalf, dimension
-      this%F(psi( n )%X( i-1,j ), psi( n )%X( i,  j ), vel(0)%X( i-0,j ))   & !TODO: mhalf, dimension
-    )
+    ! this is 3x faster!
+    !psi( n+1 )%X( i,j ) = psi( n+1 )%X( i,j ) - (                           & 
+    !  (max(0., vel(0)%X( i+1,j )) * psi( n )%X( i,  j ) + min(0., vel(0)%X( i+1,j )) * psi( n )%X( i+1,j )) - & !TODO: phalf, dimension
+    !  (max(0., vel(0)%X( i-0,j )) * psi( n )%X( i-1,j ) + min(0., vel(0)%X( i-0,j )) * psi( n )%X( i,  j ))   & !TODO: mhalf, dimension
+    !)
   end subroutine
 end module
 
@@ -109,10 +128,10 @@ program egu2012
   implicit none
 
   character (len=256) :: fname
-  integer :: ncid, stat, nt, nx, ny, np, no, i, t
+  integer :: ncid, varid, stat, nt, nx, ny, np, no, i, t, d
   real :: Cx, Cy
   integer, parameter :: n = 0
-  integer, dimension(:), allocatable :: ii, jj
+  integer, dimension(:), allocatable, target :: ii, jj
   type(arr_t), allocatable :: psi(:)
   type(arr_t), pointer :: psi_ptr(:), vel(:)
   
@@ -124,7 +143,7 @@ program egu2012
   call get_command_argument(1,fname)
   
   ! opening the netCDF file
-  stat = nf90_open(fname, NF90_NOWRITE, ncid) 
+  stat = nf90_open(fname, NF90_WRITE, ncid) 
 
   ! reading options
   stat = nf90_get_att(ncid, NF90_GLOBAL, "nx", nx)
@@ -138,21 +157,12 @@ program egu2012
   ! instantiating the advection operator
   allocate(adv_upstream_t::a) 
 
-  ! allocating memory: psi
+  ! allocating memory for psi
   allocate(psi(0:a%ntlev-1), psi_ptr(0:a%ntlev-1)) 
   do i = 0, a%ntlev - 1
     allocate(psi(i)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo), stat=stat) !TODO: rng_psi
     psi_ptr(i)%X => psi(i)%X
   end do
-
-  ! allocating memory: vel
-  allocate(vel(0:1))
-  allocate( &
-    vel(0)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo),& !TODO: rng_vel 
-    vel(1)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo) &
-  )
-  vel(0)%X = 1!Cx
-  vel(1)%X = Cy
 
   ! helpe... TODO
   allocate(ii(0:nx-1), jj(0:ny-1)) !TODO: zmienne dla OpenMP
@@ -163,8 +173,20 @@ program egu2012
     jj(i) = i
   end do
 
-  psi(0)%X(0,0) = 1 ! TODO: read from netCDF
-  !print*, 0, psi_ptr(0)%X(ii,jj) ! TEMP
+  ! filling psi with data from netCDF
+  stat = nf90_inq_varid(ncid, "psi", varid)
+  stat = nf90_get_var(ncid, varid, psi(n)%X(0:nx-1, 0:ny-1))
+
+  ! allocating memory for vel
+  allocate(vel(0:1))
+  allocate( &
+    vel(0)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo),& !TODO: rng_vel 
+    vel(1)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo) &
+  )
+
+  ! filling vel with data from netCDF
+  vel(0)%X = Cx
+  vel(1)%X = Cy
 
   ! integration loop
   do t = 1, nt 
@@ -176,13 +198,15 @@ program egu2012
     tmp = a%rght_edge(psi_ptr(0)%X)
      
     ! advecting in each dimension
-    
     psi_ptr(n+1)%X = psi_ptr(n)%X
-    call a%op(psi_ptr, vel, ii, jj, n) ! TODO: second dimension
-    call a%op(psi_ptr, vel, ii, jj, n) ! TODO: second dimension
+    do d = 1, 2
+      call a%op(psi_ptr, vel, ii, jj, n, d)
+    end do
     
     ! outputting
-    !if (modulo(t, no) == 0) print*, t, psi_ptr(1)%X(ii,jj)
+    if (modulo(t, no) == 0) then
+      stat = nf90_put_var(ncid, varid, psi(n+1)%X(0:nx-1, 0:ny-1), start = (/1,1,1+t/no/))
+    end if
     
     ! cycling the pointers
     psi_ptr(n)%X => psi(modulo(t, 2))%X
