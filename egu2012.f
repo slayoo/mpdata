@@ -13,7 +13,6 @@ module adv
   type, abstract :: adv_t
     integer, public :: ntlev = 2, halo = 1, mh = 0, ph = 1
     contains   
-    !procedure, public :: rng_psi, rng_vel  TODO!!!
     procedure, public :: left_halo, rght_halo, left_edge, rght_edge
     procedure(op_proto), public, deferred :: op
   end type 
@@ -94,6 +93,7 @@ module adv
 
 end module
 
+! derived class implementing the upstream algorithm
 module adv_upstream
   use adv
   use hack
@@ -153,14 +153,13 @@ program egu2012
   class(adv_upstream_t), allocatable :: advop
   real, dimension(:,:), pointer :: tmp
 
-  ! handling command-line argument
-  if (command_argument_count() /= 1) stop "ERROR - expecting one argument - a netCDF file name"
+  ! handling command line argument
+  if (command_argument_count() /= 1) &
+    stop "expecting one argument - a netCDF file name"
   call get_command_argument(1,fname)
   
-  ! opening the netCDF file
+  ! opening and reading in data from the netCDF file
   stat = nf90_open(fname, NF90_WRITE, ncid) 
-
-  ! reading options
   stat = nf90_get_att(ncid, NF90_GLOBAL, "nx", nx)
   stat = nf90_get_att(ncid, NF90_GLOBAL, "ny", ny)
   stat = nf90_get_att(ncid, NF90_GLOBAL, "np", np)
@@ -172,12 +171,22 @@ program egu2012
   ! instantiating the advection operator
   allocate(adv_upstream_t::advop) 
 
-  ! allocating memory for psi
+  ! allocating memory for psi (at two time levels)
   allocate(psi(0:advop%ntlev-1), psi_ptr(0:advop%ntlev-1)) 
   do i = 0, advop%ntlev - 1
-    allocate(psi(i)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo), stat=stat) !TODO: rng_psi
+    allocate(psi(i)%X( &
+      -advop%halo:nx-1+advop%halo, &
+      -advop%halo:ny-1+advop%halo) &
+    )
     psi_ptr(i)%X => psi(i)%X
   end do
+
+  ! allocating memory for the velocity field (x & y)
+  allocate(vel(0:1))
+  allocate( &
+    vel(0)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo),& 
+    vel(1)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo) &
+  )
 
   ! helper vars for vector indexing the arrays
   allocate(ii(np, 0:nx-1), jj(np, 0:ny-1))
@@ -194,20 +203,14 @@ program egu2012
   stat = nf90_inq_varid(ncid, "psi", varid)
   stat = nf90_get_var(ncid, varid, psi(n)%X(0:nx-1, 0:ny-1))
 
-  ! allocating memory for vel
-  allocate(vel(0:1))
-  allocate( &
-    vel(0)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo),& !TODO: rng_vel 
-    vel(1)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo) &
-  )
-
   ! filling vel with data from netCDF
   vel(0)%X = Cx
   vel(1)%X = Cy
 
   ! integration loop
   do t = 1, nt 
-    ! without the temporary variable GCC segfaults on compilation! (bug no. 52994)
+    ! filling the halos
+    ! (GCC segfaults without tmp - bug no. 52994)
     do d = 1, 2
       tmp => advop%left_halo(psi_ptr(0)%X, d) 
       tmp = advop%rght_edge(psi_ptr(0)%X, d)
@@ -215,7 +218,7 @@ program egu2012
       tmp = advop%rght_edge(psi_ptr(0)%X, d)
     end do
      
-    ! advecting in each dimension
+    ! advecting in each dimension sharing the workload among threads
     psi_ptr(n+1)%X = psi_ptr(n)%X
 !$OMP PARALLEL DO
     do p = 0, np - 1
@@ -225,9 +228,10 @@ program egu2012
     end do
 !$OMP END PARALLEL DO
     
-    ! outputting
+    ! outputting to the netCDF
     if (modulo(t, no) == 0) then
-      stat = nf90_put_var(ncid, varid, psi(n+1)%X(0:nx-1, 0:ny-1), start = (/1,1,1+t/no/))
+      stat = nf90_put_var(ncid, varid, &
+        psi(n+1)%X(0:nx-1, 0:ny-1), start = (/1,1,1+t/no/))
     end if
     
     ! cycling the pointers
@@ -235,10 +239,12 @@ program egu2012
     psi_ptr(n+1)%X => psi(modulo(t+1, 2))%X
   end do
 
+  ! closing the netCDF file
+  stat = nf90_close(ncid)
+
   ! cleanup: deallocating memory and closing the netcdf file
   do i = 0, advop%ntlev - 1
     deallocate(psi(i)%X,stat=stat)
   end do
   deallocate(psi,stat=stat)
-  stat = nf90_close(ncid)
 end program egu2012

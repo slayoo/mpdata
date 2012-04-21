@@ -53,7 +53,9 @@ template <class idx> class adv_idx : public adv
 {
   private: const int nx, ny, halo;
 
-  public: adv_idx(const int nx, const int ny, const int halo) : nx(nx), ny(ny), halo(halo) {}
+  public: adv_idx(const int nx, const int ny, const int halo) : 
+    nx(nx), ny(ny), halo(halo) 
+  {}
 
   public: rng_t rng_psi() 
   { return rng_t(0 - halo, nx - 1 + halo); }
@@ -80,7 +82,8 @@ template <class idx> class adv_upstream : public adv_idx<idx>
   public: adv_upstream(const int nx, const int ny) : adv_idx<idx>(nx, ny, 1) {}
 
   // e.g. eq. (3 a-d) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480)
-  protected: template <class a1_t, class a2_t, class a3_t> static auto F(a1_t psi_l, a2_t psi_r, a3_t U)
+  protected: template <class a1_t, class a2_t, class a3_t> 
+  static auto F(a1_t psi_l, a2_t psi_r, a3_t U)
     decltype_return(max(0,U) * psi_l + min(0,U) * psi_r)
 
   // e.g. eq. (2) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
@@ -100,12 +103,13 @@ int main(int ac, char* av[])
 {
   const int n = 0, x = 0, y = 1; // for human readibility :)
 
-  // reading in simulation parameters from the netCDF file
+  // handling command line argument
   if (ac != 2) {
-    std::cerr << av[0] << " expects one argument - a netCDF file name" << std::endl;
+    std::cerr << "expecting one argument - a netCDF file name" << std::endl;
     throw std::exception(); 
   }
 
+  // opening and reading in data from the netCDF file
   int nt, nx, ny, np, no;
   real_t Cx, Cy;
   netCDF::NcFile nf(std::string(av[1]), netCDF::NcFile::write);
@@ -123,7 +127,7 @@ int main(int ac, char* av[])
   omp_set_num_threads(std::min(np, nx)); // np > nx does not make sense
 #endif
 
-  // memory allocation: advection functors
+  // instantiating the advection operator functors
   ptr_vector<adv> advop(ndim); 
   advop.push_back(new adv_upstream<idx_ij>(nx, ny)); // x 
   advop.push_back(new adv_upstream<idx_ji>(ny, nx)); // y 
@@ -135,29 +139,30 @@ int main(int ac, char* av[])
     j.push_back(new rng_t(0, ny - 1));
   }
 
-  // memory allocation: scalar fields at two time levels (n, n+1)
+  // allocating memory for psi (at two time levels)
   vec_arr_t psi(ndim); 
   for (int i=0; i<adv::ntlev; ++i) 
     psi.push_back(new arr_t(advop[x].rng_psi(), advop[y].rng_psi()));
 
-  // memory allocation: Courant number fields for two dimensions (x,y)
+  // allocating memory for the velocity field (x & y)
   vec_arr_t vel(ndim); 
   for (int i=0; i<ndim; ++i) 
     vel.push_back(new arr_t(advop[x].rng_vel(), advop[y].rng_vel()));
-  vel[x] = Cx;
-  vel[y] = Cy;
 
-  // reading the initial condition (due to presence of haloes the data to be stored 
-  // is not contiguous, hence looping over one dimension) dims = {t,x,y}
+  // filling psi and vel with data from netCDF
+  // (due to presence of haloes the data to be stored 
+  // is not contiguous, hence looping over one dimension) 
   for (
     nc_pos_t ncdf_off({0,0,0}), ncdf_cnt({1,1,nc_siz_t(ny)}); 
     ncdf_off[1] < nx; 
     ++ncdf_off[1]
   ) nv.getVar(ncdf_off, ncdf_cnt, psi[n](ncdf_off[1], rng_t(0,ny)).dataFirst());
+  vel[x] = Cx;
+  vel[y] = Cy;
 
-  // integration
+  // integration loop
   for (nc_siz_t t = 1; t <= nt; ++t) {
-    // filling halos 
+    // filling the halos 
     for (int d = 0; d < ndim; ++d) {
       psi[n](advop[d].left_halo()) = psi[n](advop[d].rght_edge());
       psi[n](advop[d].rght_halo()) = psi[n](advop[d].left_edge());
@@ -170,14 +175,14 @@ int main(int ac, char* av[])
       for (int d = 0; d < ndim; ++d) // dimensions
         advop[d](psi, vel[d], i[p], j[p], n);
 
-    // outputting
+    // outputting to the netCDF
     if ((t % no) == 0) for (
       nc_pos_t ncdf_off({nc_siz_t(t/no),0,0}), ncdf_cnt({1,1,nc_siz_t(ny)}); 
       ncdf_off[1] < nx; 
       ++ncdf_off[1]
     ) nv.putVar(ncdf_off, ncdf_cnt, psi[n+1](ncdf_off[1], rng_t(0,ny)).dataFirst());
 
-    // cycling the pointers to the arrays
+    // cycling the pointers 
     blitz::cycleArrays(psi[n], psi[n+1]);
   }  
-}
+} // netCDF file gets closed automatically when out of scope

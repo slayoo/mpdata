@@ -2,21 +2,22 @@ import numpy as np
 import subprocess
 from scipy.io.netcdf import netcdf_file
 import time
-from pylab import *
+import json as js
 
 times = {}
-sizes = (10,20,40,80,160,300)
+sizes = np.array([64,128,256,512,1024,2048,4096])
 
-for lang in ('cpp','for','pyt') :
+for lang in ('pyt','for','cpp') :
   times[lang] = []
   for n in sizes :
+    print 'lang: ', lang, ' size: ', n, 'x', n
     # simulation parameters (via the netCDF global attributes)
     ncfile = 'data-' + lang + '.nc'
     nc = netcdf_file(ncfile, mode='w')
     nc.np = 1
     nc.nx = n
     nc.ny = n
-    nc.no = 1000
+    nc.no = 10
     nc.nt = 100
     nc.Cx = .5
     nc.Cy = .5
@@ -40,12 +41,5 @@ for lang in ('cpp','for','pyt') :
     #for t in range(nc.nt / nc.no + 1):
     #  print lang, nc.variables['psi'][t,:,:]
 
-sizes =np.array([10,20,40,80,160,300])**2
-figure(1)
-plot(
-  sizes, times['cpp'], 
-  sizes, times['for'], 
-  sizes, times['pyt']
-)
-legend(['C++','FORTRAN','Python'])
-show()
+js.dump(times, open('times.js','w'))
+js.dump(list(sizes**2), open('sizes.js','w'))
