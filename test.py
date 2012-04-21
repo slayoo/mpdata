@@ -7,11 +7,11 @@ for lang in ('cpp','for','pyt') :
   # simulation parameters (via the netCDF global attributes)
   ncfile = 'data-' + lang + '.nc'
   nc = netcdf_file(ncfile, mode='w')
-  nc.np = 1
-  nc.nx = 10
-  nc.ny = 10
+  nc.np = 2
+  nc.nx = 1000
+  nc.ny = 1000
   nc.no = 5
-  nc.nt = 10
+  nc.nt = 1000
   nc.Cx = .5
   nc.Cy = .5
 
@@ -27,10 +27,10 @@ for lang in ('cpp','for','pyt') :
   t0 = time.time()
   cmd = ('./egu2012-' + lang,) if lang != 'pyt' else ('python', './egu2012.py')
   subprocess.check_call(cmd + (ncfile,))
-  print time.time() - t0
+  print lang, time.time() - t0
   
   nc = netcdf_file(ncfile, mode='r')
 
   # plotting the result
-  for t in range(nc.nt / nc.no + 1):
-    print nc.variables['psi'][t,:,:]
+  #for t in range(nc.nt / nc.no + 1):
+  #  print nc.variables['psi'][t,:,:]

@@ -16,8 +16,8 @@ project(egu2012 CXX Fortran)
 add_executable(egu2012-for egu2012.f)
 target_link_libraries(egu2012-for "-lnetcdff")
 
-set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -Ofast -fwhole-file" CACHE STRING "Release options." FORCE)
-set(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-form -g -Warray-bounds" CACHE STRING "Debug options." FORCE)
+set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -cpp -Ofast -fwhole-file" CACHE STRING "Release options." FORCE)
+set(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-form -cpp -g -Warray-bounds" CACHE STRING "Debug options." FORCE)
 
 ### C++ stuff:
 add_executable(egu2012-cpp egu2012.cpp)
@@ -62,6 +62,7 @@ if ("${OPENMP}" STREQUAL "NO")
 else()
   set(TMP ${CMAKE_CXX_FLAGS}) 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fopenmp")
   check_cxx_source_compiles(
     "#include <omp.h>\n int main() { omp_set_num_threads(2); }" 
     Find_OpenMP
