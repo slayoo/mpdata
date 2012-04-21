@@ -141,8 +141,8 @@ template <class idx> class adv_mpdata : public adv_upstream<idx>
     switch (step) {
       case 0: return adv_upstream<idx>::operator()(psi, vel, i, j, n, step);
       case 1: psi[n+1](idx(i,j)) -= (
-        this->F(psi[n](idx(i,  j)), psi[n](idx(i+1,j)), U(psi[n], vel, i + adv::ph, j)) -
-        this->F(psi[n](idx(i-1,j)), psi[n](idx(i,  j)), U(psi[n], vel, i - adv::mh, j))
+        this->F(psi[n](idx(i,  j)), psi[n](idx(i+1,j)), U(psi[n], vel, i, j)) -
+        this->F(psi[n](idx(i-1,j)), psi[n](idx(i,  j)), U(psi[n], vel, i-1, j))
       );
       return;
       default: assert(false);
