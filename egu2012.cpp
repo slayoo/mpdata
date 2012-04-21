@@ -1,7 +1,3 @@
-// garbage collection
-#include <boost/ptr_container/ptr_vector.hpp>
-using boost::ptr_vector;
-
 // working in 2 dimensions, with double precision
 const int ndim = 2;
 typedef double real_t;
@@ -12,7 +8,11 @@ typedef double real_t;
 #  define BZ_THREADSAFE
 #endif
 
-// Blitz++ for arrays and array expressions
+// automatic garbage collection
+#include <boost/ptr_container/ptr_vector.hpp>
+using boost::ptr_vector;
+
+// array handling: Blitz++ 
 #include <blitz/array.h>
 typedef blitz::Array<real_t, ndim> arr_t;
 typedef ptr_vector<arr_t> vec_arr_t;
@@ -20,16 +20,17 @@ typedef blitz::Range rng_t;
 typedef blitz::RectDomain<ndim> idx_t;
 typedef blitz::TinyVector<rng_t, ndim> tv_t;
 
-// netCDF-4 for input and output
+// I/O: netCDF-4 (the netcdf-cxx4 API)
 #include <netcdf>
 typedef size_t nc_siz_t;
 typedef std::vector<nc_siz_t> nc_pos_t;
 
-// some helper constructs
+// helper construct for implementing dimension-independent algorithms
 struct idx_ij : idx_t { idx_ij(const rng_t &i, const rng_t &j) : idx_t(tv_t(i,j)) {} }; 
 struct idx_ji : idx_t { idx_ji(const rng_t &j, const rng_t &i) : idx_t(tv_t(i,j)) {} }; 
-#define decltype_return(expr) -> decltype(expr) { return expr; } // requires C++11
-#define error(msg) { std::cerr << msg << std::endl; throw std::exception(); }
+
+// helper construct for C++11 automatic return type guess
+#define decltype_return(expr) -> decltype(expr) { return expr; } 
 
 // abstract class defining the advection operator functor
 class adv {
@@ -47,7 +48,7 @@ class adv {
   protected: static const int ph = 1, mh = 0; // for Arakawa-C staggered grid
 };
 
-// derived abstract class with the 1D->2D logic
+// derived abstract class with the dimension-independency logic
 template <class idx> class adv_idx : public adv 
 {
   private: const int nx, ny, halo;
@@ -73,16 +74,16 @@ template <class idx> class adv_idx : public adv
   { return idx(rng_t(nx - halo, nx - 1), rng_t(-halo, ny - 1 + halo)); }
 };
 
-// derived class implementing the upstream aka upwind aka donor-cell algorithm 
+// derived class implementing the upstream algorithm
 template <class idx> class adv_upstream : public adv_idx<idx> 
 {
   public: adv_upstream(const int nx, const int ny) : adv_idx<idx>(nx, ny, 1) {}
 
-  // eq. (3 a-d) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480)
+  // e.g. eq. (3 a-d) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480)
   protected: template <class a1_t, class a2_t, class a3_t> static auto F(a1_t psi_l, a2_t psi_r, a3_t U)
     decltype_return(max(0,U) * psi_l + min(0,U) * psi_r)
 
-  // eq. (2) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
+  // e.g. eq. (2) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
   public: void operator()(
     const vec_arr_t &psi, const arr_t &vel, 
     const rng_t &i, const rng_t &j, const int n
@@ -100,7 +101,11 @@ int main(int ac, char* av[])
   const int n = 0, x = 0, y = 1; // for human readibility :)
 
   // reading in simulation parameters from the netCDF file
-  if (ac != 2) error(av[0] << " expects one argument - a netCDF file name")
+  if (ac != 2) {
+    std::cerr << av[0] << " expects one argument - a netCDF file name" << std::endl;
+    throw std::exception(); 
+  }
+
   int nt, nx, ny, np, no;
   real_t Cx, Cy;
   netCDF::NcFile nf(std::string(av[1]), netCDF::NcFile::write);

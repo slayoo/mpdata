@@ -1,10 +1,11 @@
+! a hack to support arrays of arrays
 module hack
-  ! Fortran does not allow an array of pointers but it allows an array of derived types
   type :: arr_t
     real, dimension(:,:), pointer :: X
   end type 
 end module
 
+! abstract class (module) defining the advection operator 
 module adv
   use hack
   implicit none
@@ -12,7 +13,7 @@ module adv
   type, abstract :: adv_t
     integer, public :: ntlev = 2, halo = 1, mh = 0, ph = 1
     contains   
-    procedure, public :: rng_psi, rng_vel 
+    !procedure, public :: rng_psi, rng_vel  TODO!!!
     procedure, public :: left_halo, rght_halo, left_edge, rght_edge
     procedure(op_proto), public, deferred :: op
   end type 
@@ -101,7 +102,6 @@ module adv_upstream
   type, extends(adv_t) :: adv_upstream_t
     contains
     procedure, public :: op
-    !procedure, private :: F
   end type 
 
   contains 
@@ -150,7 +150,7 @@ program egu2012
   type(arr_t), allocatable :: psi(:)
   type(arr_t), pointer :: psi_ptr(:), vel(:)
   
-  class(adv_upstream_t), allocatable :: a
+  class(adv_upstream_t), allocatable :: advop
   real, dimension(:,:), pointer :: tmp
 
   ! handling command-line argument
@@ -170,12 +170,12 @@ program egu2012
   stat = nf90_get_att(ncid, NF90_GLOBAL, "Cy", Cy)
 
   ! instantiating the advection operator
-  allocate(adv_upstream_t::a) 
+  allocate(adv_upstream_t::advop) 
 
   ! allocating memory for psi
-  allocate(psi(0:a%ntlev-1), psi_ptr(0:a%ntlev-1)) 
-  do i = 0, a%ntlev - 1
-    allocate(psi(i)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo), stat=stat) !TODO: rng_psi
+  allocate(psi(0:advop%ntlev-1), psi_ptr(0:advop%ntlev-1)) 
+  do i = 0, advop%ntlev - 1
+    allocate(psi(i)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo), stat=stat) !TODO: rng_psi
     psi_ptr(i)%X => psi(i)%X
   end do
 
@@ -197,8 +197,8 @@ program egu2012
   ! allocating memory for vel
   allocate(vel(0:1))
   allocate( &
-    vel(0)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo),& !TODO: rng_vel 
-    vel(1)%X(-a%halo:nx-1+a%halo, -a%halo:ny-1+a%halo) &
+    vel(0)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo),& !TODO: rng_vel 
+    vel(1)%X(-advop%halo:nx-1+advop%halo, -advop%halo:ny-1+advop%halo) &
   )
 
   ! filling vel with data from netCDF
@@ -209,10 +209,10 @@ program egu2012
   do t = 1, nt 
     ! without the temporary variable GCC segfaults on compilation! (bug no. 52994)
     do d = 1, 2
-      tmp => a%left_halo(psi_ptr(0)%X, d) 
-      tmp = a%rght_edge(psi_ptr(0)%X, d)
-      tmp => a%left_halo(psi_ptr(0)%X, d)
-      tmp = a%rght_edge(psi_ptr(0)%X, d)
+      tmp => advop%left_halo(psi_ptr(0)%X, d) 
+      tmp = advop%rght_edge(psi_ptr(0)%X, d)
+      tmp => advop%left_halo(psi_ptr(0)%X, d)
+      tmp = advop%rght_edge(psi_ptr(0)%X, d)
     end do
      
     ! advecting in each dimension
@@ -220,7 +220,7 @@ program egu2012
 !$OMP PARALLEL DO
     do p = 0, np - 1
       do d = 1, 2
-        call a%op(psi_ptr, vel, ii(p,:), jj(p,:), n, d)
+        call advop%op(psi_ptr, vel, ii(p,:), jj(p,:), n, d)
       end do
     end do
 !$OMP END PARALLEL DO
@@ -236,7 +236,7 @@ program egu2012
   end do
 
   ! cleanup: deallocating memory and closing the netcdf file
-  do i = 0, a%ntlev - 1
+  do i = 0, advop%ntlev - 1
     deallocate(psi(i)%X,stat=stat)
   end do
   deallocate(psi,stat=stat)
