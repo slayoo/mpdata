@@ -7,7 +7,7 @@ import json as js
 times = {}
 sizes = np.array([64,128,256,512,1024,2048,4096])
 
-for lang in ('pyt','for','cpp') :
+for lang in ('cpp','for','pyt') :
   times[lang] = []
   for n in sizes :
     print 'lang: ', lang, ' size: ', n, 'x', n

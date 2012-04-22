@@ -37,7 +37,7 @@ class adv {
   public: static const int ntlev = 2; // two-time leve schemes
   public: virtual void operator()(
     const vec_arr_t &psi, const arr_t &C, 
-    const rng_t &i, const rng_t &j, const int n
+    const rng_t &i, const rng_t &j, const int n, const int step
   ) = 0;
   public: virtual rng_t rng_psi() = 0;
   public: virtual rng_t rng_vel() = 0;
@@ -45,6 +45,7 @@ class adv {
   public: virtual idx_t rght_halo() = 0;
   public: virtual idx_t left_edge() = 0;
   public: virtual idx_t rght_edge() = 0;
+  public: virtual int n_steps() { return 1; }
   protected: static const int ph = 1, mh = 0; // for Arakawa-C staggered grid
 };
 
@@ -89,12 +90,68 @@ template <class idx> class adv_upstream : public adv_idx<idx>
   // e.g. eq. (2) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
   public: void operator()(
     const vec_arr_t &psi, const arr_t &vel, 
-    const rng_t &i, const rng_t &j, const int n
+    const rng_t &i, const rng_t &j, const int n, const int step
   ) {
     psi[n+1](idx(i,j)) -= (
       F(psi[n](idx(i,  j)), psi[n](idx(i+1,j)), vel(idx(i + adv::ph,j))) -
       F(psi[n](idx(i-1,j)), psi[n](idx(i,  j)), vel(idx(i - adv::mh,j)))
     );
+  }
+};
+
+template <class X> class adv_mpdata : public adv_upstream<X> 
+{
+  public: adv_mpdata(int nx, int ny) : adv_upstream<X>(nx, ny) {}
+  public: int n_steps() { return 2; }
+
+  // preventing zeros from entering denominators
+  protected: template <class a1_t, class a2_t> static auto frac(a1_t num, a2_t den)
+    decltype_return(where(den > real_t(0), num / den, real_t(0)))
+
+  // eq. (17a) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
+  protected: static auto A(const arr_t &psi, const rng_t &i, const rng_t &j)
+    decltype_return(frac(
+      psi(X(i+1,j)) - psi(X(i,j)),
+      psi(X(i+1,j)) + psi(X(i,j))
+    ))
+
+  // eq. (17b) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
+  protected: static auto B(const arr_t &psi, const rng_t &i, const rng_t &j)
+    decltype_return(real_t(.5) * frac(
+      psi(X(i+1,j+1)) + psi(X(i,j+1)) - psi(X(i+1,j-1)) - psi(X(i,j-1)),
+      psi(X(i+1,j+1)) + psi(X(i,j+1)) + psi(X(i+1,j-1)) + psi(X(i,j-1))
+    ))
+
+  // eq. (29b) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480)
+  protected: static auto vmean(const arr_t &V, const rng_t &i, const rng_t &j)
+    decltype_return(real_t(.25) * (
+      V(X(i + 1,j + adv::ph)) +
+      V(X(i + 0,j + adv::ph)) +
+      V(X(i + 1,j - adv::ph)) +
+      V(X(i + 0,j - adv::ph))
+    ))
+
+  // eq. (29a) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) (for 2D case)
+  protected: static auto U(const arr_t &psi, const arr_t &V, const rng_t &i, const rng_t &j)
+    decltype_return(
+      (abs(V(X(i + adv::ph, j))) - .5 * pow(V(X(i + adv::ph, j)),2)) * A(psi, i, j)
+      - vmean(V, i, j) * V(X(i + adv::ph, j)) * B(psi, i, j)
+    )
+
+  public: void operator()(
+    const vec_arr_t &psi, const arr_t &vel, 
+    const rng_t &i, const rng_t &j, const int n, const int step
+  ) {
+    std::cerr << "step " << step << std::endl;
+    switch (step) {
+      case 0: return adv_upstream<X>::operator()(psi, vel, i, j, n, step);
+      case 1: psi[n+1](X(i,j)) -= (
+        this->F(psi[n](X(i,  j)), psi[n](X(i+1,j)), U(psi[n], vel, i, j)) -
+        this->F(psi[n](X(i-1,j)), psi[n](X(i,  j)), U(psi[n], vel, i-1, j))
+      );
+      return;
+      default: assert(false);
+    }
   }
 };
 
@@ -129,8 +186,8 @@ int main(int ac, char* av[])
 
   // instantiating the advection operator functors
   ptr_vector<adv> advop(ndim); 
-  advop.push_back(new adv_upstream<idx_ij>(nx, ny)); // x 
-  advop.push_back(new adv_upstream<idx_ji>(ny, nx)); // y 
+  advop.push_back(new adv_mpdata<idx_ij>(nx, ny)); // x 
+  advop.push_back(new adv_mpdata<idx_ji>(ny, nx)); // y 
 
   // memoray allocation: indices
   ptr_vector<rng_t> i(np), j(np);
@@ -162,18 +219,20 @@ int main(int ac, char* av[])
 
   // integration loop
   for (nc_siz_t t = 1; t <= nt; ++t) {
-    // filling the halos 
-    for (int d = 0; d < ndim; ++d) {
-      psi[n](advop[d].left_halo()) = psi[n](advop[d].rght_edge());
-      psi[n](advop[d].rght_halo()) = psi[n](advop[d].left_edge());
-    }
+    for (int s = 0; s < advop[x].n_steps(); ++s) {
+      // filling the halos 
+      for (int d = 0; d < ndim; ++d) {
+        psi[n](advop[d].left_halo()) = psi[n](advop[d].rght_edge());
+        psi[n](advop[d].rght_halo()) = psi[n](advop[d].left_edge());
+      }
 
-    // advecting in each dimension sharing the workload among threads
-    psi[n+1] = psi[n];
+      // advecting in each dimension sharing the workload among threads
+      psi[n+1] = psi[n];
 #pragma omp parallel for
-    for (int p = 0; p < np; ++p) // threads
-      for (int d = 0; d < ndim; ++d) // dimensions
-        advop[d](psi, vel[d], i[p], j[p], n);
+      for (int p = 0; p < np; ++p) // threads
+        for (int d = 0; d < ndim; ++d) // dimensions
+          advop[d](psi, vel[d], i[p], j[p], n, s);
+    }
 
     // outputting to the netCDF
     if ((t % no) == 0) for (
