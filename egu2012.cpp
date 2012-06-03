@@ -20,6 +20,10 @@ typedef blitz::Range rng_t;
 typedef blitz::RectDomain<ndim> idx_t;
 typedef blitz::TinyVector<rng_t, ndim> tv_t;
 
+// static rational
+#include <boost/units/static_rational.hpp>
+using boost::units::static_rational;
+
 // I/O: netCDF-4 (the netcdf-cxx4 API)
 #include <netcdf>
 typedef size_t nc_siz_t;
@@ -31,6 +35,11 @@ struct idx_ji : idx_t { idx_ji(const rng_t &j, const rng_t &i) : idx_t(tv_t(i,j)
 
 // helper construct for C++11 automatic return type guess
 #define decltype_return(expr) -> decltype(expr) { return expr; } 
+
+// helper construct for elegantly handling the Arakawa-C staggered grid
+// TODO: isn't the templated version too general?
+template <typename T> inline T operator+(const T &i, const static_rational<1,2> &h) { return i + 1; }
+template <typename T> inline T operator-(const T &i, const static_rational<1,2> &h) { return i; }
 
 // abstract class defining the advection operator functor
 class adv {
@@ -46,7 +55,7 @@ class adv {
   public: virtual idx_t left_edge() = 0;
   public: virtual idx_t rght_edge() = 0;
   public: virtual int n_steps() { return 1; }
-  protected: static const int ph = 1, mh = 0; // for Arakawa-C staggered grid
+  protected: static const static_rational<1,2> h;
 };
 
 // derived abstract class with the dimension-independency logic
@@ -62,7 +71,7 @@ template <class idx> class adv_idx : public adv
   { return rng_t(0 - halo, nx - 1 + halo); }
 
   public: rng_t rng_vel() 
-  { return rng_t(0 - halo - mh, nx - 1 + halo + ph); }
+  { return rng_t(0 - halo - adv::h, nx - 1 + halo + adv::h); }
 
   public: idx_t left_halo() 
   { return idx(rng_t(- halo, -1), rng_t(-halo, ny - 1 + halo)); }
@@ -93,8 +102,8 @@ template <class idx> class adv_upstream : public adv_idx<idx>
     const rng_t &i, const rng_t &j, const int n, const int step
   ) {
     psi[n+1](idx(i,j)) -= (
-      F(psi[n](idx(i,  j)), psi[n](idx(i+1,j)), vel(idx(i + adv::ph,j))) -
-      F(psi[n](idx(i-1,j)), psi[n](idx(i,  j)), vel(idx(i - adv::mh,j)))
+      F(psi[n](idx(i,   j)), psi[n](idx(i+1, j)), vel(idx(i + adv::h, j))) -
+      F(psi[n](idx(i-1, j)), psi[n](idx(i,   j)), vel(idx(i - adv::h, j)))
     );
   }
 };
@@ -111,31 +120,31 @@ template <class X> class adv_mpdata : public adv_upstream<X>
   // eq. (17a) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
   protected: static auto A(const arr_t &psi, const rng_t &i, const rng_t &j)
     decltype_return(frac(
-      psi(X(i+1,j)) - psi(X(i,j)),
-      psi(X(i+1,j)) + psi(X(i,j))
+      psi(X(i+1, j)) - psi(X(i, j)),
+      psi(X(i+1, j)) + psi(X(i, j))
     ))
 
   // eq. (17b) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) 
   protected: static auto B(const arr_t &psi, const rng_t &i, const rng_t &j)
     decltype_return(real_t(.5) * frac(
-      psi(X(i+1,j+1)) + psi(X(i,j+1)) - psi(X(i+1,j-1)) - psi(X(i,j-1)),
-      psi(X(i+1,j+1)) + psi(X(i,j+1)) + psi(X(i+1,j-1)) + psi(X(i,j-1))
+      psi(X(i+1, j+1)) + psi(X(i, j+1)) - psi(X(i+1, j-1)) - psi(X(i, j-1)),
+      psi(X(i+1, j+1)) + psi(X(i, j+1)) + psi(X(i+1, j-1)) + psi(X(i, j-1))
     ))
 
   // eq. (29b) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480)
   protected: static auto vmean(const arr_t &V, const rng_t &i, const rng_t &j)
     decltype_return(real_t(.25) * (
-      V(X(i + 1,j + adv::ph)) +
-      V(X(i + 0,j + adv::ph)) +
-      V(X(i + 1,j - adv::ph)) +
-      V(X(i + 0,j - adv::ph))
+      V(X(i + 1, j + adv::h)) +
+      V(X(i + 0, j + adv::h)) +
+      V(X(i + 1, j - adv::h)) +
+      V(X(i + 0, j - adv::h))
     ))
 
   // eq. (29a) in Smolarkiewicz & Margolin 1998 (J. Comp. Phys., 140, 459-480) (for 2D case)
   protected: static auto U(const arr_t &psi, const arr_t &V, const rng_t &i, const rng_t &j)
     decltype_return(
-      (abs(V(X(i + adv::ph, j))) - .5 * pow(V(X(i + adv::ph, j)),2)) * A(psi, i, j)
-      - vmean(V, i, j) * V(X(i + adv::ph, j)) * B(psi, i, j)
+      (abs(V(X(i + adv::h, j))) - .5 * pow(V(X(i + adv::h, j)),2)) * A(psi, i, j)
+      - vmean(V, i, j) * V(X(i + adv::h, j)) * B(psi, i, j)
     )
 
   public: void operator()(
