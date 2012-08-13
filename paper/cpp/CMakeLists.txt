@@ -1,0 +1,21 @@
+set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors")
+if(CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
+else()
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # e.g. clang++
+endif()
+set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++11 -DBZ_DEBUG")
+
+if("${CMAKE_CXX_COMPILER}" STREQUAL "/usr/bin/c++")
+  message(FATAL_ERROR "Please specify the C++ compiler (-DCMAKE_CXX_COMPILER=g++|clang++|...)")
+endif()
+
+find_package(Boost COMPONENTS iostreams system REQUIRED)
+find_path(GNUPLOT-IOSTREAM_INCLUDE_DIR PATH_SUFFIXES gnuplot-iostream/ NAMES gnuplot-iostream.h)
+add_executable(plot-cpp plot.cpp)
+target_link_libraries(plot-cpp ${Boost_LIBRARIES})
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  find_library(BLITZ_LIBRARY NAMES blitz)
+  target_link_libraries(plot-cpp "blitz")
+  #TODO: target_link_libraries(test-cpp "blitz")
+endif()
