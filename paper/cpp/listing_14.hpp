@@ -1,11 +1,11 @@
-template <class pi, int hlo>
-struct bcd
+template <class pi>
+struct cyclic
 {
   // (could-be-private) member fields
   pi left_halo, rght_edge, rght_halo, left_edge;
 
   // ctor with member-field initialisation 
-  bcd(const rng_t &i, const rng_t &j) :
+  cyclic(const rng_t &i, const rng_t &j, const int hlo) :
     //     ( i.first  ...   i.last         ), (  j ) 
     left_halo(
       rng_t(i.first()-hlo,  i.first()-1    ), j^hlo),
@@ -20,7 +20,7 @@ struct bcd
   // public method
   void fill_halos(const arr_t &psi)
   {
-    psi(l_halo) = psi(r_edge);     
-    psi(r_halo) = psi(l_edge);     
+    psi(left_halo) = psi(rght_edge);     
+    psi(rght_halo) = psi(left_edge);     
   }
 };

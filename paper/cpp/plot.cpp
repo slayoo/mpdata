@@ -16,9 +16,12 @@ int main()
 {
   int nx = 32, ny = 32, nt = 200;
 
-  solver_2D<mpdata<1>> slv1(nx, ny);
-  solver_2D<mpdata<2>> slv2(nx, ny); 
-  solver_2D<mpdata<3>> slv3(nx, ny); 
+  solver_2D<mpdata<1>, cyclic<pi_ij>, cyclic<pi_ji>> 
+    slv1(nx, ny);
+  solver_2D<mpdata<2>, cyclic<pi_ij>, cyclic<pi_ji>> 
+    slv2(nx, ny); 
+  solver_2D<mpdata<3>, cyclic<pi_ij>, cyclic<pi_ji>> 
+    slv3(nx, ny); 
 
   Gnuplot gp;
   gp << "set term pdf size 10cm, 30cm\n";
@@ -40,19 +43,19 @@ int main()
   gp.sendBinary(slv1.state().copy());
 
   slv1.solve(nt);
-  gp << "set title 'donorcell t=" << nt << "'\n";
+  gp << "set title 'mpdata<1> @ t=" << nt << "'\n";
   gp << "splot '-' binary" << fmt << " notitle\n";
   gp.sendBinary(slv1.state().copy());
 
   init(slv2); // TODO
   slv2.solve(nt);
-  gp << "set title 'mpdata<2> t=" << nt << "'\n";
+  gp << "set title 'mpdata<2> @ t=" << nt << "'\n";
   gp << "splot '-' binary" << fmt << " notitle\n";
   gp.sendBinary(slv2.state().copy());
 
   init(slv3); 
   slv3.solve(nt); 
-  gp << "set title 'mpdata<3> t=" << nt << "'\n";
+  gp << "set title 'mpdata<3> @ t=" << nt << "'\n";
   gp << "splot '-' binary" << fmt << " notitle\n";
   gp.sendBinary(slv3.state().copy());
 }
