@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6.3)
+cmake_minimum_required(VERSION 2.6.3) # TODO: "module procedure bug" http://www.cmake.org/pipermail/cmake/2007-October/016831.html
 project(mpdata CXX Fortran)
 
 if(NOT (
