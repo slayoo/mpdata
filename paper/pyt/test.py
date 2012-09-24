@@ -88,21 +88,22 @@ class Solver_2D(object):
 
 # -- listing 2.16
 
-nx, ny = 10, 5
+if __name__ == '__main__':
+  nx, ny = 10, 5
 
-slv1 = Solver_2D(Mpdata(1), nx, ny)
+  slv1 = Solver_2D(Mpdata(1), nx, ny)
 
-slv1.state()[:] = 0
-slv1.state()[0:2,0:3] = 1
-slv1.Cx()[:] = .5
-slv1.Cy()[:] = .5
-
-print slv1.state()
-
-nt = 1
-
-slv1.solve(nt)
-print slv1.state()
-
-slv2 = Solver_2D(Mpdata(2), nx, ny)
-slv2.solve(nt)
+  slv1.state()[:] = 0
+  slv1.state()[0:2,0:3] = 1
+  slv1.Cx()[:] = .5
+  slv1.Cy()[:] = .5
+  
+  print slv1.state()
+  
+  nt = 1
+  
+  slv1.solve(nt)
+  print slv1.state()
+  
+  slv2 = Solver_2D(Mpdata(2), nx, ny)
+  slv2.solve(nt)
