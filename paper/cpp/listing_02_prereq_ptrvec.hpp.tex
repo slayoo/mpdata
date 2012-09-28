@@ -1,0 +1,13 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{c+cp}{\PYZsh{}}\PY{c+cp}{include \PYZlt{}boost}\PY{c+cp}{/}\PY{c+cp}{ptr\PYZus{}container}\PY{c+cp}{/}\PY{c+cp}{ptr\PYZus{}vector.hpp\PYZgt{}}
+\PY{k}{template} \PY{o}{\PYZlt{}}\PY{k}{class} \PY{n+nc}{T}\PY{o}{\PYZgt{}}
+\PY{k}{struct} \PY{n}{vec\PYZus{}t} \PY{o}{:} \PY{n}{boost}\PY{o}{:}\PY{o}{:}\PY{n}{ptr\PYZus{}vector}\PY{o}{\PYZlt{}}\PY{n}{T}\PY{o}{\PYZgt{}}
+\PY{p}{\PYZob{}}
+  \PY{k}{const} \PY{n}{T} \PY{o}{\PYZam{}}\PY{k}{operator}\PY{p}{[}\PY{p}{]}\PY{p}{(}\PY{k}{const} \PY{k+kt}{int} \PY{n}{i}\PY{p}{)} \PY{k}{const}
+  \PY{p}{\PYZob{}}   
+    \PY{k}{return} \PY{k}{this}\PY{o}{-}\PY{o}{\PYZgt{}}\PY{n}{at}\PY{p}{(}
+      \PY{p}{(}\PY{n}{i} \PY{o}{+} \PY{k}{this}\PY{o}{-}\PY{o}{\PYZgt{}}\PY{n}{size}\PY{p}{(}\PY{p}{)}\PY{p}{)} \PY{o}{\PYZpc{}} \PY{k}{this}\PY{o}{-}\PY{o}{\PYZgt{}}\PY{n}{size}\PY{p}{(}\PY{p}{)}
+    \PY{p}{)}\PY{p}{;} 
+  \PY{p}{\PYZcb{}}
+\PY{p}{\PYZcb{}}\PY{p}{;}
+\end{Verbatim}
