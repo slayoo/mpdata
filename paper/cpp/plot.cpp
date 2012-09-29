@@ -1,3 +1,4 @@
+//listing16
 #include "listings.hpp"
 #define GNUPLOT_ENABLE_BLITZ
 #include <gnuplot-iostream/gnuplot-iostream.h>
@@ -59,3 +60,4 @@ int main()
   gp << "splot '-' binary" << fmt << " notitle\n";
   gp.sendBinary(slv3.state().copy());
 }
+//listing17

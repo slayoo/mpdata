@@ -1,9 +1,6 @@
 #listing00
-
 import numpy 
-
 #listing01
-
 class Shift():
   def __init__(self, plus, mnus):
     self.plus = plus
@@ -18,18 +15,14 @@ class Shift():
       arg.start - self.mnus, 
       arg.stop  - self.mnus
     )
-
+#listing02
 one = Shift(1,1) 
 hlf = Shift(1,0)
 two = Shift(2,2)
-
-#listing02
-
+#listing03
 def f(psi_l, psi_r, C): 
   return numpy.where(C >= 0, psi_l * C, psi_r * C)
-
-#listing03
-
+#listing04
 def donorcell_1D(psi_arg, C_arg, i, j, d): 
   psi = psi_arg.swapaxes(0,d)
   C = C_arg.swapaxes(0,d)
@@ -37,19 +30,13 @@ def donorcell_1D(psi_arg, C_arg, i, j, d):
     f(psi[i,   j], psi[i+one, j], C[i+hlf, j]) - 
     f(psi[i-one, j], psi[i,   j], C[i-hlf, j]) 
   ).swapaxes(0,d)
-
-#listing04
-
+#listing05
 def donorcell_2D(psi, n, C, i, j):
-  print "psi,c shape", psi[n].shape, C[0].shape 
-  print "psi.swap, c.swap shape", psi[n].swapaxes(0,1).shape, C[1].swapaxes(0,1).shape
   psi[n+1][i,j] = (psi[n][i,j] 
     - donorcell_1D(psi[n], C[0], i, j, 0)
     - donorcell_1D(psi[n], C[1], j, i, 1)
   ) # loopa po wymiarach???
-
-#listing05
-
+#listing06
 class Mpdata(object):
   def __init__(self, n_iters):
     self.n_steps = n_iters
@@ -57,9 +44,7 @@ class Mpdata(object):
 
   def op_2D(self, psi, n, C, i, j, step):
     donorcell_2D(psi, n, C, i, j)
-
-#listing06
-
+#listing07
 class Cyclic(object):
   def __init__(self, d, i, hlo): #TODO: i & j not needed in principle...
     self.d = d
@@ -72,9 +57,7 @@ class Cyclic(object):
     psi = psi_arg.swapaxes(0, self.d) # TODO: does it work in 3D?
     psi[self.left_halo] = psi[self.rght_edge]
     psi[self.rght_halo] = psi[self.left_edge]
-
-#
-
+#listing08
 class Solver_2D(object):
   def __init__(self, adv, bcx, bcy, nx, ny):
     self.adv = adv
@@ -94,7 +77,7 @@ class Solver_2D(object):
       self.psi.append(numpy.empty((nx + 2 * hlo, ny + 2 * hlo))) 
     self.C.append(numpy.empty((nx + 1 + 2 * hlo, ny + 2 * hlo)))
     self.C.append(numpy.empty((nx + 2 * hlo, ny + 1 + 2 * hlo)))
-
+#listing09
   def solve(self, nt):
     for t in range(nt):
       for s in range(self.adv.n_steps):
@@ -110,9 +93,7 @@ class Solver_2D(object):
     return self.C[0]
   def Cy(self):
     return self.C[1]
-
-# -- listing 2.16
-
+#listing10
 if __name__ == '__main__':
   nx, ny = 10, 5
 
