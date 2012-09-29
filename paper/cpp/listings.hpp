@@ -45,16 +45,20 @@ inline rng_t operator^(
   ); 
 } 
 //listing05
-struct pi_ij : idx_t
+template <int d> struct pi;
+
+template <>
+struct pi<0> : idx_t
 { 
-  pi_ij(const rng_t &i, const rng_t &j) :
+  pi(const rng_t &i, const rng_t &j) :
     idx_t(rngvec_t(i,j)) 
   {}  
 };
 
-struct pi_ji : idx_t
+template <>
+struct pi<1> : idx_t
 { 
-  pi_ji(const rng_t &j, const rng_t &i) :
+  pi(const rng_t &j, const rng_t &i) :
     idx_t(rngvec_t(i,j)) 
   {}  
 }; 
@@ -69,15 +73,23 @@ inline auto F(
   .5 * (C - abs(C)) * psi_r
 )
 //listing07
-template <class pi>  
+template <int d>  
 inline auto donorcell_1D( 
   const arr_t &psi, 
   const arr_t &C, 
   const rng_t &i, 
   const rng_t &j
 ) return_macro(
-  F(psi(pi(i,  j)), psi(pi(i+1,j)), C(pi(i+h,j))) -
-  F(psi(pi(i-1,j)), psi(pi(i,  j)), C(pi(i-h,j)))
+  F(
+    psi(pi<d>(i,  j)),  
+    psi(pi<d>(i+1,j)), 
+    C(pi<d>(i+h,j))
+  ) -
+  F(
+    psi(pi<d>(i-1,j)), 
+    psi(pi<d>(i,  j)), 
+    C(pi<d>(i-h,j))
+  )
 )
 //listing08
 inline void donorcell_2D(
@@ -86,8 +98,8 @@ inline void donorcell_2D(
   const rng_t &i, const rng_t &j
 ) { 
   psi[n+1](i,j) = psi[n](i,j)
-    - donorcell_1D<pi_ij>(psi[n], C[0], i, j)
-    - donorcell_1D<pi_ji>(psi[n], C[1], j, i); 
+    - donorcell_1D<0>(psi[n], C[0], i, j)
+    - donorcell_1D<1>(psi[n], C[1], j, i); 
 }
 //listing09
 template <class nom_t, class den_t>
@@ -97,45 +109,47 @@ static inline auto frac(
   where(den > 0, nom / den, 0)
 ) 
 //listing10
-template <class pi>
+template <int d>
 inline auto A(
   const arr_t &psi,
   const rng_t &i, const rng_t &j
 ) return_macro(
   frac(
-    psi(pi(i+1, j)) - psi(pi(i,j)),
-    psi(pi(i+1, j)) + psi(pi(i,j))
+    psi(pi<d>(i+1, j)) - psi(pi<d>(i,j)),
+    psi(pi<d>(i+1, j)) + psi(pi<d>(i,j))
   ) 
 ) 
 //listing11
-template <class pi>
+template <int d>
 inline auto B(
   const arr_t &psi, 
-  const rng_t &i, const rng_t &j
+  const rng_t &i, 
+  const rng_t &j
 ) return_macro(
  .5 * frac(
-    psi(pi(i+1, j+1)) + psi(pi(i, j+1)) -
-    psi(pi(i+1, j-1)) - psi(pi(i, j-1)),
-    psi(pi(i+1, j+1)) + psi(pi(i, j+1)) +
-    psi(pi(i+1, j-1)) + psi(pi(i, j-1))
+    psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) -
+    psi(pi<d>(i+1, j-1)) - psi(pi<d>(i, j-1)),
+    psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) +
+    psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
   )
 )
 //listing12
-template <class pi>
+template <int d>
 inline auto antidiff_2D(
   const arr_t &psi, 
-  const rng_t &i, const rng_t &j,
-  const ptrvec_t<arr_t> &C, const int d
+  const rng_t &i, 
+  const rng_t &j,
+  const ptrvec_t<arr_t> &C
 ) return_macro(
-  abs(C[d](pi(i+h, j)))
-  * A<pi>(psi, i, j)
-  * (1 - abs(C[d](pi(i+h, j))))
-  - C[d](pi(i+h, j)) 
-  * B<pi>(psi, i, j)
+  abs(C[d](pi<d>(i+h, j)))
+  * (1 - abs(C[d](pi<d>(i+h, j))))
+  * A<d>(psi, i, j)
+  - C[d](pi<d>(i+h, j)) 
   * .25 * (
-    C[d+1](pi(i+1, j+h)) + C[d+1](pi(i, j+h)) +
-    C[d+1](pi(i+1, j-h)) + C[d+1](pi(i, j-h)) 
+    C[d+1](pi<d>(i+1, j+h)) + C[d+1](pi<d>(i, j+h)) +
+    C[d+1](pi<d>(i+1, j-h)) + C[d+1](pi<d>(i, j-h)) 
   ) 
+  * B<d>(psi, i, j)
 ) 
 //listing13
 template <int n_iters>
@@ -173,15 +187,16 @@ struct mpdata
     // calculating the antidiffusive velocities
     if (step > 0) {
       const int hlo = n_steps - 1 - step;
-      enum {x,y};
-      C_corr[x](i ^ h ^ hlo, j ^ hlo) =
-        antidiff_2D<pi_ij>(
-          psi[n], i ^ h ^ hlo, j ^ hlo, C_unco, x
+      C_corr[0](i ^ h ^ hlo, j ^ hlo) =
+        antidiff_2D<0>(
+          psi[n], i ^ h ^ hlo, j ^ hlo, C_unco
         );
-      C_corr[y](i ^ hlo, j ^ h ^ hlo) =
-        antidiff_2D<pi_ji>(
-          psi[n], j ^ h ^ hlo, i ^ hlo, C_unco, y
+      C_corr[1](i ^ hlo, j ^ h ^ hlo) =
+        antidiff_2D<1>(
+          psi[n], j ^ h ^ hlo, i ^ hlo, C_unco
         );
+//std::cerr << "C_corr[x] : " << C_corr[x] << std::endl;
+//std::cerr << "C_corr[y] : " << C_corr[y] << std::endl;
     }
 
     // performing a donor-cell step with C or C_corr
@@ -189,11 +204,11 @@ struct mpdata
   }
 };
 //listing14
-template <class pi>
+template <int d>
 struct cyclic
 {
   // (could-be-private) member fields
-  pi left_halo, rght_edge, rght_halo, left_edge;
+  pi<d> left_halo, rght_edge, rght_halo, left_edge;
 
   // ctor with member-field initialisation 
   cyclic(const rng_t &i, const rng_t &j, const int hlo) :

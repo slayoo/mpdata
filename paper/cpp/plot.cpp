@@ -17,11 +17,11 @@ int main()
 {
   int nx = 32, ny = 32, nt = 200;
 
-  solver_2D<mpdata<1>, cyclic<pi_ij>, cyclic<pi_ji>> 
+  solver_2D<mpdata<1>, cyclic<0>, cyclic<1>> 
     slv1(nx, ny);
-  solver_2D<mpdata<2>, cyclic<pi_ij>, cyclic<pi_ji>> 
+  solver_2D<mpdata<2>, cyclic<0>, cyclic<1>> 
     slv2(nx, ny); 
-  solver_2D<mpdata<3>, cyclic<pi_ij>, cyclic<pi_ji>> 
+  solver_2D<mpdata<3>, cyclic<0>, cyclic<1>> 
     slv3(nx, ny); 
 
   Gnuplot gp;

@@ -77,7 +77,7 @@ class Solver_2D(object):
       self.psi.append(numpy.empty((nx + 2 * hlo, ny + 2 * hlo))) 
     self.C.append(numpy.empty((nx + 1 + 2 * hlo, ny + 2 * hlo)))
     self.C.append(numpy.empty((nx + 2 * hlo, ny + 1 + 2 * hlo)))
-#listing09
+
   def solve(self, nt):
     for t in range(nt):
       for s in range(self.adv.n_steps):
@@ -93,22 +93,4 @@ class Solver_2D(object):
     return self.C[0]
   def Cy(self):
     return self.C[1]
-#listing10
-if __name__ == '__main__':
-  nx, ny = 10, 5
-
-  slv1 = Solver_2D(Mpdata(1), Cyclic, Cyclic, nx, ny)
-
-  slv1.state()[:] = 0
-  slv1.state()[0:2,0:3] = 1
-  slv1.Cx()[:] = .5
-  slv1.Cy()[:] = .5
-  
-  print slv1.state()
-  
-  nt = 1
-  slv1.solve(nt)
-  print slv1.state()
-
-  #slv2 = Solver_2D(Mpdata(2), Cyclic, Cyclic, nx, ny)
-  #slv2.solve(nt)
+#listing09
