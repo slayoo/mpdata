@@ -62,8 +62,6 @@ class Solver_2D(object):
   def __init__(self, adv, bcx, bcy, nx, ny):
     self.adv = adv
     self.n = 0
-    self.psi = []
-    self.C = []
 
     hlo = adv.n_halos
 
@@ -73,10 +71,14 @@ class Solver_2D(object):
     self.bcx = bcx(0, self.i, hlo)
     self.bcy = bcy(1, self.j, hlo)
 
-    for i in range(2):
-      self.psi.append(numpy.empty((nx + 2 * hlo, ny + 2 * hlo))) 
-    self.C.append(numpy.empty((nx + 1 + 2 * hlo, ny + 2 * hlo)))
-    self.C.append(numpy.empty((nx + 2 * hlo, ny + 1 + 2 * hlo)))
+    self.psi = (
+      numpy.empty((nx + 2 * hlo, ny + 2 * hlo)),
+      numpy.empty((nx + 2 * hlo, ny + 2 * hlo)) 
+    )
+    self.C = (
+      numpy.empty((nx + 1 + 2 * hlo, ny + 2 * hlo)),
+      numpy.empty((nx + 2 * hlo, ny + 1 + 2 * hlo))
+    )
 
   def solve(self, nt):
     for t in range(nt):

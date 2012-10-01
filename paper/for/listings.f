@@ -58,7 +58,6 @@ module adv_m
     subroutine op_2D_i(this, psi, n, C, i, j, s)
       import :: adv_t
       import :: arr_t
-      implicit none
       class(adv_t) :: this
       class(arr_t) :: psi(:), C(:)
       integer, intent(in) :: n, s
@@ -80,7 +79,6 @@ module mpdata_m
   contains
 
   subroutine mpdata_ctor(this)
-    implicit none
     class(mpdata_t) :: this
     this%n_steps = 2
     this%n_halos = 2
@@ -88,7 +86,6 @@ module mpdata_m
 
   subroutine mpdata_op_2D(this, psi, n, C, i, j, s)
     use arakawa_c_m
-    implicit none
     class(mpdata_t) :: this
     class(arr_t) :: psi(:), C(:)
     integer, intent(in) :: n, s
@@ -116,7 +113,6 @@ module mpdata_m
 
     contains 
     elemental function F(psi_l, psi_r, C)
-      implicit none
       real :: F
       real, intent(in) :: psi_l, psi_r, C
     end function
@@ -136,7 +132,6 @@ module bcd_m
     subroutine fill_halos_i(this, psi)
       import :: arr_t
       import :: bcd_t
-      implicit none
       class(bcd_t) :: this
       real, dimension(:,:), pointer :: psi
     end subroutine
@@ -156,12 +151,10 @@ module cyclic_m
   contains
 
   subroutine cyclic_ctor(this)
-    implicit none
     class(cyclic_t) :: this
   end subroutine
 
   subroutine cyclic_fill_halos(this, psi)
-    implicit none
     class(cyclic_t) :: this
     real, dimension(:,:), pointer :: psi
     !psi() = psi()
@@ -184,14 +177,13 @@ module solver_2D_m
     procedure :: ctor  => solver_2D_ctor 
     procedure :: solve => solver_2D_solve
     procedure :: state => solver_2D_state
-    procedure :: dtor  => solver_2D_dtor 
+    procedure :: dtor  => solver_2D_dtor !TODO: final
   end type 
 
   contains
 
   subroutine solver_2D_ctor(this, nx,ny,adv,bcx,bcy)
     use arakawa_c_m
-    implicit none
     class(solver_2D_t) :: this
     integer, intent(in) :: nx, ny
     class(adv_t), pointer :: adv
@@ -226,7 +218,6 @@ module solver_2D_m
   end subroutine
 
   subroutine solver_2D_dtor(this)
-    implicit none
     class(solver_2D_t) :: this
 
     block
@@ -242,7 +233,6 @@ module solver_2D_m
   end subroutine
   
   subroutine solver_2D_solve(this, nt)
-    implicit none
     class(solver_2D_t) :: this
     integer, intent(in) :: nt
 
