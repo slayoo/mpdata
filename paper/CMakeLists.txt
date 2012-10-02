@@ -8,5 +8,6 @@ if(NOT (
   message(FATAL_ERROR "Please specify the build type (-DCMAKE_BUILD_TYPE=Debug|Release") 
 endif()
 
+enable_testing()
 add_subdirectory(cpp)
 add_subdirectory(for)

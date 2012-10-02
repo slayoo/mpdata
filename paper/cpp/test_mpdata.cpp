@@ -1,16 +1,27 @@
 #include "listings.hpp"
-#define GNUPLOT_ENABLE_BLITZ
-
 int main()
 {
-  int nx = 3, ny = 3, nt = 1;
+  int nx = 3, ny = 2, nt = 1;
 
   solver_2D<mpdata<2>, cyclic<0>, cyclic<1>> slv(nx, ny); 
 
   slv.state() = 0; 
-  slv.state()(rng_t(1,1), rng_t(1,1)) = 1;  
+  slv.state()(0,0) = 1;  
   slv.Cx() = .5; 
-  slv.Cy() = .5;
+  slv.Cy() = 0;
   slv.solve(nt);
-  std::cerr << slv.state() << blitz::sum(slv.state()) << std::endl;
+
+  //if (blitz::sum(slv.state()) != 1) throw;
+  //else std::cerr << "sum OK" << std::endl;
+
+  std::cerr << slv.state() << std::endl;
+
+  std::cerr << "checking values..." << std::endl;
+  if (
+    slv.state()(0,0) != .5 ||
+    slv.state()(1,0) != .5 ||
+    slv.state()(0,1) != 0 ||
+    slv.state()(1,1) != 0
+  ) throw;
+  std::cerr << "OK" << std::endl;
 }
