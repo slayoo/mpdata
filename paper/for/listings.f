@@ -53,7 +53,7 @@ module arrvec_m
     deallocate(this%at)
   end subroutine
 end module
-!listing02
+!listing01
 module arakawa_c_m
   implicit none
 
@@ -114,61 +114,6 @@ module adv_m
   end interface
 end module
 !listing03
-module mpdata_m
-  use adv_m
-  implicit none
-  
-  type, extends(adv_t) :: mpdata_t
-    contains
-    procedure :: ctor => mpdata_ctor
-    procedure :: op_2D => mpdata_op_2D
-  end type
-
-  contains
-
-  subroutine mpdata_ctor(this)
-    class(mpdata_t) :: this
-    this%n_steps = 2
-    this%n_halos = 2
-  end subroutine
-
-  subroutine mpdata_op_2D(this, psi, n, C, i, j, s)
-    use arakawa_c_m
-    class(mpdata_t) :: this
-    class(arrvec_t), pointer :: psi, C
-    integer, intent(in) :: n, s
-    integer, intent(in) :: i(:), j(:)
-
-    psi%at(n+1)%p%a(i,j) = psi%at(n)%p%a(i,j) - (    &
-      F(                                             &
-        psi%at( n )%p%a( i,   j ),  &
-        psi%at( n )%p%a( i+1, j ),  &
-        C%at( 0 )%p%a( i + h, j )   &
-      ) -                                            &
-      F(                                             &
-        psi%at( n )%p%a( i-1, j ),  &
-        psi%at( n )%p%a( i,   j ),  &
-        C%at( 0 )%p%a( i-h, j )     &
-      )                                              &
-    ) - (                                            &
-      F(                                             &
-        psi%at(n)%p%a(i,j  ), psi%at(n)%p%a(i,j+1),  &
-        C%at(1)%p%a(i,j+h)                           &
-      ) -                                            &
-      F(                                             &
-        psi%at(n)%p%a(i,j-1), psi%at(n)%p%a(i,j  ),  &
-        C%at(1)%p%a(i,j-h)                           &
-      )                                              &
-    )   
-
-    contains 
-    elemental function F(psi_l, psi_r, C)
-      real :: F
-      real, intent(in) :: psi_l, psi_r, C
-    end function
-  end subroutine
-end module
-!listing04
 module bcd_m
   use arrvec_m
   implicit none
@@ -187,31 +132,7 @@ module bcd_m
     end subroutine
   end interface
 end module
-!listing05
-module cyclic_m
-  use bcd_m
-  implicit none
-  
-  type, extends(bcd_t) :: cyclic_t
-    contains
-    procedure :: ctor => cyclic_ctor 
-    procedure :: fill_halos => cyclic_fill_halos
-  end type
-
-  contains
-
-  subroutine cyclic_ctor(this)
-    class(cyclic_t) :: this
-  end subroutine
-
-  subroutine cyclic_fill_halos(this, psi)
-    class(cyclic_t) :: this
-    real, pointer :: psi(:,:)
-    !psi() = psi()
-    !psi() = psi()
-  end subroutine
-end module
-!listing06
+!listing04
 module solver_2D_m
   use arrvec_m
   use adv_m
@@ -307,5 +228,84 @@ module solver_2D_m
       this%j(0) : this%j(size(this%j)-1)  &
     )
   end function
+end module
+!listing05
+module cyclic_m
+  use bcd_m
+  implicit none
+  
+  type, extends(bcd_t) :: cyclic_t
+    contains
+    procedure :: ctor => cyclic_ctor 
+    procedure :: fill_halos => cyclic_fill_halos
+  end type
+
+  contains
+
+  subroutine cyclic_ctor(this)
+    class(cyclic_t) :: this
+  end subroutine
+
+  subroutine cyclic_fill_halos(this, psi)
+    class(cyclic_t) :: this
+    real, pointer :: psi(:,:)
+    !psi() = psi()
+    !psi() = psi()
+  end subroutine
+end module
+!listing06
+module mpdata_m
+  use adv_m
+  implicit none
+  
+  type, extends(adv_t) :: mpdata_t
+    contains
+    procedure :: ctor => mpdata_ctor
+    procedure :: op_2D => mpdata_op_2D
+  end type
+
+  contains
+
+  subroutine mpdata_ctor(this)
+    class(mpdata_t) :: this
+    this%n_steps = 2
+    this%n_halos = 2
+  end subroutine
+
+  subroutine mpdata_op_2D(this, psi, n, C, i, j, s)
+    use arakawa_c_m
+    class(mpdata_t) :: this
+    class(arrvec_t), pointer :: psi, C
+    integer, intent(in) :: n, s
+    integer, intent(in) :: i(:), j(:)
+
+    psi%at(n+1)%p%a(i,j) = psi%at(n)%p%a(i,j) - (    &
+      F(                                             &
+        psi%at( n )%p%a( i,   j ),  &
+        psi%at( n )%p%a( i+1, j ),  &
+        C%at( 0 )%p%a( i + h, j )   &
+      ) -                                            &
+      F(                                             &
+        psi%at( n )%p%a( i-1, j ),  &
+        psi%at( n )%p%a( i,   j ),  &
+        C%at( 0 )%p%a( i-h, j )     &
+      )                                              &
+    ) - (                                            &
+      F(                                             &
+        psi%at(n)%p%a(i,j  ), psi%at(n)%p%a(i,j+1),  &
+        C%at(1)%p%a(i,j+h)                           &
+      ) -                                            &
+      F(                                             &
+        psi%at(n)%p%a(i,j-1), psi%at(n)%p%a(i,j  ),  &
+        C%at(1)%p%a(i,j-h)                           &
+      )                                              &
+    )   
+
+    contains 
+    elemental function F(psi_l, psi_r, C)
+      real :: F
+      real, intent(in) :: psi_l, psi_r, C
+    end function
+  end subroutine
 end module
 !listing07

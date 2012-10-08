@@ -10,6 +10,7 @@ program test_arrvec
   print*, psi%at(0)%p%a(1,1)
   psi%at(0)%p%a(1,1) = 10
   print*, psi%at(0)%p%a(1,1)
+  print*, psi%at(-2)%p%a(1,1)
 
   call psi%dtor
   deallocate(psi)

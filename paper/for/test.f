@@ -26,6 +26,7 @@ program test
 
   call init
   call slv%solve(nt)
+  print*, slv%state()
   call slv%dtor
 
   contains
