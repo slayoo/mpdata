@@ -2,73 +2,76 @@
 #include "listings.hpp"
 #define GNUPLOT_ENABLE_BLITZ
 #include <gnuplot-iostream/gnuplot-iostream.h>
+enum {x, y};
 
-template <class slv_t>
-void init(slv_t &slv, const int nx, const int ny)
-{
+template <class T>
+void setup(T &solver, int n[2], float C[2]) {
   blitz::firstIndex i;
   blitz::secondIndex j;
-  slv.state() = exp(
-    -sqr(i-nx/2.) / (2.*pow(nx/10,2))
-    -sqr(j-ny/2.) / (2.*pow(ny/10,2))
+  solver.state() = exp(
+    -sqr(i-n[x]/2.) / (2.*pow(n[x]/10, 2))
+    -sqr(j-n[y]/2.) / (2.*pow(n[y]/10, 2))
   );  
-  slv.Cx() = .5; 
-  slv.Cy() = .25;
+  solver.Cx() = C[x]; 
+  solver.Cy() = C[y];
 }
 
-int main()
-{
+int main() {
+  int n[] = {24, 24}, nt = 96;
+  float C[] = {.5, .25};
   Gnuplot gp;
-  gp << 
-    "set term pdf size 10cm, 30cm\n"
-    "set output 'figure.pdf'\n"
-    "set nosurface\n"
-    "set border 4095\n"
-    "unset xtics\n"
-    "unset ytics\n"
-    "set ticslevel 0\n"
-    "set cbrange [0:1.1]\n"
-    "set zrange [0:1.1]\n"
-    "set multiplot layout 4,1\n"
-    "set pm3d\n";
-
-  int nx = 32, ny = 32, nt = 128;
-  std::string fmt;
+  gp << "set term pdf size 10cm, 30cm\n" 
+     << "set output 'figure.pdf'\n"     
+     << "set multiplot layout 4,1\n" 
+     << "set border 4095\n"
+     << "set xtics out\n"
+     << "set ytics out\n"
+     << "unset ztics\n"    
+     << "set xlabel 'X'\n"
+     << "set ylabel 'Y'\n"
+     << "set xrange [0:" << n[x]-1 << "]\n"   
+     << "set yrange [0:" << n[y]-1 << "]\n"   
+     << "set zrange [-.666:1]\n"   
+     << "set cbrange [-.025:1.025]\n"     
+     << "set palette maxcolors 42\n"
+     << "set pm3d at b\n";
+  std::string binfmt;
   {
-    solver_2D<mpdata<1>, cyclic<0>, cyclic<1>> 
-      slv(nx, ny);
-    init(slv, nx, ny);
-    fmt = gp.binfmt(slv.state());
-    gp << 
-      "set title 't=0'\n";
-      "splot '-' binary" << fmt << " notitle\n";
-    gp.sendBinary(slv.state().copy());
-
-    slv.solve(nt);
-    gp << 
-      "set title 'donorcell @ t=" << nt << "'\n";
-      "splot '-' binary" << fmt << " notitle\n";
-    gp.sendBinary(slv.state().copy());
-  }
-  {
-    solver_2D<mpdata<2>, cyclic<0>, cyclic<1>> 
-      slv(nx, ny); 
-    init(slv, nx, ny); 
-    slv.solve(nt);
-    gp << 
-      "set title 'mpdata<2> @ t=" << nt << "'\n";
-      "splot '-' binary" << fmt << " notitle\n";
-    gp.sendBinary(slv.state().copy());
-  }
-  {
-    solver_2D<mpdata<3>, cyclic<0>, cyclic<1>> 
-      slv(nx, ny); 
-    init(slv, nx, ny); 
-    slv.solve(nt); 
-    gp << 
-      "set title 'mpdata<3> @ t=" << nt << "'\n";
-      "splot '-' binary" << fmt << " notitle\n";
-    gp.sendBinary(slv.state().copy());
+    solver_2D<mpdata<1>, 
+      cyclic<x>, cyclic<y>> solver(n[x],n[y]);
+    setup(solver, n, C);
+    binfmt = gp.binfmt(solver.state());
+    gp << "set title 't=0'\n"
+       << "splot '-' binary" << binfmt
+       << "with lines notitle\n";
+    gp.sendBinary(solver.state().copy());
+    solver.solve(nt);
+    gp << "set title 'donorcell t="<<nt<<"'\n"
+       << "splot '-' binary" << binfmt
+       << "with lines notitle\n";
+    gp.sendBinary(solver.state().copy());
+  } {
+    const int it = 2;
+    solver_2D<mpdata<it>, 
+      cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
+    setup(solver, n, C); 
+    solver.solve(nt);
+    gp << "set title 'mpdata<" << it << "> "
+       << "t=" << nt << "'\n"
+       << "splot '-' binary" << binfmt
+       << "with lines notitle\n";
+    gp.sendBinary(solver.state().copy());
+  } {
+    const int it = 4;
+    solver_2D<mpdata<it>, 
+      cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
+    setup(solver, n, C); 
+    solver.solve(nt); 
+    gp << "set title 'mpdata<" << it << "> "
+       << "t=" << nt << "'\n"
+       << "splot '-' binary" << binfmt
+       << "with lines notitle\n";
+    gp.sendBinary(solver.state().copy());
   }
 }
 //listing17

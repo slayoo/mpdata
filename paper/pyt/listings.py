@@ -18,7 +18,9 @@ class Shift():
 #listing02
 one = Shift(1,1) 
 hlf = Shift(1,0)
-two = Shift(2,2)
+#listing02
+def pi(d, idx): 
+  return (idx[d], idx[d-1])
 #listing03
 class Solver_2D(object):
   def __init__(self, adv, bcx, bcy, nx, ny):
@@ -66,32 +68,30 @@ class Cyclic(object):
     self.rght_halo = slice(i.stop, i.stop + hlo)
     self.left_edge = slice(i.start, i.start + hlo)
 
-  def fill_halos(self, psi_arg):
-    psi = psi_arg.swapaxes(0, self.d) # TODO: does it work in 3D?
-    psi[self.left_halo] = psi[self.rght_edge]
-    psi[self.rght_halo] = psi[self.left_edge]
+  def fill_halos(self, psi):
+    psi[pi(self.d, [self.left_halo, slice(None)])] = psi[pi(self.d, [self.rght_edge, slice(None)])]
+    psi[pi(self.d, [self.rght_halo, slice(None)])] = psi[pi(self.d, [self.left_edge, slice(None)])]
 #listing05
 def f(psi_l, psi_r, C): 
   return numpy.where(C >= 0, psi_l * C, psi_r * C)
 #listing06
-def donorcell_1D(psi_arg, C_arg, i, j, d): 
-  psi = psi_arg.swapaxes(0,d)
-  C = C_arg.swapaxes(0,d)
+def donorcell_1D(d, psi, C, i, j): 
   return (
-    f(psi[i,   j], psi[i+one, j], C[i+hlf, j]) - 
-    f(psi[i-one, j], psi[i,   j], C[i-hlf, j]) 
-  ).swapaxes(0,d)
+    f(psi[pi(d, [i,     j])], psi[pi(d, [i+one, j])], C[pi(d, [i+hlf, j])]) - 
+    f(psi[pi(d, [i-one, j])], psi[pi(d, [i,     j])], C[pi(d, [i-hlf, j])]) 
+  )
 #listing07
 def donorcell_2D(psi, n, C, i, j):
   psi[n+1][i,j] = (psi[n][i,j] 
-    - donorcell_1D(psi[n], C[0], i, j, 0)
-    - donorcell_1D(psi[n], C[1], j, i, 1)
-  ) # loopa po wymiarach???
+    - donorcell_1D(0, psi[n], C[0], i, j)
+    - donorcell_1D(1, psi[n], C[1], j, i)
+  )
 #listing08
 class Mpdata(object):
   def __init__(self, n_iters):
     self.n_steps = n_iters
     self.n_halos = n_iters
+  	
 
   def op_2D(self, psi, n, C, i, j, step):
     donorcell_2D(psi, n, C, i, j)
