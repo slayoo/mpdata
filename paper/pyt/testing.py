@@ -154,7 +154,7 @@ class KnownValues(unittest.TestCase):
 
     def testMpdata(self):
         for nx, ny, nt, cx, cy, psi_in, psi_out in self.knownValue:
-             slv = Solver_2D(Mpdata(1), Cyclic, Cyclic, nx, ny)
+             slv = Solver_2D(Mpdata, 1, Cyclic, Cyclic, nx, ny)
              slv.state()[:] = psi_in
              slv.Cx()[:] = cx
              slv.Cy()[:] = cy
