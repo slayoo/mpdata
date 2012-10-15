@@ -70,26 +70,23 @@ def pi(d, idx):
 class Cyclic(object):
   # ctor
   def __init__(self, d, i, hlo): 
-    self.d = d
-    self.left_halo = [
+    self.left_halo = pi(d, [
       slice(i.start-hlo, i.start), slice(None)
-    ]
-    self.rght_edge = [
+    ])
+    self.rght_edge = pi(d, [
       slice(i.stop-hlo, i.stop),   slice(None)
-    ]
-    self.rght_halo = [
+    ])
+    self.rght_halo = pi(d, [
       slice(i.stop, i.stop+hlo),   slice(None)
-    ]
-    self.left_edge = [
+    ])
+    self.left_edge = pi(d, [
       slice(i.start, i.start+hlo), slice(None)
-    ]
+    ])
 
   # method invoked by the solver
   def fill_halos(self, psi):
-    psi[  pi(self.d, self.left_halo)] = (
-      psi[pi(self.d, self.rght_edge)])
-    psi[  pi(self.d, self.rght_halo)] = (
-      psi[pi(self.d, self.left_edge)])
+    psi[self.left_halo] = psi[self.rght_edge]
+    psi[self.rght_halo] = psi[self.left_edge]
 #listing07
 def f(psi_l, psi_r, C): 
   return (
@@ -98,6 +95,13 @@ def f(psi_l, psi_r, C):
   )
 #listing08
 def donorcell(d, psi, C, i, j): 
+  print i
+  print j
+  print i+hlf
+  print pi(d, [i+hlf, j])
+  print (psi[pi(d, [i,     j])]).shape
+  print (psi[pi(d, [i+one, j])]).shape
+  print C[pi(d, [i+hlf, j])].shape
   return (
     f(
       psi[pi(d, [i,     j])], 
@@ -140,36 +144,43 @@ def b_op(d, psi, i, j):
 #listing13
 def antidiff_2D(d, psi, i, j, C):
   return (
-    abs(C[d]) 
-    * (1 - abs(C[d])) 
+    abs(C[d][pi(d, [i+hlf, j])]) 
+    * (1 - abs(C[d][pi(d, [i+hlf, j])])) 
     * a_op(d, psi, i, j)
-    - C[d] 
-    * 0.25 (
+    - C[d][pi(d, [i+hlf, j])] 
+    * 0.25 * (
       C[d-1][pi(d, [i+one, j+hlf])] + 
       C[d-1][pi(d, [i,     j+hlf])] +
       C[d-1][pi(d, [i+one, j-hlf])] + 
       C[d-1][pi(d, [i,     j-hlf])] 
     )
-    * b_op(d, psi, i, j))
+    * b_op(d, psi, i, j)
+  )
 #listing14
 class Mpdata(object):
   def __init__(self, n_iters, nx, ny):
     self.n_steps = n_iters
     self.n_halos = n_iters
+    hlo = self.n_halos
     self.tmp0 = (
-      numpy.empty((
-        nx + 1 + 2 * self.n_halos, 
-        ny + 2 * self.n_halos)),
-      numpy.empty((
-        nx + 2 * self.n_halos, 
-        ny + 1 + 2 * self.n_halos
-      ))
+      numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
+      numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
     )
+    if n_iters >= 2:
+      self.tmp1 = (
+        numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
+        numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
+      )
 
   def op_2D(self, psi, n, C, i, j, step):
-    #TODO...
-    #self.tmp0[0] = antidiff_2D(0, psi[n], i, j, C)
-    #self.tmp0[1] = antidiff_2D(1, psi[n], i, j, C)
-    donorcell_2D(psi, n, C, i, j)
+    im = slice(i.start - 1, i.stop)
+    jm = slice(j.start - 1, j.stop)
+    self.tmp0[0][im+hlf, j] = (
+      antidiff_2D(0, psi[n], im, j, C))
+    self.tmp0[1][i, jm+hlf] = (
+      antidiff_2D(1, psi[n], jm, i, C))
+    if step == 0:
+      donorcell_2D(psi, n, C, i, j)
+    else:
+      pass
 #listing15
-

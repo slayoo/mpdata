@@ -33,14 +33,20 @@ module arrvec_m
     this%inited = .false.
   end subroutine
 
-  subroutine arrvec_init(this, n, i_min, i_max, j_min, j_max)
+  subroutine arrvec_init(this, n,    &
+    i_min, i_max, j_min, j_max       &
+  )
     class(arrvec_t) :: this
-    integer, intent(in) :: n, i_min, i_max, j_min, j_max
+    integer, intent(in) :: n,        &
+      i_min, i_max, j_min, j_max
 
     allocate(this%at(n)%p)
-    allocate(this%at(n)%p%a(i_min : i_max, j_min : j_max))
+    allocate(this%at(n)%p%a(         &
+      i_min : i_max, j_min : j_max   &
+    ))
     this%inited(n) = .true.
-    this%at(n - size(this%inited))%p => this%at(n)%p
+    this%at(n - size(this%inited))%p &
+      => this%at(n)%p
   end subroutine
 
   subroutine arrvec_dtor(this)
@@ -282,27 +288,30 @@ module mpdata_m
     integer, intent(in) :: n, s
     integer, intent(in) :: i(:), j(:)
 
-    psi%at(n+1)%p%a(i,j) = psi%at(n)%p%a(i,j) - (    &
-      F(                                             &
-        psi%at( n )%p%a( i,   j ),  &
-        psi%at( n )%p%a( i+1, j ),  &
-        C%at( 0 )%p%a( i + h, j )   &
-      ) -                                            &
-      F(                                             &
-        psi%at( n )%p%a( i-1, j ),  &
-        psi%at( n )%p%a( i,   j ),  &
-        C%at( 0 )%p%a( i-h, j )     &
-      )                                              &
-    ) - (                                            &
-      F(                                             &
-        psi%at(n)%p%a(i,j  ), psi%at(n)%p%a(i,j+1),  &
-        C%at(1)%p%a(i,j+h)                           &
-      ) -                                            &
-      F(                                             &
-        psi%at(n)%p%a(i,j-1), psi%at(n)%p%a(i,j  ),  &
-        C%at(1)%p%a(i,j-h)                           &
-      )                                              &
-    )   
+    psi%at( n+1 )%p%a( i, j ) =        &
+      psi%at( n )%p%a( i, j ) - (      &
+        F(                             &
+          psi%at( n )%p%a( i,   j ),   &
+          psi%at( n )%p%a( i+1, j ),   &
+            C%at( 0 )%p%a( i+h, j )    &
+        ) -                            &
+        F(                             &
+          psi%at( n )%p%a( i-1, j ),   &
+          psi%at( n )%p%a( i,   j ),   &
+            C%at( 0 )%p%a( i-h, j )    &
+        )                              &
+      ) - (                            &
+        F(                             &
+          psi%at( n )%p%a( i, j   ),   &
+          psi%at( n )%p%a( i, j+1 ),   &
+            C%at( 1 )%p%a( i, j+h )    &
+        ) -                            &
+        F(                             &
+          psi%at( n )%p%a( i, j-1 ),   &
+          psi%at( n )%p%a( i, j   ),   &
+            C%at( 1 )%p%a( i, j-h )    &
+        )                              &
+      )   
 
     contains 
     elemental function F(psi_l, psi_r, C)
