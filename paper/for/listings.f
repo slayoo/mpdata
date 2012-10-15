@@ -1,4 +1,7 @@
 !listing00
+! code licensed under the terms of GNU GPL v3
+! copyright holder: University of Warsaw
+!listing01
 module arrvec_m
   implicit none
 
@@ -53,7 +56,7 @@ module arrvec_m
     deallocate(this%at)
   end subroutine
 end module
-!listing01
+!listing02
 module arakawa_c_m
   implicit none
 
@@ -91,7 +94,7 @@ module arakawa_c_m
     mh = i
   end function
 end module
-!listing02
+!listing03
 module adv_m
   use arrvec_m
   implicit none
@@ -113,7 +116,7 @@ module adv_m
     end subroutine
   end interface
 end module
-!listing03
+!listing04
 module bcd_m
   use arrvec_m
   implicit none
@@ -132,7 +135,7 @@ module bcd_m
     end subroutine
   end interface
 end module
-!listing04
+!listing05
 module solver_2D_m
   use arrvec_m
   use adv_m
@@ -229,7 +232,7 @@ module solver_2D_m
     )
   end function
 end module
-!listing05
+!listing06
 module cyclic_m
   use bcd_m
   implicit none
@@ -253,7 +256,7 @@ module cyclic_m
     !psi() = psi()
   end subroutine
 end module
-!listing06
+!listing07
 module mpdata_m
   use adv_m
   implicit none
@@ -308,4 +311,4 @@ module mpdata_m
     end function
   end subroutine
 end module
-!listing07
+!listing08
