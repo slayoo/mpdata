@@ -64,24 +64,24 @@ class Solver_2D(object):
   def Cy(self):
     return self.C[1]
 #listing05
-def pi(d, idx): 
+def pi(d, *idx): 
   return (idx[d], idx[d-1])
 #listing06
 class Cyclic(object):
   # ctor
   def __init__(self, d, i, hlo): 
-    self.left_halo = pi(d, [
+    self.left_halo = pi(d, 
       slice(i.start-hlo, i.start), slice(None)
-    ])
-    self.rght_edge = pi(d, [
+    )
+    self.rght_edge = pi(d, 
       slice(i.stop-hlo, i.stop),   slice(None)
-    ])
-    self.rght_halo = pi(d, [
+    )
+    self.rght_halo = pi(d, 
       slice(i.stop, i.stop+hlo),   slice(None)
-    ])
-    self.left_edge = pi(d, [
+    )
+    self.left_edge = pi(d, 
       slice(i.start, i.start+hlo), slice(None)
-    ])
+    )
 
   # method invoked by the solver
   def fill_halos(self, psi):
@@ -95,23 +95,16 @@ def f(psi_l, psi_r, C):
   )
 #listing08
 def donorcell(d, psi, C, i, j): 
-  print i
-  print j
-  print i+hlf
-  print pi(d, [i+hlf, j])
-  print (psi[pi(d, [i,     j])]).shape
-  print (psi[pi(d, [i+one, j])]).shape
-  print C[pi(d, [i+hlf, j])].shape
   return (
     f(
-      psi[pi(d, [i,     j])], 
-      psi[pi(d, [i+one, j])], 
-        C[pi(d, [i+hlf, j])]
+      psi[pi(d, i,     j)], 
+      psi[pi(d, i+one, j)], 
+        C[pi(d, i+hlf, j)]
     ) - 
     f(
-      psi[pi(d, [i-one, j])], 
-      psi[pi(d, [i,     j])], 
-        C[pi(d, [i-hlf, j])]
+      psi[pi(d, i-one, j)], 
+      psi[pi(d, i,     j)], 
+        C[pi(d, i-hlf, j)]
     ) 
   )
 #listing09
@@ -126,33 +119,33 @@ def frac(nom, den):
 #listing11
 def a_op(d, psi, i, j):
   return frac(
-    psi[pi(d, [i+one, j])] - psi[pi(d, [i, j])],
-    psi[pi(d, [i+one, j])] + psi[pi(d, [i, j])]
+    psi[pi(d, i+one, j)] - psi[pi(d, i, j)],
+    psi[pi(d, i+one, j)] + psi[pi(d, i, j)]
   )
 #listing12
 def b_op(d, psi, i, j):
   return frac(
-      psi[pi(d, [i+one, j+one])] 
-    + psi[pi(d, [i,     j+one])] 
-    - psi[pi(d, [i+one, j-one])] 
-    - psi[pi(d, [i,     j-one])],
-      psi[pi(d, [i+one, j+one])] 
-    + psi[pi(d, [i,     j+one])] 
-    + psi[pi(d, [i+one, j-one])] 
-    + psi[pi(d, [i,     j-one])]
+      psi[pi(d, i+one, j+one)] 
+    + psi[pi(d, i,     j+one)] 
+    - psi[pi(d, i+one, j-one)] 
+    - psi[pi(d, i,     j-one)],
+      psi[pi(d, i+one, j+one)] 
+    + psi[pi(d, i,     j+one)] 
+    + psi[pi(d, i+one, j-one)] 
+    + psi[pi(d, i,     j-one)]
   )
 #listing13
 def antidiff_2D(d, psi, i, j, C):
   return (
-    abs(C[d][pi(d, [i+hlf, j])]) 
-    * (1 - abs(C[d][pi(d, [i+hlf, j])])) 
+    abs(C[d][pi(d, i+hlf, j)]) 
+    * (1 - abs(C[d][pi(d, i+hlf, j)])) 
     * a_op(d, psi, i, j)
-    - C[d][pi(d, [i+hlf, j])] 
+    - C[d][pi(d, i+hlf, j)] 
     * 0.25 * (
-      C[d-1][pi(d, [i+one, j+hlf])] + 
-      C[d-1][pi(d, [i,     j+hlf])] +
-      C[d-1][pi(d, [i+one, j-hlf])] + 
-      C[d-1][pi(d, [i,     j-hlf])] 
+      C[d-1][pi(d, i+one, j+hlf)] + 
+      C[d-1][pi(d, i,     j+hlf)] +
+      C[d-1][pi(d, i+one, j-hlf)] + 
+      C[d-1][pi(d, i,     j-hlf)] 
     )
     * b_op(d, psi, i, j)
   )
