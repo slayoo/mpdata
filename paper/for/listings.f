@@ -79,25 +79,20 @@ module arakawa_c_m
     module procedure mh
   end interface
 
-  ! TODO
-  !interface operator (^)
-  !  module procedure ext
-  !end interface
-
   contains
 
-  elemental function ph(i, h)
+  elemental function ph(i, h) result (return)
     integer, intent(in) :: i
     type(half_t), intent(in) :: h
-    integer :: ph
-    ph = i + 1
+    integer :: return
+    return = i + 1
   end function
 
-  elemental function mh(i, h)
+  elemental function mh(i, h) result (return)
     integer, intent(in) :: i 
     type(half_t), intent(in) :: h
-    integer :: mh
-    mh = i
+    integer :: return
+    return = i
   end function
 end module
 !listing03
@@ -118,7 +113,7 @@ module adv_m
       class(adv_t) :: this
       class(arrvec_t), pointer :: psi, C
       integer, intent(in) :: n, s
-      integer, intent(in) :: i(:), j(:)
+      integer, pointer, intent(in) :: i(:), j(:)
     end subroutine
   end interface
 end module
@@ -129,15 +124,27 @@ module bcd_m
 
   type, abstract :: bcd_t
     contains
-    procedure(fill_halos_i), deferred :: fill_halos
+    procedure(fill_halos_0_i), deferred :: fill_halos_0
+    procedure(fill_halos_1_i), deferred :: fill_halos_1
+    procedure(init_i), deferred :: init
   end type
  
   abstract interface 
-    subroutine fill_halos_i(this, psi)
-      import :: arrvec_t
+    subroutine fill_halos_0_i(this, psi)
       import :: bcd_t
       class(bcd_t) :: this
       real, pointer :: psi(:,:)
+    end subroutine
+    subroutine fill_halos_1_i(this, psi)
+      import :: bcd_t
+      class(bcd_t) :: this
+      real, pointer :: psi(:,:)
+    end subroutine
+    subroutine init_i(this, ij, hlo)
+      import :: bcd_t
+      class(bcd_t) :: this
+      integer, pointer :: ij(:)
+      integer :: hlo
     end subroutine
   end interface
 end module
@@ -158,6 +165,8 @@ module solver_2D_m
     procedure :: ctor  => solver_2D_ctor 
     procedure :: solve => solver_2D_solve
     procedure :: state => solver_2D_state
+    procedure :: Cx => solver_2D_Cx
+    procedure :: Cy => solver_2D_Cy
     procedure :: dtor  => solver_2D_dtor 
   end type 
 
@@ -171,6 +180,14 @@ module solver_2D_m
     class(bcd_t), pointer :: bcx, bcy
 
     allocate(this%i(0:nx-1), this%j(0:ny-1))
+    block
+      integer :: c
+      this%i(0:nx-1) = (/ (c, c=0, nx-1) /)
+      this%j(0:ny-1) = (/ (c, c=0, ny-1) /)
+    end block
+
+    call bcx%init(this%i, adv%n_halos)
+    call bcy%init(this%j, adv%n_halos)
 
     block
       integer :: i, hlo
@@ -181,19 +198,21 @@ module solver_2D_m
       
       do i=0, 1
         call this%psi%init(i,         &
-          -hlo - h, nx - 1 + hlo + h, &
-          -hlo    , ny - 1 + hlo      &
+          -hlo, nx - 1 + hlo, &
+          -hlo, ny - 1 + hlo  &
         ) 
       end do
 
       allocate(this%C)
       call this%C%ctor(2)
-      do i=0, 1 !TODO: different dims!!!
-        call this%C%init(i,           &
-          -hlo    , nx - 1 + hlo,     &
-          -hlo - h, ny - 1 + hlo + h  &
-        )
-      end do
+      call this%C%init(0,           &
+        -hlo - h, nx - 1 + hlo + h, &
+        -hlo    , ny - 1 + hlo      &
+      )
+      call this%C%init(1,           &
+        -hlo    , nx - 1 + hlo,     &
+        -hlo - h, ny - 1 + hlo + h  &
+      )
     end block
 
     this%n = 0
@@ -205,7 +224,7 @@ module solver_2D_m
 
   subroutine solver_2D_dtor(this)
     class(solver_2D_t) :: this
-    call this%psi%dtor
+    call this%psi%dtor()
     deallocate(this%i, this%j, this%psi)
   end subroutine
   
@@ -217,54 +236,130 @@ module solver_2D_m
       integer :: t, s 
       s = 1
       do t = 1, nt
-        !do s = 1, adv%n_steps
-          !this%bcx%fill_halos(this%psi(n))
-          !this%bcy%fill_halos(this%psi(n))
-          call this%adv%op_2D( &
-            this%psi, this%n, this%C, this%i, this%j, s &
-          )
+        do s = 1, this%adv%n_steps
+          call this%bcx%fill_halos_0(   &
+            this%psi%at(this%n)%p%a)
+          call this%bcy%fill_halos_1(   &
+            this%psi%at(this%n)%p%a)
+          call this%adv%op_2D(        &
+            this%psi, this%n, this%C, this%i, this%j, s)
           this%n = mod(this%n + 1 + 2, 2) - 2
-        !end do
+        end do
       end do
     end block
   end subroutine
 
-  function solver_2D_state(this) result (state)
+  function solver_2D_state(this) result (return)
     class(solver_2D_t) :: this
-    real, pointer :: state(:,:)
-    state => this%psi%at(this%n)%p%a( &
+    real, pointer :: return(:,:)
+    return => this%psi%at(this%n)%p%a( &
       this%i(0) : this%i(size(this%i)-1), &
       this%j(0) : this%j(size(this%j)-1)  &
     )
+  end function
+
+  function solver_2D_Cx(this) result (return)
+    class(solver_2D_t) :: this
+    real, pointer :: return(:,:)
+    return => this%C%at(0)%p%a
+  end function
+
+  function solver_2D_Cy(this) result (return)
+    class(solver_2D_t) :: this
+    real, pointer :: return(:,:)
+    return => this%C%at(1)%p%a
   end function
 end module
 !listing06
 module cyclic_m
   use bcd_m
+  use adv_m
   implicit none
   
   type, extends(bcd_t) :: cyclic_t
+    integer, pointer :: left_halo(:), rght_halo(:)
+    integer, pointer :: left_edge(:), rght_edge(:)
     contains
-    procedure :: ctor => cyclic_ctor 
-    procedure :: fill_halos => cyclic_fill_halos
+    procedure :: init => cyclic_init
+    procedure :: dtor => cyclic_dtor 
+    procedure :: fill_halos_0 => cyclic_fill_halos_0
+    procedure :: fill_halos_1 => cyclic_fill_halos_1
   end type
 
   contains
 
-  subroutine cyclic_ctor(this)
+  subroutine cyclic_init(this, ij, hlo)
     class(cyclic_t) :: this
+    integer, pointer :: ij(:)
+    integer :: hlo
+    allocate(this%left_halo(ij(0) - hlo : ij(0) - 1)) 
+    allocate(this%rght_halo(ij(size(ij)) : ij(size(ij) - 1 + hlo))) 
+    allocate(this%left_edge(ij(0) : ij(0) - 1 + hlo))
+    allocate(this%rght_edge(ij(size(ij) - hlo) : ij(size(ij)- 1)))
   end subroutine
 
-  subroutine cyclic_fill_halos(this, psi)
+  subroutine cyclic_dtor(this)
+    class(cyclic_t) :: this
+    deallocate(this%left_halo)
+    deallocate(this%rght_halo)
+    deallocate(this%left_edge)
+    deallocate(this%rght_edge)
+  end subroutine
+
+  subroutine cyclic_fill_halos_0(this, psi)
     class(cyclic_t) :: this
     real, pointer :: psi(:,:)
-    !psi() = psi()
-    !psi() = psi()
+    psi(this%left_halo, :) = psi(this%rght_edge, :)
+    psi(this%rght_halo, :) = psi(this%left_edge, :)
+  end subroutine
+
+  subroutine cyclic_fill_halos_1(this, psi)
+    class(cyclic_t) :: this
+    real, pointer :: psi(:,:)
+    psi(:, this%left_halo) = psi(:, this%rght_edge)
+    psi(:, this%rght_halo) = psi(:, this%left_edge)
   end subroutine
 end module
 !listing07
+module donorcell_m
+  use arakawa_c_m
+  implicit none
+  contains 
+
+  elemental function F(psi_l, psi_r, C) result (return)
+    real :: return
+    real, intent(in) :: psi_l, psi_r, C
+    return = (                                 &
+      .5 * (C + abs(C)) * psi_l +              &
+      .5 * (C - abs(C)) * psi_r                &
+    )
+  end function
+ 
+  function donorcell_0(psi, C, i, j) result (return)
+    integer, pointer, intent(in) :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):size(j)-1)
+    real, pointer, intent(in) :: psi(:,:), C(:,:)
+    return = (                                 &
+      F(psi(i,   j), psi(i+1, j), C(i+h, j)) - &
+      F(psi(i-1, j), psi(i,   j), C(i-h, j))   &
+    )
+  end function
+
+  function donorcell_1(psi, C, i, j) result (return)
+    integer, pointer, intent(in) :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    real, pointer, intent(in) :: psi(:,:), C(:,:)
+    return = (                                 &
+      F(psi(i, j  ), psi(i, j+1), C(i, j+h)) - &
+      F(psi(i, j-1), psi(i,   j), C(i, j-h))   &
+    )
+  end function
+
+end module
+!listing08
 module mpdata_m
   use adv_m
+  use donorcell_m
   implicit none
   
   type, extends(adv_t) :: mpdata_t
@@ -277,47 +372,19 @@ module mpdata_m
 
   subroutine mpdata_ctor(this)
     class(mpdata_t) :: this
-    this%n_steps = 2
-    this%n_halos = 2
+    this%n_steps = 1 !TODO
+    this%n_halos = 1 !TODO
   end subroutine
 
   subroutine mpdata_op_2D(this, psi, n, C, i, j, s)
-    use arakawa_c_m
     class(mpdata_t) :: this
     class(arrvec_t), pointer :: psi, C
     integer, intent(in) :: n, s
-    integer, intent(in) :: i(:), j(:)
+    integer, pointer, intent(in) :: i(:), j(:)
 
-    psi%at( n+1 )%p%a( i, j ) =        &
-      psi%at( n )%p%a( i, j ) - (      &
-        F(                             &
-          psi%at( n )%p%a( i,   j ),   &
-          psi%at( n )%p%a( i+1, j ),   &
-            C%at( 0 )%p%a( i+h, j )    &
-        ) -                            &
-        F(                             &
-          psi%at( n )%p%a( i-1, j ),   &
-          psi%at( n )%p%a( i,   j ),   &
-            C%at( 0 )%p%a( i-h, j )    &
-        )                              &
-      ) - (                            &
-        F(                             &
-          psi%at( n )%p%a( i, j   ),   &
-          psi%at( n )%p%a( i, j+1 ),   &
-            C%at( 1 )%p%a( i, j+h )    &
-        ) -                            &
-        F(                             &
-          psi%at( n )%p%a( i, j-1 ),   &
-          psi%at( n )%p%a( i, j   ),   &
-            C%at( 1 )%p%a( i, j-h )    &
-        )                              &
-      )   
-
-    contains 
-    elemental function F(psi_l, psi_r, C)
-      real :: F
-      real, intent(in) :: psi_l, psi_r, C
-    end function
+    psi%at( n+1 )%p%a( i, j ) = psi%at( n )%p%a( i, j ) &
+      - donorcell_0(psi%at(n)%p%a, C%at(0)%p%a, i, j) &
+      - donorcell_1(psi%at(n)%p%a, C%at(1)%p%a, i, j)      
   end subroutine
 end module
-!listing08
+!listing09

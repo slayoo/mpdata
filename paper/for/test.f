@@ -1,4 +1,3 @@
-!listing09
 program test
   use solver_2D_m
   use mpdata_m
@@ -6,35 +5,45 @@ program test
   implicit none
 
   type(solver_2D_t) :: slv
-
   type(mpdata_t), target :: adv
-  class(adv_t), pointer :: adv_p
-
   type(cyclic_t), target :: bcx, bcy
-  class(bcd_t), pointer :: bcx_p, bcy_p
+  integer :: nx = 3, ny = 2, nt = 1
 
-  integer :: nx = 3, ny = 2, nt = 4
+  call adv%ctor()
 
-  call adv%ctor
-  call bcx%ctor
-  call bcy%ctor
-  adv_p => adv
-  bcx_p => bcx
-  bcy_p => bcy
-  
-  call slv%ctor(nx, ny, adv_p, bcx_p, bcy_p)
+  block
+    class(bcd_t), pointer :: bcx_p, bcy_p
+    class(adv_t), pointer :: adv_p
+    adv_p => adv
+    bcx_p => bcx
+    bcy_p => bcy
+    call slv%ctor(nx, ny, adv_p, bcx_p, bcy_p)
+  end block
 
-  call init
-  call slv%solve(nt)
-  print*, slv%state()
-  call slv%dtor
+  call init()
+  print*, ""
+  print '(3F6.3)', slv%state()
+  call slv%solve(1)
+  print*, ""
+  print '(3F6.3)', slv%state()
+  call slv%solve(1)
+  print*, ""
+  print '(3F6.3)', slv%state()
+
+  call slv%dtor()
+  !TODO: bcx, bcy, adv dtor
 
   contains
   subroutine init
     real, dimension(:,:), pointer :: tmp
     tmp => slv%state() 
     tmp = 0
-    tmp(0:2,0:3) = 1
+    tmp(0:1,0:1) = 1
+
+    tmp => slv%Cx() 
+    tmp = 1
+
+    tmp => slv%Cy() 
+    tmp = 0
   end subroutine
 end program
-!listing10
