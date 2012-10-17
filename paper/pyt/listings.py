@@ -151,6 +151,7 @@ def antidiff_2D(d, psi, i, j, C):
   )
 #listing14
 class Mpdata(object):
+  # n_iters has to be 1 or 2; will be changed
   def __init__(self, n_iters, nx, ny):
     self.n_steps = n_iters
     self.n_halos = n_iters
@@ -159,21 +160,50 @@ class Mpdata(object):
       numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
       numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
     )
-    if n_iters >= 2:
-      self.tmp1 = (
-        numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
-        numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
-      )
+#    if n_iters > 2:
+#      self.tmp1 = (
+#        numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
+#        numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
+#      )
 
   def op_2D(self, psi, n, C, i, j, step):
-    im = slice(i.start - 1, i.stop)
-    jm = slice(j.start - 1, j.stop)
-    self.tmp0[0][im+hlf, j] = (
-      antidiff_2D(0, psi[n], im, j, C))
-    self.tmp0[1][i, jm+hlf] = (
-      antidiff_2D(1, psi[n], jm, i, C))
     if step == 0:
       donorcell_2D(psi, n, C, i, j)
     else:
-      pass
+      im = slice(i.start - 1, i.stop)
+      jm = slice(j.start - 1, j.stop)
+      self.tmp0[0][im+hlf, j] = (
+        antidiff_2D(0, psi[n], im, j, C))
+      self.tmp0[1][i, jm+hlf] = (
+        antidiff_2D(1, psi[n], jm, i, C))
+      donorcell_2D(psi, n, self.tmp0, i, j)
+
 #listing15
+
+# mpdata testing example
+def example_mpdata(n_iters, nx, ny, cx, cy, nt, psi_in):
+  slv = Solver_2D(Mpdata, n_iters, Cyclic, Cyclic, nx, ny)
+  slv.state()[:] = psi_in
+  slv.Cx()[:] = cx
+  slv.Cy()[:] = cy
+  slv.solve(nt)
+  print "cx, cy, nt", cx, cy, nt
+  print "psi in", psi_in
+  print "psi rozw", slv.state()
+  
+
+def main():
+  psi_in = numpy.array([[0, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 0]])
+  cx = 0.1
+  cy=0.5
+  nx, ny = 3, 3
+  nt = 1
+
+  for n_iters in [1,2]:
+    example_mpdata(n_iters, nx, ny, cx, cy, nt, psi_in)
+
+
+main()
+
