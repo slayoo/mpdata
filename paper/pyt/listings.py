@@ -190,30 +190,5 @@ class Mpdata(object):
 
 #listing15
 
-# mpdata testing example
-def example_mpdata(n_iters, nx, ny, cx, cy, nt, psi_in):
-  slv = Solver_2D(Mpdata, n_iters, Cyclic, Cyclic, nx, ny)
-  slv.state()[:] = psi_in
-  slv.Cx()[:] = cx
-  slv.Cy()[:] = cy
-  slv.solve(nt)
-  print "cx, cy, nt", cx, cy, nt
-  print "psi in", psi_in
-  print "psi rozw", slv.state(), '\n'
-  
 
-def main():
-  psi_in = numpy.array([[0, 0, 0],
-                      [0, 1, 0],
-                      [0, 0, 0]])
-  nx, ny = 3, 3
-  nt = 1
-
-  for (cx,cy) in [(0.1,0.5), (0.2,0.2)]:
-    for n_iters in [1,2]:
-      print "n_iters", n_iters
-      example_mpdata(n_iters, nx, ny, cx, cy, nt, psi_in)
-
-
-main()
 
