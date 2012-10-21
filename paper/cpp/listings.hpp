@@ -235,7 +235,7 @@ struct mpdata
     const int hlo = n_halos;
     tmp0.push_back(new arr_t(i^h^hlo, j^hlo));
     tmp0.push_back(new arr_t(i^hlo, j^h^hlo));
-    if (n_iters < 2) return;
+    if (n_iters <= 2) return;
     tmp1.push_back(new arr_t(i^h^hlo, j^hlo));
     tmp1.push_back(new arr_t(i^hlo, j^h^hlo));
   }
@@ -247,19 +247,22 @@ struct mpdata
     const rng_t &i, const rng_t &j, 
     const int step
   ) {
-    // chosing input/output for antidiff. C
-    const arrvec_t 
-      &C_unco = (step == 1) 
-        ? C 
-        : (step % 2) 
+    if (step == 0) 
+      donorcell_2D(psi, n, C, i, j);
+    else
+    {
+      // choosing input/output for antidiff. C
+      const arrvec_t 
+        &C_unco = (step == 1) 
+          ? C 
+          : (step % 2) 
+            ? tmp1
+            : tmp0,
+        &C_corr = (step  % 2) 
           ? tmp0 
-          : tmp1,
-      &C_corr = (step  % 2) 
-        ? tmp1 
-        : tmp0;
+          : tmp1;
 
-    // calculating the antidiffusive velocities
-    if (step > 0) {
+      // calculating the antidiffusive velocities
       const int hlo = n_steps - 1 - step;
       // extended ranges as we only use C_+1/2 
       const rng_t 
@@ -271,13 +274,10 @@ struct mpdata
       C_corr[1](i^hlo, jm+h) = antidiff_2D<1>(
         psi[n], jm, i ^ hlo, C_unco
       );
-    }
 
-    // donor-cell step with C or C_corr
-    if (step == 0) 
-      donorcell_2D(psi, n, C,      i, j);
-    else    
+      // donor-cell step 
       donorcell_2D(psi, n, C_corr, i, j);
+    }
   }
 };
 //listing17
