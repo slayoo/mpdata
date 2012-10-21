@@ -1,6 +1,7 @@
 """Unit test for listing.py using numpy function for testing"""
 from listings import *
 import numpy
+import numpy.testing
 
 knownValue = [[3,3,1,0.5,0.5,
                numpy.array([[0., 0, 0],
@@ -42,7 +43,7 @@ def testMpdata(nx, ny, nt, cx, cy, n_iters, psi_in, psi_out):
     slv.solve(nt)
     print "test dla parametrow: cx, cy, nt, n_iters", cx, cy, nt, n_iters
     print "psi rozw", slv.state(), slv.state() - psi_out
-    print "test", numpy.allclose(slv.state(), psi_out, atol=1.e-5), '\n'
+    print "test message: ", numpy.testing.assert_almost_equal(slv.state(), psi_out, decimal=5)
 
 def main():
     for nx, ny, nt, cx, cy, psi_in, psi_out1, psi_out2 in knownValue:
