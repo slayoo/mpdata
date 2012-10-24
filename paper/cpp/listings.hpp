@@ -90,45 +90,43 @@ struct solver_2D
 };
 //listing07
 template<int d> 
-struct pi;
+inline idx_t pi(const rng_t &i, const rng_t &j);
 
 template<>
-struct pi<0> : idx_t { 
-  pi(const rng_t &i, const rng_t &j) :
-    idx_t({i,j})
-  {}  
+inline idx_t pi<0>(const rng_t &i, const rng_t &j)
+{
+  return idx_t({i,j});
 };
 
 template<>
-struct pi<1> : idx_t { 
-  pi(const rng_t &j, const rng_t &i) :
-    idx_t({i,j}) 
-  {}  
+inline idx_t pi<1>(const rng_t &j, const rng_t &i) 
+{
+  return idx_t({i,j});
 }; 
 //listing08
 template<int d>
 struct cyclic
 {
   // member fields
-  pi<d> left_halo, rght_halo;
-  pi<d> left_edge, rght_edge;;
+  idx_t left_halo, rght_halo;
+  idx_t left_edge, rght_edge;;
 
   // ctor
   cyclic(
     const rng_t &i, const rng_t &j, int hlo
   ) :
-    left_halo(
+    left_halo(pi<d>(
       rng_t(i.first()-hlo, i.first()-1), j^hlo
-    ),
-    rght_edge(
+    )),
+    rght_edge(pi<d>(
       rng_t(i.last()-hlo+1, i.last()  ), j^hlo
-    ),
-    rght_halo(
+    )),
+    rght_halo(pi<d>(
       rng_t(i.last()+1, i.last()+hlo  ), j^hlo
-    ),
-    left_edge(
+    )),
+    left_edge(pi<d>(
       rng_t(i.first(), i.first()+hlo-1), j^hlo
-    )
+    ))
   {} 
 
   // method invoked by the solver
@@ -175,7 +173,7 @@ inline void donorcell_2D(
 }
 //listing12
 template<class nom_t, class den_t>
-static inline auto frac(
+inline auto frac(
   const nom_t &nom, const den_t &den
 ) return_macro(
   where(den > 0, nom / den, 0)
@@ -256,11 +254,11 @@ struct mpdata
         &C_unco = (step == 1) 
           ? C 
           : (step % 2) 
-            ? tmp1
-            : tmp0,
+            ? tmp1  // odd steps
+            : tmp0, // even steps
         &C_corr = (step  % 2) 
-          ? tmp0 
-          : tmp1;
+          ? tmp0    // odd steps
+          : tmp1;   // even steps
 
       // calculating the antidiffusive velocities
       const int hlo = n_steps - 1 - step;
