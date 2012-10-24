@@ -2,7 +2,9 @@
 # code licensed under the terms of GNU GPL v3
 # copyright holder: University of Warsaw
 #listing01
-import numpy 
+import numpy
+import pdb
+                
 #listing02
 class Shift():
   def __init__(self, plus, mnus):
@@ -51,6 +53,7 @@ class Solver_2D(object):
       for s in range(self.adv.n_steps):
         self.bcx.fill_halos(self.psi[self.n])
         self.bcy.fill_halos(self.psi[self.n])
+        #pdb.set_trace()
         self.adv.op_2D(self.psi, self.n, 
           self.C, self.i, self.j, s
         )
@@ -114,6 +117,7 @@ def donorcell_2D(psi, n, C, i, j):
     - donorcell(1, psi[n], C[1], j, i)
   )
 #listing10
+  # TO DO!!! den can be < 0
 def frac(nom, den):
   return numpy.where(den>0, nom/den, 0)
 #listing11
@@ -124,7 +128,8 @@ def a_op(d, psi, i, j):
   )
 #listing12
 def b_op(d, psi, i, j):
-  return frac(
+#  pdb.set_trace()
+  return 0.5 * frac( 
       psi[pi(d, i+one, j+one)] 
     + psi[pi(d, i,     j+one)] 
     - psi[pi(d, i+one, j-one)] 
@@ -136,6 +141,9 @@ def b_op(d, psi, i, j):
   )
 #listing13
 def antidiff_2D(d, psi, i, j, C):
+  #pdb.set_trace()
+  print  "a", d, a_op(d, psi, i, j)
+  print  "b", d, b_op(d, psi, i, j)
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
@@ -166,7 +174,9 @@ class Mpdata(object):
 #        numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
 #      )
 
+
   def op_2D(self, psi, n, C, i, j, step):
+    #pdb.set_trace()
     if step == 0:
       donorcell_2D(psi, n, C, i, j)
     else:
@@ -180,30 +190,5 @@ class Mpdata(object):
 
 #listing15
 
-# mpdata testing example
-def example_mpdata(n_iters, nx, ny, cx, cy, nt, psi_in):
-  slv = Solver_2D(Mpdata, n_iters, Cyclic, Cyclic, nx, ny)
-  slv.state()[:] = psi_in
-  slv.Cx()[:] = cx
-  slv.Cy()[:] = cy
-  slv.solve(nt)
-  print "cx, cy, nt", cx, cy, nt
-  print "psi in", psi_in
-  print "psi rozw", slv.state()
-  
 
-def main():
-  psi_in = numpy.array([[0, 0, 0],
-                      [0, 1, 0],
-                      [0, 0, 0]])
-  cx = 0.1
-  cy=0.5
-  nx, ny = 3, 3
-  nt = 1
-
-  for n_iters in [1,2]:
-    example_mpdata(n_iters, nx, ny, cx, cy, nt, psi_in)
-
-
-main()
 
