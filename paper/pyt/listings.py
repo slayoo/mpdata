@@ -117,7 +117,6 @@ def donorcell_2D(psi, n, C, i, j):
     - donorcell(1, psi[n], C[1], j, i)
   )
 #listing10
-  # TO DO!!! den can be < 0
 def frac(nom, den):
   return numpy.where(den>0, nom/den, 0)
 #listing11
@@ -142,6 +141,7 @@ def b_op(d, psi, i, j):
 #listing13
 def antidiff_2D(d, psi, i, j, C):
   #pdb.set_trace()
+  print "ind", i,j
   print  "a", d, a_op(d, psi, i, j)
   print  "b", d, b_op(d, psi, i, j)
   return (
@@ -168,11 +168,11 @@ class Mpdata(object):
       numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
       numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
     )
-#    if n_iters > 2:
-#      self.tmp1 = (
-#        numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
-#        numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
-#      )
+    if n_iters > 2:
+      self.tmp1 = (
+        numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
+        numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
+      )
 
 
   def op_2D(self, psi, n, C, i, j, step):
@@ -180,13 +180,21 @@ class Mpdata(object):
     if step == 0:
       donorcell_2D(psi, n, C, i, j)
     else:
+      if step == 1:
+        C_unco, C_corr = C, self.tmp0
+      elif step % 2:
+        C_unco, C_corr = self.tmp1, self.tmp0
+      else:
+        C_unco, C_corr = self.tmp0, self.tmp1
+        
+
       im = slice(i.start - 1, i.stop)
       jm = slice(j.start - 1, j.stop)
-      self.tmp0[0][im+hlf, j] = (
-        antidiff_2D(0, psi[n], im, j, C))
-      self.tmp0[1][i, jm+hlf] = (
-        antidiff_2D(1, psi[n], jm, i, C))
-      donorcell_2D(psi, n, self.tmp0, i, j)
+      C_corr[0][im+hlf, j] = (
+        antidiff_2D(0, psi[n], im, j, C_unco))
+      C_corr[1][i, jm+hlf] = (
+        antidiff_2D(1, psi[n], jm, i, C_unco))
+      donorcell_2D(psi, n, C_corr, i, j)
 
 #listing15
 
