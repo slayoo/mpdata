@@ -32,8 +32,18 @@ knownValue = [[3,3,1,0.5,0.5,
                             [0, 0.1, 0]]),
                numpy.array([[0, 0,       0],
                             [0, 0.4068,  0.5011],
-                            [0, 0.0921,  0]])]
-              ]
+                            [0, 0.0921,  0]])],
+              [3,3,1,0.1,0.5,
+               numpy.array([[0., 0, 0],
+                            [0,  0, 0],
+                            [0,  0, 1]]),
+               numpy.array([[0,   0,   0.1],
+                            [0,   0.,  0.],
+                            [0.5, 0.,  0.4]]),
+               numpy.array([[0,      0.,      0.0921],
+                            [0,      0.,     0.],
+                            [0.5011, 0.,     0.4068]])]
+                ]
 
 def testMpdata(nx, ny, nt, cx, cy, n_iters, psi_in, psi_out):
     slv = Solver_2D(Mpdata, n_iters, Cyclic, Cyclic, nx, ny)
