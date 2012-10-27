@@ -107,12 +107,12 @@ module adv_m
   end type
 
   abstract interface
-    subroutine op_2D_i(this, psi, n, C, i, j, s)
+    subroutine op_2D_i(this, psi, n, C, i, j, step)
       import :: adv_t
       import :: arrvec_t
       class(adv_t) :: this
       class(arrvec_t), pointer :: psi, C
-      integer, intent(in) :: n, s
+      integer, intent(in) :: n, step
       integer, pointer, intent(in) :: i(:), j(:)
     end subroutine
   end interface
@@ -176,14 +176,14 @@ module solver_2D_m
     use arakawa_c_m
     class(solver_2D_t) :: this
     integer, intent(in) :: nx, ny
-    class(adv_t), pointer :: adv
-    class(bcd_t), pointer :: bcx, bcy
+    class(adv_t), intent(in), pointer :: adv
+    class(bcd_t), intent(in), pointer :: bcx, bcy
 
     allocate(this%i(0:nx-1), this%j(0:ny-1))
     block
       integer :: c
-      this%i(0:nx-1) = (/ (c, c=0, nx-1) /)
-      this%j(0:ny-1) = (/ (c, c=0, ny-1) /)
+      this%i = (/ (c, c=0, nx-1) /)
+      this%j = (/ (c, c=0, ny-1) /)
     end block
 
     call bcx%init(this%i, adv%n_halos)
@@ -234,9 +234,8 @@ module solver_2D_m
 
     block
       integer :: t, s 
-      s = 1
-      do t = 1, nt
-        do s = 1, this%adv%n_steps
+      do t = 0, nt-1
+        do s = 0, this%adv%n_steps-1
           call this%bcx%fill_halos_0(   &
             this%psi%at(this%n)%p%a)
           call this%bcy%fill_halos_1(   &
@@ -292,10 +291,18 @@ module cyclic_m
     class(cyclic_t) :: this
     integer, pointer :: ij(:)
     integer :: hlo
-    allocate(this%left_halo(ij(0) - hlo : ij(0) - 1)) 
-    allocate(this%rght_halo(ij(size(ij)) : ij(size(ij) - 1 + hlo))) 
-    allocate(this%left_edge(ij(0) : ij(0) - 1 + hlo))
-    allocate(this%rght_edge(ij(size(ij) - hlo) : ij(size(ij)- 1)))
+    allocate(this%left_halo(hlo))
+    allocate(this%rght_halo(hlo))
+    allocate(this%left_edge(hlo))
+    allocate(this%rght_edge(hlo))
+
+    block
+      integer :: c
+      this%left_halo = (/ (c, c = ij(0) - hlo, ij(0) - 1) /) 
+      this%rght_halo = (/ (c, c = ij(size(ij)-1) + 1, ij(size(ij)-1) + hlo) /) 
+      this%left_edge = (/ (c, c = ij(0),  ij(0) + hlo) /)
+      this%rght_edge = (/ (c, c = ij(size(ij) - hlo), ij(size(ij)-1)) /)
+    end block
   end subroutine
 
   subroutine cyclic_dtor(this)
@@ -321,7 +328,7 @@ module cyclic_m
   end subroutine
 end module
 !listing07
-module donorcell_m
+module donorcell_1D_m
   use arakawa_c_m
   implicit none
   contains 
@@ -356,13 +363,30 @@ module donorcell_m
   end function
 
 end module
+!
+module donorcell_2D_m
+  use donorcell_1D_m
+  use arrvec_m
+  implicit none
+  contains 
+  subroutine donorcell_2D(psi, n, C, i, j)  
+    class(arrvec_t), pointer :: psi, C
+    integer, intent(in) :: n
+    integer, pointer, intent(in) :: i(:), j(:)
+    
+    psi%at( n+1 )%p%a( i, j ) = psi%at( n )%p%a( i, j ) &
+      - donorcell_0(psi%at(n)%p%a, C%at(0)%p%a, i, j)   &
+      - donorcell_1(psi%at(n)%p%a, C%at(1)%p%a, i, j)      
+  end subroutine
+end module
 !listing08
 module mpdata_m
   use adv_m
-  use donorcell_m
+  use donorcell_2D_m
   implicit none
   
   type, extends(adv_t) :: mpdata_t
+    class(arrvec_t), pointer :: tmp0, tmp1 !TODO: dtor!
     contains
     procedure :: ctor => mpdata_ctor
     procedure :: op_2D => mpdata_op_2D
@@ -376,15 +400,32 @@ module mpdata_m
     this%n_halos = 1 !TODO
   end subroutine
 
-  subroutine mpdata_op_2D(this, psi, n, C, i, j, s)
+  subroutine mpdata_op_2D(this, psi, n, C, i, j, step)
     class(mpdata_t) :: this
     class(arrvec_t), pointer :: psi, C
-    integer, intent(in) :: n, s
+    integer, intent(in) :: n, step
     integer, pointer, intent(in) :: i(:), j(:)
 
-    psi%at( n+1 )%p%a( i, j ) = psi%at( n )%p%a( i, j ) &
-      - donorcell_0(psi%at(n)%p%a, C%at(0)%p%a, i, j) &
-      - donorcell_1(psi%at(n)%p%a, C%at(1)%p%a, i, j)      
+    if (step == 0) then
+      call donorcell_2D(psi, n, C, i, j)
+    else
+      block
+        class(arrvec_t), pointer :: C_corr, C_unco
+        if (step == 1) then
+          C_unco => C
+          C_corr => this%tmp0
+        else if (mod(step, 2) == 1) then
+          C_unco => this%tmp1
+          C_corr => this%tmp0
+        else
+          C_unco => this%tmp0
+          C_corr => this%tmp1
+        endif
+
+        call donorcell_2D(psi, n, C_corr, i, j)
+      end block
+    endif
+
   end subroutine
 end module
 !listing09
