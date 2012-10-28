@@ -9,7 +9,7 @@ program test
   type(cyclic_t), target :: bcx, bcy
   integer :: nx = 3, ny = 3, nt = 1
 
-  call adv%ctor()
+  call adv%ctor(2, nx, ny)
 
   block
     class(bcd_t), pointer :: bcx_p, bcy_p

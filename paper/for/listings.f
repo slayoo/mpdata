@@ -379,10 +379,53 @@ module donorcell_2D_m
       - donorcell_1(psi%at(n)%p%a, C%at(1)%p%a, i, j)      
   end subroutine
 end module
+!
+module antidiff_2D_m
+  use arrvec_m
+  use arakawa_c_m
+  implicit none
+  contains 
+  !function frac() result (return)
+  !
+  !end function
+  !function A() resutl (return)
+  !  
+  !end function
+  !function B() result (return)
+  !  
+  !end function
+  function antidiff_2D_0(psi, i, j, C) result (return)
+    integer, pointer :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    real, pointer, intent(in) :: psi(:,:)
+    class(arrvec_t), pointer :: C
+    integer, parameter :: d = 0
+ 
+    return =                           &
+      abs(C%at(d)%p%a(i+h, j))         &
+      * (1 - abs(C%at(d)%p%a(i+h, j))) &
+      - C%at(d)%p%a(i+h, j)            &
+      * .25 * (                        &
+        C%at(d-1)%p%a(i+1, j+h) +      &
+        C%at(d-1)%p%a(i,   j+h) +      &
+        C%at(d-1)%p%a(i+1, j-h) +      &
+        C%at(d-1)%p%a(i,   j-h)        &
+      )
+  end function
+  function antidiff_2D_1(psi, i, j, C) result (return)
+    integer, pointer :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    real, pointer, intent(in) :: psi(:,:)
+    class(arrvec_t), pointer :: C
+
+    return = 0  !TODO
+  end function
+end module
 !listing08
 module mpdata_m
   use adv_m
   use donorcell_2D_m
+  use antidiff_2D_m
   implicit none
   
   type, extends(adv_t) :: mpdata_t
@@ -394,10 +437,35 @@ module mpdata_m
 
   contains
 
-  subroutine mpdata_ctor(this)
+  subroutine mpdata_ctor(this, n_iters, nx, ny)
     class(mpdata_t) :: this
-    this%n_steps = 1 !TODO
-    this%n_halos = 1 !TODO
+    integer, intent(in) :: n_iters, nx, ny
+    this%n_steps = n_iters
+    this%n_halos = n_iters
+    
+    allocate(this%tmp0)
+    call this%tmp0%ctor(2)
+    block
+      integer :: hlo 
+      hlo = this%n_halos
+      call this%tmp0%init(0,        &   
+        -hlo - h, nx - 1 + hlo + h, &
+        -hlo    , ny - 1 + hlo      &   
+      )   
+      call this%tmp0%init(1,        &   
+        -hlo    , nx - 1 + hlo,     &   
+        -hlo - h, ny - 1 + hlo + h  &
+      )  
+    end block
+    if (n_iters > 0) then
+      ! TODO
+    endif
+  end subroutine
+
+  subroutine mpdata_dtor(this)
+    class(mpdata_t) :: this
+    !TODO
+    !deallocate()
   end subroutine
 
   subroutine mpdata_op_2D(this, psi, n, C, i, j, step)
@@ -409,6 +477,7 @@ module mpdata_m
     if (step == 0) then
       call donorcell_2D(psi, n, C, i, j)
     else
+print*, "performing step ", step
       block
         class(arrvec_t), pointer :: C_corr, C_unco
         if (step == 1) then
@@ -422,6 +491,9 @@ module mpdata_m
           C_corr => this%tmp1
         endif
 
+        !TODO: im, jm
+        C_corr%at(0)%p%a = antidiff_2D_0(psi%at(n)%p%a, i, j, C_unco)
+        C_corr%at(1)%p%a = antidiff_2D_1(psi%at(n)%p%a, i, j, C_unco)
         call donorcell_2D(psi, n, C_corr, i, j)
       end block
     endif
