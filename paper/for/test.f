@@ -7,9 +7,9 @@ program test
   type(solver_2D_t) :: slv
   type(mpdata_t), target :: adv
   type(cyclic_t), target :: bcx, bcy
-  integer :: nx = 3, ny = 3, nt = 1
+  integer :: nx = 512, ny = 512, nt = 100
 
-  call adv%ctor(2, nx, ny)
+  call adv%ctor(2)
 
   block
     class(bcd_t), pointer :: bcx_p, bcy_p
@@ -22,16 +22,10 @@ program test
 
   call init()
   print*, ""
-  print '(3F6.3)', slv%state()
-  call slv%solve(1)
+  !print '(3F6.3)', slv%state()
+  call slv%solve(nt)
   print*, ""
-  print '(3F6.3)', slv%state()
-  call slv%solve(1)
-  print*, ""
-  print '(3F6.3)', slv%state()
-  call slv%solve(1)
-  print*, ""
-  print '(3F6.3)', slv%state()
+  !print '(3F6.3)', slv%state()
 
   call slv%dtor()
   !TODO: bcx, bcy, adv dtor
@@ -42,12 +36,12 @@ program test
     tmp => slv%state() 
     print*, lbound(tmp)
     tmp = 0
-    tmp(1:1,1:1) = 1
+    tmp(2:2,2:2) = 1
 
     tmp => slv%Cx() 
-    tmp = .5
+    tmp = .2
 
     tmp => slv%Cy() 
-    tmp = .5
+    tmp = .2
   end subroutine
 end program

@@ -3,7 +3,7 @@
 # copyright holder: University of Warsaw
 #listing01
 import numpy
-import pdb
+#import pdb
                 
 #listing02
 class Shift():
@@ -141,9 +141,9 @@ def b_op(d, psi, i, j):
 #listing13
 def antidiff_2D(d, psi, i, j, C):
   #pdb.set_trace()
-  print "ind", i,j
-  print  "a", d, a_op(d, psi, i, j)
-  print  "b", d, b_op(d, psi, i, j)
+  #print "ind", i,j
+  #print  "a", d, a_op(d, psi, i, j)
+  #print  "b", d, b_op(d, psi, i, j)
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 

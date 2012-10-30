@@ -104,16 +104,22 @@ module adv_m
     integer :: n_steps, n_halos
     contains 
     procedure(op_2D_i), deferred :: op_2D
+    procedure(adv_init_i), deferred :: init
   end type
 
   abstract interface
-    subroutine op_2D_i(this, psi, n, C, i, j, step)
+    subroutine op_2D_i(this, psi, n, C, step)
       import :: adv_t
       import :: arrvec_t
       class(adv_t) :: this
       class(arrvec_t), pointer :: psi, C
       integer, intent(in) :: n, step
-      integer, pointer, intent(in) :: i(:), j(:)
+    end subroutine
+
+    subroutine adv_init_i(this, i, j)
+      import :: adv_t
+      class(adv_t) :: this
+      integer, intent(in), pointer :: i(:), j(:)
     end subroutine
   end interface
 end module
@@ -124,23 +130,23 @@ module bcd_m
 
   type, abstract :: bcd_t
     contains
-    procedure(fill_halos_0_i), deferred :: fill_halos_0
-    procedure(fill_halos_1_i), deferred :: fill_halos_1
-    procedure(init_i), deferred :: init
+    procedure(bcd_fill_halos_0_i), deferred :: fill_halos_0
+    procedure(bcd_fill_halos_1_i), deferred :: fill_halos_1
+    procedure(bcd_init_i), deferred :: init
   end type
  
   abstract interface 
-    subroutine fill_halos_0_i(this, psi)
+    subroutine bcd_fill_halos_0_i(this, psi)
       import :: bcd_t
       class(bcd_t) :: this
       real, pointer :: psi(:,:)
     end subroutine
-    subroutine fill_halos_1_i(this, psi)
+    subroutine bcd_fill_halos_1_i(this, psi)
       import :: bcd_t
       class(bcd_t) :: this
       real, pointer :: psi(:,:)
     end subroutine
-    subroutine init_i(this, ij, hlo)
+    subroutine bcd_init_i(this, ij, hlo)
       import :: bcd_t
       class(bcd_t) :: this
       integer, pointer :: ij(:)
@@ -188,6 +194,7 @@ module solver_2D_m
 
     call bcx%init(this%i, adv%n_halos)
     call bcy%init(this%j, adv%n_halos)
+    call adv%init(this%i, this%j)
 
     block
       integer :: i, hlo
@@ -197,21 +204,21 @@ module solver_2D_m
       call this%psi%ctor(2)
       
       do i=0, 1
-        call this%psi%init(i,         &
-          -hlo, nx - 1 + hlo, &
-          -hlo, ny - 1 + hlo  &
+        call this%psi%init(i, &
+          this%i(0) -hlo, this%i(size(this%i)-1) + hlo, &
+          this%j(0) -hlo, this%j(size(this%j)-1) + hlo  &
         ) 
       end do
 
       allocate(this%C)
       call this%C%ctor(2)
-      call this%C%init(0,           &
-        -hlo - h, nx - 1 + hlo + h, &
-        -hlo    , ny - 1 + hlo      &
+      call this%C%init(0,                                     &
+        this%i(0) -hlo - h, this%i(size(this%i)-1) + hlo + h, &
+        this%j(0) -hlo    , this%j(size(this%j)-1) + hlo      &   
       )
-      call this%C%init(1,           &
-        -hlo    , nx - 1 + hlo,     &
-        -hlo - h, ny - 1 + hlo + h  &
+      call this%C%init(1,                                     &
+        this%i(0) -hlo    , this%i(size(this%i)-1) + hlo,     &   
+        this%j(0) -hlo - h, this%j(size(this%j)-1) + hlo + h  &
       )
     end block
 
@@ -241,7 +248,7 @@ module solver_2D_m
           call this%bcy%fill_halos_1(   &
             this%psi%at(this%n)%p%a)
           call this%adv%op_2D(        &
-            this%psi, this%n, this%C, this%i, this%j, s)
+            this%psi, this%n, this%C, s)
           this%n = mod(this%n + 1 + 2, 2) - 2
         end do
       end do
@@ -385,15 +392,63 @@ module antidiff_2D_m
   use arakawa_c_m
   implicit none
   contains 
-  !function frac() result (return)
-  !
-  !end function
-  !function A() resutl (return)
-  !  
-  !end function
-  !function B() result (return)
-  !  
-  !end function
+  function A_0(psi, i, j) result (return)
+    real, pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = frac(             &
+      psi(i+1, j) - psi(i, j), &
+      psi(i+1, j) + psi(i, j)  &
+    )  
+  end function
+  function A_1(psi, i, j) result (return)
+    real, pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = frac(             &
+      psi(i, j+1) - psi(i, j), &
+      psi(i, j+1) + psi(i, j)  &
+    )  
+  end function
+  function B_0(psi, i, j) result (return)
+    real, pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = .5 * frac(   &
+      psi(i+1, j+1)  &
+    + psi(i,   j+1)  &
+    - psi(i+1, j-1)  &
+    - psi(i,   j-1), &
+      psi(i+1, j+1)  &
+    + psi(i,   j+1)  &
+    + psi(i+1, j-1)  &
+    + psi(i,   j-1)  &
+    )
+  end function
+  function B_1(psi, i, j) result (return)
+    real, pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = .5 * frac(   &
+      psi(i+1, j+1)  &
+    + psi(i+1, j  )  &
+    - psi(i-1, j+1)  &
+    - psi(i-1, j  ), &
+      psi(i+1, j+1)  &
+    + psi(i+1, j  )  &
+    + psi(i-1, j+1)  &
+    + psi(i-1, j  )  &
+    )
+  end function
+  function frac(nom, den) result (return)
+    real, intent(in) :: nom(:,:), den(:,:)
+    real :: return(size(nom,1),size(nom,2))
+    where (den > 0)
+      return = nom / den
+    elsewhere
+      return = 0
+    end where
+  end function
   function antidiff_2D_0(psi, i, j, C) result (return)
     integer, pointer :: i(:), j(:)
     real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
@@ -404,21 +459,35 @@ module antidiff_2D_m
     return =                           &
       abs(C%at(d)%p%a(i+h, j))         &
       * (1 - abs(C%at(d)%p%a(i+h, j))) &
+      * A_0(psi, i, j)                 &
       - C%at(d)%p%a(i+h, j)            &
       * .25 * (                        &
         C%at(d-1)%p%a(i+1, j+h) +      &
         C%at(d-1)%p%a(i,   j+h) +      &
         C%at(d-1)%p%a(i+1, j-h) +      &
         C%at(d-1)%p%a(i,   j-h)        &
-      )
+      )                                &
+      * B_0(psi, i, j)
   end function
   function antidiff_2D_1(psi, i, j, C) result (return)
     integer, pointer :: i(:), j(:)
     real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
     real, pointer, intent(in) :: psi(:,:)
     class(arrvec_t), pointer :: C
-
-    return = 0  !TODO
+    integer, parameter :: d = 1
+ 
+    return =                           &
+      abs(C%at(d)%p%a(i, j+h))         &
+      * (1 - abs(C%at(d)%p%a(i, j+h))) &
+      * A_1(psi, i, j)                 &
+      - C%at(d)%p%a(i, j+h)            &
+      * .25 * (                        &
+        C%at(d-1)%p%a(i+h, j+1) +      &
+        C%at(d-1)%p%a(i+h, j  ) +      &
+        C%at(d-1)%p%a(i-h, j+1) +      &
+        C%at(d-1)%p%a(i-h, j  )        &
+      )                                &
+      * B_1(psi, i, j)
   end function
 end module
 !listing08
@@ -429,35 +498,55 @@ module mpdata_m
   implicit none
   
   type, extends(adv_t) :: mpdata_t
+    integer :: n_iters
     class(arrvec_t), pointer :: tmp0, tmp1 !TODO: dtor!
+    integer, pointer :: i(:), j(:), im(:), jm(:)
     contains
     procedure :: ctor => mpdata_ctor
+    procedure :: init => mpdata_init
     procedure :: op_2D => mpdata_op_2D
   end type
 
   contains
 
-  subroutine mpdata_ctor(this, n_iters, nx, ny)
+  subroutine mpdata_ctor(this, n_iters)
     class(mpdata_t) :: this
-    integer, intent(in) :: n_iters, nx, ny
+    integer, intent(in) :: n_iters
+    this%n_iters = n_iters
     this%n_steps = n_iters
     this%n_halos = n_iters
+  end subroutine 
+
+  subroutine mpdata_init(this, i, j)
+    class(mpdata_t) :: this
+    integer, intent(in), pointer :: i(:), j(:)
+
+    this%i => i
+    this%j => j
+
+    allocate(this%im(0:size(i)))  !TODO: deallocate
+    allocate(this%jm(0:size(j)))  !TODO: deallocate
+    block 
+      integer :: c
+      this%im = (/ (c, c=i(0)-1, j(size(i)-1)) /)
+      this%jm = (/ (c, c=j(0)-1, j(size(j)-1)) /)
+    end block
     
     allocate(this%tmp0)
     call this%tmp0%ctor(2)
     block
       integer :: hlo 
       hlo = this%n_halos
-      call this%tmp0%init(0,        &   
-        -hlo - h, nx - 1 + hlo + h, &
-        -hlo    , ny - 1 + hlo      &   
+      call this%tmp0%init(0,                   &   
+        i(0) -hlo - h, i(size(i)-1) + hlo + h, &
+        j(0) -hlo    , j(size(j)-1) + hlo      &   
       )   
-      call this%tmp0%init(1,        &   
-        -hlo    , nx - 1 + hlo,     &   
-        -hlo - h, ny - 1 + hlo + h  &
+      call this%tmp0%init(1,                   &   
+        i(0) -hlo    , i(size(i)-1) + hlo,     &   
+        j(0) -hlo - h, j(size(j)-1) + hlo + h  &
       )  
     end block
-    if (n_iters > 0) then
+    if (this%n_iters > 0) then
       ! TODO
     endif
   end subroutine
@@ -468,18 +557,17 @@ module mpdata_m
     !deallocate()
   end subroutine
 
-  subroutine mpdata_op_2D(this, psi, n, C, i, j, step)
+  subroutine mpdata_op_2D(this, psi, n, C, step)
     class(mpdata_t) :: this
     class(arrvec_t), pointer :: psi, C
     integer, intent(in) :: n, step
-    integer, pointer, intent(in) :: i(:), j(:)
 
     if (step == 0) then
-      call donorcell_2D(psi, n, C, i, j)
+      call donorcell_2D(psi, n, C, this%i, this%j)
     else
-print*, "performing step ", step
       block
         class(arrvec_t), pointer :: C_corr, C_unco
+
         if (step == 1) then
           C_unco => C
           C_corr => this%tmp0
@@ -491,10 +579,10 @@ print*, "performing step ", step
           C_corr => this%tmp1
         endif
 
-        !TODO: im, jm
-        C_corr%at(0)%p%a = antidiff_2D_0(psi%at(n)%p%a, i, j, C_unco)
-        C_corr%at(1)%p%a = antidiff_2D_1(psi%at(n)%p%a, i, j, C_unco)
-        call donorcell_2D(psi, n, C_corr, i, j)
+        C_corr%at(0)%p%a(this%im+h, this%j) = antidiff_2D_0(psi%at(n)%p%a, this%im, this%j, C_unco)
+
+        C_corr%at(1)%p%a(this%i, this%jm+h) = antidiff_2D_1(psi%at(n)%p%a, this%i, this%jm, C_unco)
+        call donorcell_2D(psi, n, C_corr, this%i, this%j)
       end block
     endif
 

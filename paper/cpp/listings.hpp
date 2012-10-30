@@ -82,7 +82,7 @@ struct solver_2D
       for (int s = 0; s < adv.n_steps; ++s) {
         bcx.fill_halos(psi[n]);
         bcy.fill_halos(psi[n]);
-        adv.op_2D(psi, n, C, i, j, s);
+        adv.op_2D(psi, n, C, s);
         n = (n + 1) % 2;
       }
     }
@@ -225,11 +225,16 @@ struct mpdata
 {
   // member fields
   arrvec_t tmp0, tmp1;
+  const rng_t i, j, im, jm;
+
   static const int n_steps = n_iters;
   static const int n_halos = n_iters;
 
   // ctor
-  mpdata(const rng_t &i, const rng_t &j) {
+  mpdata(const rng_t &i, const rng_t &j)
+    // im, jm: extended ranges as we only use C_+1/2 
+    : i(i), j(j), im(i.first() - 1, i.last()), jm(j.first() - 1, j.last())
+  {
     const int hlo = n_halos;
     tmp0.push_back(new arr_t(i^h^hlo, j^hlo));
     tmp0.push_back(new arr_t(i^hlo, j^h^hlo));
@@ -242,7 +247,6 @@ struct mpdata
   inline void op_2D( 
     const arrvec_t &psi, const int n, 
     const arrvec_t &C, 
-    const rng_t &i, const rng_t &j, 
     const int step
   ) {
     if (step == 0) 
@@ -262,10 +266,6 @@ struct mpdata
 
       // calculating the antidiffusive velocities
       const int hlo = n_steps - 1 - step;
-      // extended ranges as we only use C_+1/2 
-      const rng_t 
-        im(i.first() - 1, i.last()),
-        jm(j.first() - 1, j.last());
       C_corr[0](im+h, j^hlo) = antidiff_2D<0>(
         psi[n], im, j^hlo, C_unco
       );
