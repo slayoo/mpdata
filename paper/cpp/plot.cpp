@@ -1,11 +1,11 @@
-//listing17
+//listing18
 #include "listings.hpp"
 #define GNUPLOT_ENABLE_BLITZ
 #include <gnuplot-iostream/gnuplot-iostream.h>
 enum {x, y};
 
 template <class T>
-void setup(T &solver, int n[2], float C[2]) {
+void setup(T &solver, int n[2], real_t C[2]) {
   blitz::firstIndex i;
   blitz::secondIndex j;
   solver.state() = exp(
@@ -18,7 +18,7 @@ void setup(T &solver, int n[2], float C[2]) {
 
 int main() {
   int n[] = {24, 24}, nt = 96;
-  float C[] = {.5, .25};
+  real_t C[] = {.5, .25};
   Gnuplot gp;
   gp << "set term pdf size 10cm, 30cm\n" 
      << "set output 'figure.pdf'\n"     
@@ -74,4 +74,4 @@ int main() {
     gp.sendBinary(solver.state().copy());
   }
 }
-//listing18
+//listing19

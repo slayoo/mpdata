@@ -32,7 +32,7 @@ program test
 
   contains
   subroutine init
-    real, pointer :: tmp(:,:)
+    real(real_t), pointer :: tmp(:,:)
     tmp => slv%state() 
     print*, lbound(tmp)
     tmp = 0

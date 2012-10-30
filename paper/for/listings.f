@@ -2,11 +2,17 @@
 ! code licensed under the terms of GNU GPL v3
 ! copyright holder: University of Warsaw
 !listing01
+module real_m
+  implicit none
+  integer, parameter :: real_t = kind(0.d0) 
+end module
+!listing02
 module arrvec_m
+  use real_m
   implicit none
 
   type :: arr_t
-    real, pointer :: a(:,:)
+    real(real_t), pointer :: a(:,:)
   end type
 
   type :: arrptr_t
@@ -62,7 +68,7 @@ module arrvec_m
     deallocate(this%at)
   end subroutine
 end module
-!listing02
+!listing03
 module arakawa_c_m
   implicit none
 
@@ -95,7 +101,7 @@ module arakawa_c_m
     return = i
   end function
 end module
-!listing03
+!listing04
 module adv_m
   use arrvec_m
   implicit none
@@ -123,7 +129,7 @@ module adv_m
     end subroutine
   end interface
 end module
-!listing04
+!listing05
 module bcd_m
   use arrvec_m
   implicit none
@@ -137,24 +143,24 @@ module bcd_m
  
   abstract interface 
     subroutine bcd_fill_halos_0_i(this, psi)
-      import :: bcd_t
+      import :: bcd_t, real_t
       class(bcd_t) :: this
-      real, pointer :: psi(:,:)
+      real(real_t), pointer :: psi(:,:)
     end subroutine
     subroutine bcd_fill_halos_1_i(this, psi)
-      import :: bcd_t
+      import :: bcd_t, real_t
       class(bcd_t) :: this
-      real, pointer :: psi(:,:)
+      real(real_t), pointer :: psi(:,:)
     end subroutine
     subroutine bcd_init_i(this, ij, hlo)
-      import :: bcd_t
+      import :: bcd_t, real_t
       class(bcd_t) :: this
       integer, pointer :: ij(:)
       integer :: hlo
     end subroutine
   end interface
 end module
-!listing05
+!listing06
 module solver_2D_m
   use arrvec_m
   use adv_m
@@ -257,7 +263,7 @@ module solver_2D_m
 
   function solver_2D_state(this) result (return)
     class(solver_2D_t) :: this
-    real, pointer :: return(:,:)
+    real(real_t), pointer :: return(:,:)
     return => this%psi%at(this%n)%p%a( &
       this%i(0) : this%i(size(this%i)-1), &
       this%j(0) : this%j(size(this%j)-1)  &
@@ -266,17 +272,17 @@ module solver_2D_m
 
   function solver_2D_Cx(this) result (return)
     class(solver_2D_t) :: this
-    real, pointer :: return(:,:)
+    real(real_t), pointer :: return(:,:)
     return => this%C%at(0)%p%a
   end function
 
   function solver_2D_Cy(this) result (return)
     class(solver_2D_t) :: this
-    real, pointer :: return(:,:)
+    real(real_t), pointer :: return(:,:)
     return => this%C%at(1)%p%a
   end function
 end module
-!listing06
+!listing07
 module cyclic_m
   use bcd_m
   use adv_m
@@ -322,27 +328,28 @@ module cyclic_m
 
   subroutine cyclic_fill_halos_0(this, psi)
     class(cyclic_t) :: this
-    real, pointer :: psi(:,:)
+    real(real_t), pointer :: psi(:,:)
     psi(this%left_halo, :) = psi(this%rght_edge, :)
     psi(this%rght_halo, :) = psi(this%left_edge, :)
   end subroutine
 
   subroutine cyclic_fill_halos_1(this, psi)
     class(cyclic_t) :: this
-    real, pointer :: psi(:,:)
+    real(real_t), pointer :: psi(:,:)
     psi(:, this%left_halo) = psi(:, this%rght_edge)
     psi(:, this%rght_halo) = psi(:, this%left_edge)
   end subroutine
 end module
-!listing07
+!listing08
 module donorcell_1D_m
+  use real_m
   use arakawa_c_m
   implicit none
   contains 
 
   elemental function F(psi_l, psi_r, C) result (return)
-    real :: return
-    real, intent(in) :: psi_l, psi_r, C
+    real(real_t) :: return
+    real(real_t), intent(in) :: psi_l, psi_r, C
     return = (                                 &
       .5 * (C + abs(C)) * psi_l +              &
       .5 * (C - abs(C)) * psi_r                &
@@ -351,8 +358,8 @@ module donorcell_1D_m
  
   function donorcell_0(psi, C, i, j) result (return)
     integer, pointer, intent(in) :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):size(j)-1)
-    real, pointer, intent(in) :: psi(:,:), C(:,:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):size(j)-1)
+    real(real_t), pointer, intent(in) :: psi(:,:), C(:,:)
     return = (                                 &
       F(psi(i,   j), psi(i+1, j), C(i+h, j)) - &
       F(psi(i-1, j), psi(i,   j), C(i-h, j))   &
@@ -361,8 +368,8 @@ module donorcell_1D_m
 
   function donorcell_1(psi, C, i, j) result (return)
     integer, pointer, intent(in) :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    real, pointer, intent(in) :: psi(:,:), C(:,:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    real(real_t), pointer, intent(in) :: psi(:,:), C(:,:)
     return = (                                 &
       F(psi(i, j  ), psi(i, j+1), C(i, j+h)) - &
       F(psi(i, j-1), psi(i,   j), C(i, j-h))   &
@@ -370,7 +377,7 @@ module donorcell_1D_m
   end function
 
 end module
-!
+!listing09
 module donorcell_2D_m
   use donorcell_1D_m
   use arrvec_m
@@ -386,73 +393,72 @@ module donorcell_2D_m
       - donorcell_1(psi%at(n)%p%a, C%at(1)%p%a, i, j)      
   end subroutine
 end module
-!
+!listing10
 module antidiff_2D_m
   use arrvec_m
   use arakawa_c_m
   implicit none
+
   contains 
-  function A_0(psi, i, j) result (return)
-    real, pointer, intent(in) :: psi(:,:)
-    integer, pointer :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    return = frac(             &
-      psi(i+1, j) - psi(i, j), &
-      psi(i+1, j) + psi(i, j)  &
-    )  
-  end function
-  function A_1(psi, i, j) result (return)
-    real, pointer, intent(in) :: psi(:,:)
-    integer, pointer :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    return = frac(             &
-      psi(i, j+1) - psi(i, j), &
-      psi(i, j+1) + psi(i, j)  &
-    )  
-  end function
-  function B_0(psi, i, j) result (return)
-    real, pointer, intent(in) :: psi(:,:)
-    integer, pointer :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    return = .5 * frac(   &
-      psi(i+1, j+1)  &
-    + psi(i,   j+1)  &
-    - psi(i+1, j-1)  &
-    - psi(i,   j-1), &
-      psi(i+1, j+1)  &
-    + psi(i,   j+1)  &
-    + psi(i+1, j-1)  &
-    + psi(i,   j-1)  &
-    )
-  end function
-  function B_1(psi, i, j) result (return)
-    real, pointer, intent(in) :: psi(:,:)
-    integer, pointer :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    return = .5 * frac(   &
-      psi(i+1, j+1)  &
-    + psi(i+1, j  )  &
-    - psi(i-1, j+1)  &
-    - psi(i-1, j  ), &
-      psi(i+1, j+1)  &
-    + psi(i+1, j  )  &
-    + psi(i-1, j+1)  &
-    + psi(i-1, j  )  &
-    )
-  end function
+
   function frac(nom, den) result (return)
-    real, intent(in) :: nom(:,:), den(:,:)
-    real :: return(size(nom,1),size(nom,2))
+    real(real_t), intent(in) :: nom(:,:), den(:,:)
+    real(real_t) :: return(size(nom,1),size(nom,2))
     where (den > 0)
       return = nom / den
     elsewhere
       return = 0
     end where
   end function
+
+  function A_0(psi, i, j) result (return)
+    real(real_t), pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = frac(             &
+      psi(i+1, j) - psi(i, j), &
+      psi(i+1, j) + psi(i, j)  &
+    )  
+  end function
+
+  function A_1(psi, i, j) result (return)
+    real(real_t), pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = frac(             &
+      psi(i, j+1) - psi(i, j), &
+      psi(i, j+1) + psi(i, j)  &
+    )  
+  end function
+
+  function B_0(psi, i, j) result (return)
+    real(real_t), pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = .5 * frac(   &
+      psi(i+1, j+1) + psi(i,   j+1)  &
+    - psi(i+1, j-1) - psi(i,   j-1), &
+      psi(i+1, j+1) + psi(i,   j+1)  &
+    + psi(i+1, j-1) + psi(i,   j-1)  &
+    )
+  end function
+
+  function B_1(psi, i, j) result (return)
+    real(real_t), pointer, intent(in) :: psi(:,:)
+    integer, pointer :: i(:), j(:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    return = .5 * frac(   &
+      psi(i+1, j+1) + psi(i+1, j  )  &
+    - psi(i-1, j+1) - psi(i-1, j  ), &
+      psi(i+1, j+1) + psi(i+1, j  )  &
+    + psi(i-1, j+1) + psi(i-1, j  )  &
+    )
+  end function
+
   function antidiff_2D_0(psi, i, j, C) result (return)
     integer, pointer :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    real, pointer, intent(in) :: psi(:,:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    real(real_t), pointer, intent(in) :: psi(:,:)
     class(arrvec_t), pointer :: C
     integer, parameter :: d = 0
  
@@ -469,10 +475,11 @@ module antidiff_2D_m
       )                                &
       * B_0(psi, i, j)
   end function
+
   function antidiff_2D_1(psi, i, j, C) result (return)
     integer, pointer :: i(:), j(:)
-    real :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    real, pointer, intent(in) :: psi(:,:)
+    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    real(real_t), pointer, intent(in) :: psi(:,:)
     class(arrvec_t), pointer :: C
     integer, parameter :: d = 1
  

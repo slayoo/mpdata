@@ -2,10 +2,10 @@
 # code licensed under the terms of GNU GPL v3
 # copyright holder: University of Warsaw
 #listing01
-import numpy
-#import pdb
-                
+real_t = 'float64'
 #listing02
+import numpy
+#listing03
 class Shift():
   def __init__(self, plus, mnus):
     self.plus = plus
@@ -20,10 +20,10 @@ class Shift():
       arg.start - self.mnus, 
       arg.stop  - self.mnus
     )
-#listing03
+#listing04
 one = Shift(1,1) 
 hlf = Shift(1,0)
-#listing04
+#listing05
 class Solver_2D(object):
   # ctor
   def __init__(self, adv, n_iters, bcx, bcy, nx, ny):
@@ -39,25 +39,13 @@ class Solver_2D(object):
     self.bcy = bcy(1, self.j, hlo)
 
     self.psi = (
-      numpy.empty((nx+2*hlo, ny+2*hlo)),
-      numpy.empty((nx+2*hlo, ny+2*hlo)) 
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t) 
     )
     self.C = (
-      numpy.empty((nx+1+2*hlo, ny+2*hlo)),
-      numpy.empty((nx+2*hlo,   ny+1+2*hlo))
+      numpy.empty((nx+1+2*hlo, ny+2*hlo), real_t),
+      numpy.empty((nx+2*hlo,   ny+1+2*hlo), real_t)
     )
-
-  # integration logic
-  def solve(self, nt):
-    for t in range(nt):
-      for s in range(self.adv.n_steps):
-        self.bcx.fill_halos(self.psi[self.n])
-        self.bcy.fill_halos(self.psi[self.n])
-        #pdb.set_trace()
-        self.adv.op_2D(self.psi, self.n, 
-          self.C, self.i, self.j, s
-        )
-        self.n  = (self.n + 1) % 2 - 2
 
   # accessor methods
   def state(self):
@@ -66,10 +54,21 @@ class Solver_2D(object):
     return self.C[0]
   def Cy(self):
     return self.C[1]
-#listing05
+
+  # integration logic
+  def solve(self, nt):
+    for t in range(nt):
+      for s in range(self.adv.n_steps):
+        self.bcx.fill_halos(self.psi[self.n])
+        self.bcy.fill_halos(self.psi[self.n])
+        self.adv.op_2D(self.psi, self.n, 
+          self.C, self.i, self.j, s
+        )
+        self.n  = (self.n + 1) % 2 - 2
+#listing06
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
-#listing06
+#listing07
 class Cyclic(object):
   # ctor
   def __init__(self, d, i, hlo): 
@@ -90,13 +89,13 @@ class Cyclic(object):
   def fill_halos(self, psi):
     psi[self.left_halo] = psi[self.rght_edge]
     psi[self.rght_halo] = psi[self.left_edge]
-#listing07
+#listing08
 def f(psi_l, psi_r, C): 
   return (
     .5 * (C + abs(C)) * psi_l + 
     .5 * (C - abs(C)) * psi_r
   )
-#listing08
+#listing09
 def donorcell(d, psi, C, i, j): 
   return (
     f(
@@ -110,24 +109,23 @@ def donorcell(d, psi, C, i, j):
         C[pi(d, i-hlf, j)]
     ) 
   )
-#listing09
+#listing10
 def donorcell_2D(psi, n, C, i, j):
   psi[n+1][i,j] = (psi[n][i,j] 
     - donorcell(0, psi[n], C[0], i, j)
     - donorcell(1, psi[n], C[1], j, i)
   )
-#listing10
+#listing11
 def frac(nom, den):
   return numpy.where(den>0, nom/den, 0)
-#listing11
+#listing12
 def a_op(d, psi, i, j):
   return frac(
     psi[pi(d, i+one, j)] - psi[pi(d, i, j)],
     psi[pi(d, i+one, j)] + psi[pi(d, i, j)]
   )
-#listing12
+#listing13
 def b_op(d, psi, i, j):
-#  pdb.set_trace()
   return 0.5 * frac( 
       psi[pi(d, i+one, j+one)] 
     + psi[pi(d, i,     j+one)] 
@@ -138,12 +136,8 @@ def b_op(d, psi, i, j):
     + psi[pi(d, i+one, j-one)] 
     + psi[pi(d, i,     j-one)]
   )
-#listing13
+#listing14
 def antidiff_2D(d, psi, i, j, C):
-  #pdb.set_trace()
-  #print "ind", i,j
-  #print  "a", d, a_op(d, psi, i, j)
-  #print  "b", d, b_op(d, psi, i, j)
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
@@ -157,26 +151,24 @@ def antidiff_2D(d, psi, i, j, C):
     )
     * b_op(d, psi, i, j)
   )
-#listing14
+#listing15
 class Mpdata(object):
-  # n_iters has to be 1 or 2; will be changed
   def __init__(self, n_iters, nx, ny):
     self.n_steps = n_iters
     self.n_halos = n_iters
     hlo = self.n_halos
     self.tmp0 = (
-      numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
-      numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
+      numpy.empty(( nx+1+2*hlo, ny+2*hlo), real_t),
+      numpy.empty(( nx+2*hlo,   ny+1+2*hlo), real_t)
     )
     if n_iters > 2:
       self.tmp1 = (
-        numpy.empty(( nx+1+2*hlo, ny+2*hlo)),
-        numpy.empty(( nx+2*hlo,   ny+1+2*hlo))
+        numpy.empty(( nx+1+2*hlo, ny+2*hlo), real_t),
+        numpy.empty(( nx+2*hlo,   ny+1+2*hlo), real_t)
       )
 
 
   def op_2D(self, psi, n, C, i, j, step):
-    #pdb.set_trace()
     if step == 0:
       donorcell_2D(psi, n, C, i, j)
     else:
@@ -196,7 +188,4 @@ class Mpdata(object):
         antidiff_2D(1, psi[n], jm, i, C_unco))
       donorcell_2D(psi, n, C_corr, i, j)
 
-#listing15
-
-
-
+#listing16

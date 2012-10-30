@@ -2,15 +2,17 @@
 // code licensed under the terms of GNU GPL v3
 // copyright holder: University of Warsaw
 //listing01
+typedef double real_t;
+//listing02
 #include <blitz/array.h>
-using arr_t = blitz::Array<double, 2>;
+using arr_t = blitz::Array<real_t, 2>;
 using rng_t = blitz::Range;
 using idx_t = blitz::RectDomain<2>;
-//listing02
+//listing03
 #define return_macro(expr) \
   -> decltype(safeToReturn(expr)) \
 { return safeToReturn(expr); } 
-//listing03
+//listing04
 #include <boost/ptr_container/ptr_vector.hpp>
 struct arrvec_t : boost::ptr_vector<arr_t> {
   const arr_t &operator[](const int i) const {   
@@ -19,7 +21,7 @@ struct arrvec_t : boost::ptr_vector<arr_t> {
     ); 
   }
 };
-//listing04
+//listing05
 struct hlf_t {} h;
 
 inline rng_t operator+(
@@ -33,7 +35,7 @@ inline rng_t operator-(
 ) { 
   return i; 
 }
-//listing05
+//listing06
 template<class n_t>
 inline rng_t operator^(
   const rng_t &r, const n_t &n
@@ -43,7 +45,7 @@ inline rng_t operator^(
     (r + n).last()
   ); 
 } 
-//listing06
+//listing07
 template<class adv_t, class bcx_t, class bcy_t>
 struct solver_2D
 {
@@ -88,7 +90,7 @@ struct solver_2D
     }
   }
 };
-//listing07
+//listing08
 template<int d> 
 inline idx_t pi(const rng_t &i, const rng_t &j);
 
@@ -103,7 +105,7 @@ inline idx_t pi<1>(const rng_t &j, const rng_t &i)
 {
   return idx_t({i,j});
 }; 
-//listing08
+//listing09
 template<int d>
 struct cyclic
 {
@@ -136,7 +138,7 @@ struct cyclic
     psi(rght_halo) = psi(left_edge);     
   }
 };
-//listing09
+//listing10
 template<class T1, class T2, class T3> 
 inline auto F(
   const T1 &psi_l, const T2 &psi_r, const T3 &C
@@ -144,7 +146,7 @@ inline auto F(
   .5 * (C + abs(C)) * psi_l + 
   .5 * (C - abs(C)) * psi_r
 )
-//listing10
+//listing11
 template<int d>  
 inline auto donorcell( 
   const arr_t &psi, const arr_t &C, 
@@ -161,7 +163,7 @@ inline auto donorcell(
       C(pi<d>(i-h, j))
   )
 )
-//listing11
+//listing12
 inline void donorcell_2D(
   const arrvec_t &psi, const int n,
   const arrvec_t &C, 
@@ -171,14 +173,14 @@ inline void donorcell_2D(
     - donorcell<0>(psi[n], C[0], i, j)
     - donorcell<1>(psi[n], C[1], j, i); 
 }
-//listing12
+//listing13
 template<class nom_t, class den_t>
 inline auto frac(
   const nom_t &nom, const den_t &den
 ) return_macro(
   where(den > 0, nom / den, 0)
 ) 
-//listing13
+//listing14
 template<int d>
 inline auto A(const arr_t &psi, 
   const rng_t &i, const rng_t &j
@@ -188,7 +190,7 @@ inline auto A(const arr_t &psi,
     psi(pi<d>(i+1, j)) + psi(pi<d>(i,j))
   ) 
 ) 
-//listing14
+//listing15
 template<int d>
 inline auto B(const arr_t &psi, 
   const rng_t &i, const rng_t &j
@@ -200,7 +202,7 @@ inline auto B(const arr_t &psi,
     psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
   )
 )
-//listing15
+//listing16
 template<int d>
 inline auto antidiff_2D(
   const arr_t &psi, 
@@ -219,7 +221,7 @@ inline auto antidiff_2D(
   ) 
   * B<d>(psi, i, j)
 ) 
-//listing16
+//listing17
 template<int n_iters>
 struct mpdata 
 {
@@ -278,4 +280,4 @@ struct mpdata
     }
   }
 };
-//listing17
+//listing18
