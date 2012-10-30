@@ -499,7 +499,7 @@ module mpdata_m
   
   type, extends(adv_t) :: mpdata_t
     integer :: n_iters
-    class(arrvec_t), pointer :: tmp0, tmp1 !TODO: dtor!
+    class(arrvec_t), pointer :: tmp(:) !TODO: dtor!
     integer, pointer :: i(:), j(:), im(:), jm(:)
     contains
     procedure :: ctor => mpdata_ctor
@@ -532,23 +532,24 @@ module mpdata_m
       this%jm = (/ (c, c=j(0)-1, j(size(j)-1)) /)
     end block
     
-    allocate(this%tmp0)
-    call this%tmp0%ctor(2)
     block
-      integer :: hlo 
+      integer :: c, hlo, nc
+      nc = 1
+      if (this%n_iters > 2) nc = 2
+      allocate(this%tmp(0:nc)) !TODO: deallocate?
       hlo = this%n_halos
-      call this%tmp0%init(0,                   &   
-        i(0) -hlo - h, i(size(i)-1) + hlo + h, &
-        j(0) -hlo    , j(size(j)-1) + hlo      &   
-      )   
-      call this%tmp0%init(1,                   &   
-        i(0) -hlo    , i(size(i)-1) + hlo,     &   
-        j(0) -hlo - h, j(size(j)-1) + hlo + h  &
-      )  
+      do c=0, nc-1
+        call this%tmp(c)%ctor(2)
+        call this%tmp(c)%init(0,                   &   
+          i(0) -hlo - h, i(size(i)-1) + hlo + h, &
+          j(0) -hlo    , j(size(j)-1) + hlo      &   
+        )   
+        call this%tmp(c)%init(1,                   &   
+          i(0) -hlo    , i(size(i)-1) + hlo,     &   
+          j(0) -hlo - h, j(size(j)-1) + hlo + h  &
+        )  
+      end do
     end block
-    if (this%n_iters > 0) then
-      ! TODO
-    endif
   end subroutine
 
   subroutine mpdata_dtor(this)
@@ -570,18 +571,20 @@ module mpdata_m
 
         if (step == 1) then
           C_unco => C
-          C_corr => this%tmp0
+          C_corr => this%tmp(0)
         else if (mod(step, 2) == 1) then
-          C_unco => this%tmp1
-          C_corr => this%tmp0
+          C_unco => this%tmp(1)
+          C_corr => this%tmp(0)
         else
-          C_unco => this%tmp0
-          C_corr => this%tmp1
+          C_unco => this%tmp(0)
+          C_corr => this%tmp(1)
         endif
 
-        C_corr%at(0)%p%a(this%im+h, this%j) = antidiff_2D_0(psi%at(n)%p%a, this%im, this%j, C_unco)
+        C_corr%at(0)%p%a(this%im+h, this%j) = &
+          antidiff_2D_0(psi%at(n)%p%a, this%im, this%j, C_unco)
+        C_corr%at(1)%p%a(this%i, this%jm+h) = &
+          antidiff_2D_1(psi%at(n)%p%a, this%i, this%jm, C_unco)
 
-        C_corr%at(1)%p%a(this%i, this%jm+h) = antidiff_2D_1(psi%at(n)%p%a, this%i, this%jm, C_unco)
         call donorcell_2D(psi, n, C_corr, this%i, this%j)
       end block
     endif
