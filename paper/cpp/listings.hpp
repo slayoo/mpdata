@@ -142,9 +142,12 @@ struct cyclic
 template<class T1, class T2, class T3> 
 inline auto F(
   const T1 &psi_l, const T2 &psi_r, const T3 &C
-) return_macro(
-  .5 * (C + abs(C)) * psi_l + 
-  .5 * (C - abs(C)) * psi_r
+) 
+return_macro(
+  (
+    (C + abs(C)) * psi_l + 
+    (C - abs(C)) * psi_r
+  ) / 2
 )
 //listing11
 template<int d>  
@@ -195,12 +198,12 @@ template<int d>
 inline auto B(const arr_t &psi, 
   const rng_t &i, const rng_t &j
 ) return_macro(
- .5 * frac(
+ frac(
     psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) -
     psi(pi<d>(i+1, j-1)) - psi(pi<d>(i, j-1)),
     psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) +
     psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
-  )
+  ) / 2
 )
 //listing16
 template<int d>
@@ -213,12 +216,12 @@ inline auto antidiff_2D(
   * (1 - abs(C[d](pi<d>(i+h, j)))) 
   * A<d>(psi, i, j) 
   - C[d](pi<d>(i+h, j)) 
-  * .25 * (
+  * (
     C[d-1](pi<d>(i+1, j+h)) + 
     C[d-1](pi<d>(i,   j+h)) +
     C[d-1](pi<d>(i+1, j-h)) + 
     C[d-1](pi<d>(i,   j-h)) 
-  ) 
+  ) / 4
   * B<d>(psi, i, j)
 ) 
 //listing17

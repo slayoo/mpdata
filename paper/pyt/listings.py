@@ -92,9 +92,9 @@ class Cyclic(object):
 #listing08
 def f(psi_l, psi_r, C): 
   return (
-    .5 * (C + abs(C)) * psi_l + 
-    .5 * (C - abs(C)) * psi_r
-  )
+    (C + abs(C)) * psi_l + 
+    (C - abs(C)) * psi_r
+  ) / 2
 #listing09
 def donorcell(d, psi, C, i, j): 
   return (
@@ -126,7 +126,7 @@ def a_op(d, psi, i, j):
   )
 #listing13
 def b_op(d, psi, i, j):
-  return 0.5 * frac( 
+  return frac( 
       psi[pi(d, i+one, j+one)] 
     + psi[pi(d, i,     j+one)] 
     - psi[pi(d, i+one, j-one)] 
@@ -135,7 +135,7 @@ def b_op(d, psi, i, j):
     + psi[pi(d, i,     j+one)] 
     + psi[pi(d, i+one, j-one)] 
     + psi[pi(d, i,     j-one)]
-  )
+  ) / 2
 #listing14
 def antidiff_2D(d, psi, i, j, C):
   return (
@@ -143,12 +143,12 @@ def antidiff_2D(d, psi, i, j, C):
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
     * a_op(d, psi, i, j)
     - C[d][pi(d, i+hlf, j)] 
-    * 0.25 * (
+    * (
       C[d-1][pi(d, i+one, j+hlf)] + 
       C[d-1][pi(d, i,     j+hlf)] +
       C[d-1][pi(d, i+one, j-hlf)] + 
       C[d-1][pi(d, i,     j-hlf)] 
-    )
+    ) / 4
     * b_op(d, psi, i, j)
   )
 #listing15
@@ -166,7 +166,6 @@ class Mpdata(object):
         numpy.empty(( nx+1+2*hlo, ny+2*hlo), real_t),
         numpy.empty(( nx+2*hlo,   ny+1+2*hlo), real_t)
       )
-
 
   def op_2D(self, psi, n, C, i, j, step):
     if step == 0:
@@ -187,5 +186,4 @@ class Mpdata(object):
       C_corr[1][i, jm+hlf] = (
         antidiff_2D(1, psi[n], jm, i, C_unco))
       donorcell_2D(psi, n, C_corr, i, j)
-
 #listing16

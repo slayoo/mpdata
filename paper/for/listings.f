@@ -350,10 +350,10 @@ module donorcell_1D_m
   elemental function F(psi_l, psi_r, C) result (return)
     real(real_t) :: return
     real(real_t), intent(in) :: psi_l, psi_r, C
-    return = (                                 &
-      .5 * (C + abs(C)) * psi_l +              &
-      .5 * (C - abs(C)) * psi_r                &
-    )
+    return = (                            &
+      (C + abs(C)) * psi_l +              &
+      (C - abs(C)) * psi_r                &
+    ) / 2
   end function
  
   function donorcell_0(psi, C, i, j) result (return)
@@ -435,24 +435,24 @@ module antidiff_2D_m
     real(real_t), pointer, intent(in) :: psi(:,:)
     integer, pointer :: i(:), j(:)
     real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    return = .5 * frac(   &
+    return = frac(   &
       psi(i+1, j+1) + psi(i,   j+1)  &
     - psi(i+1, j-1) - psi(i,   j-1), &
       psi(i+1, j+1) + psi(i,   j+1)  &
     + psi(i+1, j-1) + psi(i,   j-1)  &
-    )
+    ) / 2
   end function
 
   function B_1(psi, i, j) result (return)
     real(real_t), pointer, intent(in) :: psi(:,:)
     integer, pointer :: i(:), j(:)
     real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    return = .5 * frac(   &
+    return = frac(   &
       psi(i+1, j+1) + psi(i+1, j  )  &
     - psi(i-1, j+1) - psi(i-1, j  ), &
       psi(i+1, j+1) + psi(i+1, j  )  &
     + psi(i-1, j+1) + psi(i-1, j  )  &
-    )
+    ) / 2
   end function
 
   function antidiff_2D_0(psi, i, j, C) result (return)
@@ -467,12 +467,12 @@ module antidiff_2D_m
       * (1 - abs(C%at(d)%p%a(i+h, j))) &
       * A_0(psi, i, j)                 &
       - C%at(d)%p%a(i+h, j)            &
-      * .25 * (                        &
+      * (                              &
         C%at(d-1)%p%a(i+1, j+h) +      &
         C%at(d-1)%p%a(i,   j+h) +      &
         C%at(d-1)%p%a(i+1, j-h) +      &
         C%at(d-1)%p%a(i,   j-h)        &
-      )                                &
+      ) / 4                            &
       * B_0(psi, i, j)
   end function
 
@@ -488,12 +488,12 @@ module antidiff_2D_m
       * (1 - abs(C%at(d)%p%a(i, j+h))) &
       * A_1(psi, i, j)                 &
       - C%at(d)%p%a(i, j+h)            &
-      * .25 * (                        &
+      * (                              &
         C%at(d-1)%p%a(i+h, j+1) +      &
         C%at(d-1)%p%a(i+h, j  ) +      &
         C%at(d-1)%p%a(i-h, j+1) +      &
         C%at(d-1)%p%a(i-h, j  )        &
-      )                                &
+      ) / 4                            &
       * B_1(psi, i, j)
   end function
 end module
