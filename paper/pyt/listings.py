@@ -143,7 +143,7 @@ def antidiff_2D(d, psi, i, j, C):
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
     * a_op(d, psi, i, j)
     - C[d][pi(d, i+hlf, j)] 
-    * (
+    * ( # zrobic f-cje vmean
       C[d-1][pi(d, i+one, j+hlf)] + 
       C[d-1][pi(d, i,     j+hlf)] +
       C[d-1][pi(d, i+one, j-hlf)] + 
@@ -172,18 +172,26 @@ class Mpdata(object):
       donorcell_2D(psi, n, C, i, j)
     else:
       if step == 1:
-        C_unco, C_corr = C, self.tmp0
+        C_unco, C_corr = C, self.tmp0 #zmienic tmp0,1 na tuple tmp
       elif step % 2:
         C_unco, C_corr = self.tmp1, self.tmp0
       else:
         C_unco, C_corr = self.tmp0, self.tmp1
         
-
-      im = slice(i.start - 1, i.stop)
+        
+      im = slice(i.start - 1, i.stop) # przeniesc do konstruktora
       jm = slice(j.start - 1, j.stop)
-      C_corr[0][im+hlf, j] = (
-        antidiff_2D(0, psi[n], im, j, C_unco))
-      C_corr[1][i, jm+hlf] = (
-        antidiff_2D(1, psi[n], jm, i, C_unco))
+
+      # not sure if this is ok, ask Sylwester
+      # TO DO: should we write similar class to Shift??
+      ih = slice(i.start - (self.n_halos-1), i.stop + (self.n_halos-1)) 
+      jh = slice(j.start - (self.n_halos-1), j.stop + (self.n_halos-1))
+
+      print "rozmiar psi", psi[n].shape, im, jm, ih, jh, self.n_halos
+      
+      C_corr[0][im+hlf, jh] = (
+        antidiff_2D(0, psi[n], im, jh, C_unco)) 
+      C_corr[1][ih, jm+hlf] = (
+        antidiff_2D(1, psi[n], jm, ih, C_unco)) 
       donorcell_2D(psi, n, C_corr, i, j)
 #listing16
