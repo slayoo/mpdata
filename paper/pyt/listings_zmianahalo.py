@@ -60,22 +60,20 @@ class Solver_2D(object):
   def Cy(self):
     return self.C[1][self.i, self.j]
 
-  # integration logic
+   # integration logic
   def solve(self, nt):
     for t in range(nt):
+      self.bcx.fill_halos_vel(self.C)
+      self.bcy.fill_halos_vel(self.C)
       for s in range(self.adv.n_steps):
-        print "time, step", t, s
         self.bcx.fill_halos(self.psi[self.n])
         self.bcy.fill_halos(self.psi[self.n])
-        self.bcx.fill_halos(self.C[0])
-        self.bcy.fill_halos(self.C[0])
-        self.bcx.fill_halos(self.C[1])
-        self.bcy.fill_halos(self.C[1])
-        #pdb.set_trace()
         self.adv.op_2D(self.psi, self.n, 
-          self.C, self.i, self.j, s
-        )
+          self.C, self.i, self.j, s, 
+           self.bcx, self.bcy)
+        #nie rozumiem!
         self.n  = (self.n + 1) % 2 - 2
+        
 #listing06
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
@@ -100,16 +98,20 @@ class Cyclic(object):
   def fill_halos(self, psi):
     psi[self.left_halo] = psi[self.rght_edge]
     psi[self.rght_halo] = psi[self.left_edge]
+
+  def fill_halos_vel(self, C):
+    for i in range(len(C)):
+      self.fill_halos(C[i])
+    
+    
 #listing08
 def f(psi_l, psi_r, C):
-  #pdb.set_trace()
   return (
     (C + abs(C)) * psi_l + 
     (C - abs(C)) * psi_r
   ) / 2
 #listing09
 def donorcell(d, psi, C, i, j):
-  #pdb.set_trace()
   return (
     f(
       psi[pi(d, i,     j)], 
@@ -171,9 +173,10 @@ def antidiff_2D(d, psi, i, j, C):
 class Mpdata(object):
   def __init__(self, n_iters, nx, ny):
     self.n_steps = n_iters
+    #mim zdaniem wystarczy zawsze jedno halo
     self.n_halos = 1
     hlo = self.n_halos
-    #definiuje tak samo jak C
+    #czy w konstruktorze powinno to byc?
     self.tmp0 = (
       numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
       numpy.empty((nx+2*hlo,  ny+2*hlo), real_t)
@@ -182,8 +185,9 @@ class Mpdata(object):
       self.tmp1 = (
         numpy.empty(( nx+2*hlo, ny+2*hlo), real_t),
         numpy.empty(( nx+2*hlo,   ny+2*hlo), real_t)
-      )
-  def op_2D(self, psi, n, C, i, j, step):
+        )
+
+  def op_2D(self, psi, n, C, i, j, step, bcx, bcy):
     if step == 0:
       donorcell_2D(psi, n, C, i, j)
     else:
@@ -194,22 +198,19 @@ class Mpdata(object):
       else:
         C_unco, C_corr = self.tmp0, self.tmp1
 
+#jesli hlh = Shift(0,1), to by to chyba nie bylo potrzebne
       im = i - one # przeniesc do konstruktora
       jm = j - one
 
-      
       C_corr[0][im+hlf, j] = (
         antidiff_2D(0, psi[n], im, j, C_unco)) 
       C_corr[1][i, jm+hlf] = (
         antidiff_2D(1, psi[n], jm, i, C_unco)) 
 
-      #pdb.set_trace()
-      bcx =  Cyclic(0, i, self.n_halos)
-      bcy =  Cyclic(1, j, self.n_halos)
-      bcx.fill_halos(C_corr[0])
-      bcy.fill_halos(C_corr[0])
-      bcx.fill_halos(C_corr[1])
-      bcy.fill_halos(C_corr[1])
-      #pdb.set_trace()
-      
+      bcx.fill_halos_vel(C_corr)
+      bcy.fill_halos_vel(C_corr)
+
       donorcell_2D(psi, n, C_corr, i, j)
+
+
+      
