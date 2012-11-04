@@ -65,6 +65,7 @@ class Solver_2D(object):
           self.C, self.i, self.j, s
         )
         self.n  = (self.n + 1) % 2 - 2
+        
 #listing06
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
@@ -184,8 +185,8 @@ class Mpdata(object):
 
       # not sure if this is ok, ask Sylwester
       # TO DO: should we write similar class to Shift??
-      ih = slice(i.start - (self.n_halos-1), i.stop + (self.n_halos-1)) 
-      jh = slice(j.start - (self.n_halos-1), j.stop + (self.n_halos-1))
+      ih = slice(i.start - (self.n_steps - 1 - step), i.stop +  (self.n_steps - 1 - step)) 
+      jh = slice(j.start -  (self.n_steps - 1 - step), j.stop +  (self.n_steps - 1 - step))
 
       print "rozmiar psi", psi[n].shape, im, jm, ih, jh, self.n_halos
       
