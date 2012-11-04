@@ -62,9 +62,9 @@ class Solver_2D(object):
 
    # integration logic
   def solve(self, nt):
+    self.bcx.fill_halos_vel(self.C)
+    self.bcy.fill_halos_vel(self.C)
     for t in range(nt):
-      self.bcx.fill_halos_vel(self.C)
-      self.bcy.fill_halos_vel(self.C)
       for s in range(self.adv.n_steps):
         self.bcx.fill_halos(self.psi[self.n])
         self.bcy.fill_halos(self.psi[self.n])
