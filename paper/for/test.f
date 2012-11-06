@@ -34,7 +34,6 @@ program test
   subroutine init
     real(real_t), pointer :: tmp(:,:)
     tmp => slv%state() 
-    print*, lbound(tmp)
     tmp = 0
     tmp(2:2,2:2) = 1
 

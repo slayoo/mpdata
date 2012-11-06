@@ -12,7 +12,7 @@ module arrvec_m
   implicit none
 
   type :: arr_t
-    real(real_t), pointer :: a(:,:)
+    real(real_t), pointer, contiguous :: a(:,:)
   end type
 
   type :: arrptr_t
@@ -21,7 +21,7 @@ module arrvec_m
 
   type :: arrvec_t
     class(arrptr_t), pointer :: at(:)
-    logical, pointer :: inited(:)
+    logical, pointer, contiguous :: inited(:)
     contains
     procedure :: ctor => arrvec_ctor
     procedure :: init => arrvec_init
@@ -125,7 +125,7 @@ module adv_m
     subroutine adv_init_i(O, i, j)
       import :: adv_t
       class(adv_t) :: O
-      integer, intent(in), pointer :: i(:), j(:)
+      integer, intent(in), contiguous, pointer :: i(:), j(:) 
     end subroutine
   end interface
 end module
@@ -144,13 +144,13 @@ module bcd_m
     subroutine bcd_fill_halos_i(O, psi)
       import :: bcd_t, real_t
       class(bcd_t) :: O
-      real(real_t), pointer :: psi(:,:)
+      real(real_t), pointer, contiguous :: psi(:,:) 
     end subroutine
     subroutine bcd_init_i(O, d, i, j, hlo)
       import :: bcd_t, real_t
       class(bcd_t) :: O
       integer :: d, hlo
-      integer, pointer :: i(:), j(:)
+      integer, pointer, contiguous :: i(:), j(:)
     end subroutine
   end interface
 end module
@@ -165,7 +165,7 @@ module solver_2D_m
     class(arrvec_t), pointer :: psi, C
     class(adv_t), pointer :: adv
     class(bcd_t), pointer :: bcx, bcy
-    integer, pointer :: i(:), j(:)
+    integer, pointer, contiguous :: i(:), j(:) 
     integer :: n
     contains
     procedure :: ctor  => solver_2D_ctor 
@@ -306,12 +306,11 @@ module cyclic_m
     integer :: d
     integer, pointer :: left_halo(:), rght_halo(:)
     integer, pointer :: left_edge(:), rght_edge(:)
-    integer, pointer :: j(:)
+    integer, pointer, contiguous :: j(:)
     contains
     procedure :: init => cyclic_init
     procedure :: dtor => cyclic_dtor 
     procedure :: fill_halos => cyclic_fill_halos
-    !procedure :: fill_halos_1 => cyclic_fill_halos_1
   end type
 
   contains
@@ -319,7 +318,7 @@ module cyclic_m
   subroutine cyclic_init(O, d, i, j, hlo)
     class(cyclic_t) :: O
     integer :: d, hlo
-    integer, pointer :: i(:), j(:)
+    integer, pointer, contiguous :: i(:), j(:) 
 
     O%d = d
 
@@ -355,7 +354,6 @@ module cyclic_m
     tmp => pi(O%d, psi, O%rght_halo, O%j) 
     tmp = pi(O%d, psi, O%left_edge, O%j)
   end subroutine
-
 end module
 !listing08
 module donorcell_1D_m
@@ -376,15 +374,14 @@ module donorcell_1D_m
  
   function donorcell(d, psi, C, i, j) result (return)
     integer :: d
-    integer, pointer, intent(in) :: i(:), j(:)
-    real(real_t) :: return(i(0):i(size(i)-1),j(0):size(j)-1)
-    real(real_t), pointer, intent(in) :: psi(:,:), C(:,:)
+    integer, pointer, intent(in), contiguous :: i(:), j(:) 
+    real(real_t) :: return(size(i), size(j))
+    real(real_t), pointer, intent(in), contiguous :: psi(:,:), C(:,:)
     return = (                                 &
       F(pi(d, psi, i,   j), pi(d, psi, i+1, j), pi(d, C, i+h, j)) - &
       F(pi(d, psi, i-1, j), pi(d, psi, i,   j), pi(d, C, i-h, j))   &
     )
   end function
-
 end module
 !listing09
 module donorcell_2D_m
@@ -395,7 +392,7 @@ module donorcell_2D_m
   subroutine donorcell_2D(psi, n, C, i, j)  
     class(arrvec_t), pointer :: psi, C
     integer, intent(in) :: n
-    integer, pointer, intent(in) :: i(:), j(:)
+    integer, pointer, intent(in), contiguous :: i(:), j(:) 
     
     psi%at( n+1 )%p%a( i, j ) = psi%at( n )%p%a( i, j ) &
       - donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j)  &
@@ -413,7 +410,7 @@ module antidiff_2D_m
 
   function frac(nom, den) result (return)
     real(real_t), intent(in) :: nom(:,:), den(:,:)
-    real(real_t) :: return(size(nom,1),size(nom,2))
+    real(real_t) :: return(size(nom,1), size(nom,2))
     where (den > 0)
       return = nom / den
     elsewhere
@@ -423,9 +420,9 @@ module antidiff_2D_m
 
   function A(d, psi, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in) :: psi(:,:)
-    integer, pointer :: i(:), j(:)
-    real(real_t) :: return(i(0):i(size(i)-1), j(0):j(size(j)-1))
+    real(real_t), pointer, intent(in), contiguous :: psi(:,:)
+    integer, pointer, contiguous :: i(:), j(:) 
+    real(real_t) :: return(size(i), size(j))
     return = frac(                           &
       pi(d, psi, i+1, j) - pi(d, psi, i, j), &
       pi(d, psi, i+1, j) + pi(d, psi, i, j)  &
@@ -434,9 +431,9 @@ module antidiff_2D_m
 
   function B(d, psi, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in) :: psi(:,:)
-    integer, pointer :: i(:), j(:)
-    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
+    real(real_t), pointer, intent(in), contiguous :: psi(:,:) 
+    integer, pointer, contiguous :: i(:), j(:) 
+    real(real_t) :: return(size(i), size(j))
     return = frac(   &
       pi(d, psi, i+1, j+1) + pi(d, psi, i,   j+1)  &
     - pi(d, psi, i+1, j-1) - pi(d, psi, i,   j-1), &
@@ -447,9 +444,9 @@ module antidiff_2D_m
 
   function antidiff_2D(d, psi, i, j, C) result (return)
     integer :: d
-    integer, pointer :: i(:), j(:)
-    real(real_t) :: return(i(0):i(size(i)-1),j(0):j(size(j)-1))
-    real(real_t), pointer, intent(in) :: psi(:,:)
+    integer, pointer, contiguous :: i(:), j(:) 
+    real(real_t) :: return(size(i), size(j))
+    real(real_t), pointer, intent(in), contiguous :: psi(:,:) 
     class(arrvec_t), pointer :: C
  
     return =                                  &
@@ -465,7 +462,6 @@ module antidiff_2D_m
       ) / 4                                   &
       * B(d, psi, i, j)
   end function
-
 end module
 !listing08
 module mpdata_m
@@ -475,9 +471,10 @@ module mpdata_m
   implicit none
   
   type, extends(adv_t) :: mpdata_t
-    integer :: n_iters
-    class(arrvec_t), pointer :: tmp(:) !TODO: dtor!
-    integer, pointer :: i(:), j(:), im(:), jm(:)
+    integer :: n_iters, n_tmp
+    class(arrvec_t), pointer :: tmp(:) 
+    integer, pointer, contiguous :: i(:), j(:)
+    integer, pointer, contiguous :: im(:), jm(:) 
     contains
     procedure :: ctor => mpdata_ctor
     procedure :: init => mpdata_init
@@ -496,13 +493,12 @@ module mpdata_m
 
   subroutine mpdata_init(O, i, j)
     class(mpdata_t) :: O
-    integer, intent(in), pointer :: i(:), j(:)
+    integer, intent(in), pointer, contiguous :: i(:), j(:)
 
     O%i => i
     O%j => j
 
-    allocate(O%im(0:size(i)))  !TODO: deallocate
-    allocate(O%jm(0:size(j)))  !TODO: deallocate
+    allocate(O%im(0:size(i)), O%jm(0:size(j)))  
     block 
       integer :: c
       O%im = (/ (c, c=i(0)-1, j(size(i)-1)) /)
@@ -511,11 +507,11 @@ module mpdata_m
     
     block
       integer :: c, hlo, nc
-      nc = 1
-      if (O%n_iters > 2) nc = 2
-      allocate(O%tmp(0:nc)) !TODO: deallocate?
+      O%n_tmp = 1
+      if (O%n_iters > 2) O%n_tmp = 2
+      allocate(O%tmp(0:O%n_tmp)) 
       hlo = O%n_halos
-      do c=0, nc-1
+      do c=0, O%n_tmp - 1
         call O%tmp(c)%ctor(2)
         call O%tmp(c)%init(0,                    &   
           i(0) -hlo - h, i(size(i)-1) + hlo + h, &
@@ -531,8 +527,11 @@ module mpdata_m
 
   subroutine mpdata_dtor(O)
     class(mpdata_t) :: O
-    !TODO
-    !deallocate()
+    integer :: c
+    do c=0, O%n_tmp-1 
+      call O%tmp(c)%dtor()
+    end do
+    deallocate(O%im, O%jm, O%tmp)
   end subroutine
 
   subroutine mpdata_op_2D(O, psi, n, C, step)
@@ -544,7 +543,6 @@ module mpdata_m
     else
       block
         class(arrvec_t), pointer :: C_corr, C_unco
-
         if (step == 1) then
           C_unco => C
           C_corr => O%tmp(0)
@@ -554,8 +552,9 @@ module mpdata_m
         else
           C_unco => O%tmp(0)
           C_corr => O%tmp(1)
-        endif
+        end if
 
+        !TODO: hlo!
         C_corr%at(0)%p%a(O%im+h, O%j) = &
           antidiff_2D(0, psi%at(n)%p%a, O%im, O%j, C_unco)
         C_corr%at(1)%p%a(O%i, O%jm+h) = &
@@ -563,8 +562,7 @@ module mpdata_m
 
         call donorcell_2D(psi, n, C_corr, O%i, O%j)
       end block
-    endif
-
+    end if
   end subroutine
 end module
 !listing09
