@@ -216,7 +216,7 @@ inline auto antidiff_2D(
   * (1 - abs(C[d](pi<d>(i+h, j)))) 
   * A<d>(psi, i, j) 
   - C[d](pi<d>(i+h, j)) 
-  * (
+  * ( // TODO: vmean
     C[d-1](pi<d>(i+1, j+h)) + 
     C[d-1](pi<d>(i,   j+h)) +
     C[d-1](pi<d>(i+1, j-h)) + 
@@ -240,6 +240,7 @@ struct mpdata
     // im, jm: extended ranges as we only use C_+1/2 
     : i(i), j(j), im(i.first() - 1, i.last()), jm(j.first() - 1, j.last())
   {
+    // TODO: tmp vector (as in Fortran)
     const int hlo = n_halos;
     tmp0.push_back(new arr_t(i^h^hlo, j^hlo));
     tmp0.push_back(new arr_t(i^hlo, j^h^hlo));

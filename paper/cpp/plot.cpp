@@ -62,7 +62,7 @@ int main() {
        << "with lines notitle\n";
     gp.sendBinary(solver.state().copy());
   } {
-    const int it = 4;
+    const int it = 7;
     solver_2D<mpdata<it>, 
       cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
     setup(solver, n, C); 
