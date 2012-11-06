@@ -196,19 +196,19 @@ module solver_2D_m
     call bcy%init(1, O%j, O%i, adv%n_halos)
     call adv%init(O%i, O%j)
 
-    block
-      integer :: i, hlo
-      hlo = adv%n_halos
-
+    associate (hlo => adv%n_halos)
       allocate(O%psi)
       call O%psi%ctor(2)
       
-      do i=0, 1
-        call O%psi%init(i, &
-          O%i(0) -hlo, O%i(size(O%i)-1) + hlo, &
-          O%j(0) -hlo, O%j(size(O%j)-1) + hlo  &
-        ) 
-      end do
+      block
+        integer :: i
+        do i=0, 1
+          call O%psi%init(i, &
+            O%i(0) -hlo, O%i(size(O%i)-1) + hlo, &
+            O%j(0) -hlo, O%j(size(O%j)-1) + hlo  &
+          ) 
+        end do
+      end block
 
       allocate(O%C)
       call O%C%ctor(2)
@@ -220,7 +220,7 @@ module solver_2D_m
         O%i(0) -hlo    , O%i(size(O%i)-1) + hlo,     &   
         O%j(0) -hlo - h, O%j(size(O%j)-1) + hlo + h  &
       )
-    end block
+    end associate
 
     O%n = 0
 
@@ -505,24 +505,25 @@ module mpdata_m
       O%jm = (/ (c, c=j(0)-1, j(size(j)-1)) /)
     end block
     
-    block
-      integer :: c, hlo, nc
+    associate (hlo => O%n_halos)
       O%n_tmp = 1
       if (O%n_iters > 2) O%n_tmp = 2
       allocate(O%tmp(0:O%n_tmp)) 
-      hlo = O%n_halos
-      do c=0, O%n_tmp - 1
-        call O%tmp(c)%ctor(2)
-        call O%tmp(c)%init(0,                    &   
-          i(0) -hlo - h, i(size(i)-1) + hlo + h, &
-          j(0) -hlo    , j(size(j)-1) + hlo      &   
-        )   
-        call O%tmp(c)%init(1,                    &   
-          i(0) -hlo    , i(size(i)-1) + hlo,     &   
-          j(0) -hlo - h, j(size(j)-1) + hlo + h  &
-        )  
-      end do
-    end block
+      block
+        integer :: c
+        do c=0, O%n_tmp - 1
+          call O%tmp(c)%ctor(2)
+          call O%tmp(c)%init(0,                    &   
+            i(0) -hlo - h, i(size(i)-1) + hlo + h, &
+            j(0) -hlo    , j(size(j)-1) + hlo      &   
+          )   
+          call O%tmp(c)%init(1,                    &   
+            i(0) -hlo    , i(size(i)-1) + hlo,     &   
+            j(0) -hlo - h, j(size(j)-1) + hlo + h  &
+          )  
+        end do
+      end block
+    end associate
   end subroutine
 
   subroutine mpdata_dtor(O)
@@ -554,7 +555,7 @@ module mpdata_m
           C_corr => O%tmp(1)
         end if
 
-        !TODO: hlo!
+        !TODO: hlo! / associate
         C_corr%at(0)%p%a(O%im+h, O%j) = &
           antidiff_2D(0, psi%at(n)%p%a, O%im, O%j, C_unco)
         C_corr%at(1)%p%a(O%i, O%jm+h) = &
