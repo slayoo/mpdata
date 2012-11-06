@@ -51,10 +51,12 @@ def testMpdata(nx, ny, nt, cx, cy, n_iters, psi_in, psi_out):
     slv.Cx()[:] = cx
     slv.Cy()[:] = cy
     print "ind", slice(slv.i.start - 1, slv.i.stop),slv.j
+    adwekcja = slv.adv
+    print "slv.adv", adwekcja.n_halos
     #a_operator = a_op(0,slv.psi,slice(1, 5, None), slice(2, 5, None))
     slv.solve(nt)
     print "test dla parametrow: cx, cy, nt, n_iters", cx, cy, nt, n_iters
-    print "psi rozw", slv.state(), slv.state() - psi_out
+    print "psi rozw, roznica", slv.state(), slv.state() - psi_out
     print "test message: ", numpy.testing.assert_almost_equal(slv.state(), psi_out, decimal=5)
 
 
