@@ -41,7 +41,6 @@ program test
 
     nx = arg2int(1)
     ny = arg2int(2)
-print*, nx, " ", ny
     Cx = arg2real(3)
     Cy = arg2real(4)
     nt = arg2int(5)
@@ -76,13 +75,18 @@ print*, nx, " ", ny
     call slv%solve(nt)
 
     block
+      logical :: error = .FALSE.
       real(real_t), pointer :: tmp(:,:)
       character (len=666) :: fname
       allocate(tmp(nx,ny))
       call get_command_argument(8, fname)
       call read_file(666, fname, tmp)
-      if (maxval(abs(slv%state() - tmp)) >= .5 * 10.**(-dec)) stop 1
+      if (maxval(abs(slv%state() - tmp)) >= .5 * 10.**(-dec)) error = .TRUE.
       deallocate(tmp)
+      if (error) then
+        print*, slv%state()
+        stop 1
+      end if
     end block
 
     call slv%dtor()

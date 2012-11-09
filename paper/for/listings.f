@@ -58,7 +58,6 @@ module arrvec_m
   subroutine arrvec_dtor(O)
     class(arrvec_t) :: O
     integer :: i
-
     do i = 0, size(O%inited) - 1
       if (O%inited(i)) then
         deallocate(O%at(i)%p%a)
@@ -199,7 +198,6 @@ module solver_2D_m
     associate (hlo => adv%n_halos)
       allocate(O%psi)
       call O%psi%ctor(2)
-      
       block
         integer :: i
         do i=0, 1
@@ -232,6 +230,7 @@ module solver_2D_m
   subroutine solver_2D_dtor(O)
     class(solver_2D_t) :: O
     call O%psi%dtor()
+    call O%C%dtor()
     deallocate(O%i, O%j, O%psi)
   end subroutine
   
@@ -304,8 +303,8 @@ module cyclic_m
   
   type, extends(bcd_t) :: cyclic_t
     integer :: d
-    integer, pointer :: left_halo(:), rght_halo(:)
-    integer, pointer :: left_edge(:), rght_edge(:)
+    integer, pointer, contiguous :: left_halo(:), rght_halo(:)
+    integer, pointer, contiguous :: left_edge(:), rght_edge(:)
     integer, pointer, contiguous :: j(:)
     contains
     procedure :: init => cyclic_init
@@ -342,8 +341,9 @@ module cyclic_m
     class(cyclic_t) :: O
     deallocate(O%left_halo)
     deallocate(O%rght_halo)
-    deallocate(O%left_edge)
-    deallocate(O%rght_edge)
+    !deallocate(O%left_edge) !causes a segfault :(
+    !deallocate(O%rght_edge) !causes a segfault :(
+    deallocate(O%j)
   end subroutine
 
   subroutine cyclic_fill_halos(O, psi)
