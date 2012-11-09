@@ -1,30 +1,7 @@
-! modeule code from http://stackoverflow.com/questions/2813502/reading-input-files-in-fortran
-module read_file_m
-  use real_m
-  implicit none
-  contains
-  subroutine read_file (UnitNum, FileName, Array)
-    integer, intent (in) :: UnitNum
-    character (len=*), intent (in) :: FileName
-    real(real_t), pointer :: Array(:,:)
-
-    open (unit=UnitNum, file=FileName, status='old', action='read' )
-    !backspace (UnitNum)
-    block    
-      integer :: i, j
-      do i=1, size(Array, 2)
-        read (UnitNum, *) (Array (i, j), j=1, size(Array, 1))
-      end do
-    end block
-    close (UnitNum)
-   end subroutine read_file
-end module read_file_m
-
 program test
   use solver_2D_m
   use mpdata_m
   use cyclic_m
-  use read_file_m
   implicit none
 
   if (command_argument_count() /= (9)) then
@@ -63,7 +40,7 @@ program test
       character (len=666) :: fname
       tmp => slv%state() 
       call get_command_argument(7, fname)
-      call read_file(666, fname, tmp)
+      call read_file(fname, tmp)
 
       tmp => slv%Cx() 
       tmp = Cx
@@ -80,7 +57,7 @@ program test
       character (len=666) :: fname
       allocate(tmp(nx,ny))
       call get_command_argument(8, fname)
-      call read_file(666, fname, tmp)
+      call read_file(fname, tmp)
       if (maxval(abs(slv%state() - tmp)) >= .5 * 10.**(-dec)) error = .TRUE.
       deallocate(tmp)
       if (error) then
@@ -113,4 +90,18 @@ program test
     call get_command_argument(argno, tmp)
     read(tmp,*)return
   end function
+
+  subroutine read_file(fname, array)
+    character (len=*), intent (in) :: fname
+    real(real_t), pointer :: array(:,:)
+    integer :: un
+    open(newunit=un, file=fname, status='old', action='read' )
+    block    
+      integer :: i, j
+      do i=1, size(array, 2)
+        read(un, *) (array (i, j), j=1, size(array, 1))
+      end do
+    end block
+    close (un)
+   end subroutine read_file
 end program
