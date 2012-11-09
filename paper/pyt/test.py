@@ -1,7 +1,7 @@
+from listings import *
 import sys
 from numpy import loadtxt
 from numpy.testing import assert_almost_equal
-from listings import *
 
 if (len(sys.argv) != (9 + 1)) : 
   raise Exception('expecting 9 arguments (nx, ny, Cx, Cy, nt, it, f.in, f.out, dec)')

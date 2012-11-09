@@ -4,6 +4,10 @@
 #listing01
 real_t = 'float64'
 #listing02
+try:
+  import numpypy
+except ImportError:
+  pass
 import numpy
 #listing03
 class Shift():
