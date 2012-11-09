@@ -478,6 +478,7 @@ module mpdata_m
     contains
     procedure :: ctor => mpdata_ctor
     procedure :: init => mpdata_init
+    procedure :: dtor => mpdata_dtor
     procedure :: op_2D => mpdata_op_2D
   end type
 
