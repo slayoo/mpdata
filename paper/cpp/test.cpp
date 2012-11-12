@@ -32,8 +32,8 @@ void test(char **argv)
 
   mpdata_2D<it, cyclic<0>, cyclic<1>> slv(nx, ny); 
   slv.state() = read_file(fin, nx, ny);
-  slv.Cx() = Cx; 
-  slv.Cy() = Cy; 
+  slv.courant(0) = Cx; 
+  slv.courant(1) = Cy; 
   slv.solve(nt);
   if (max(abs(slv.state() - read_file(fout, nx, ny))) >= .5 * pow(10, -dec)) throw;
 }

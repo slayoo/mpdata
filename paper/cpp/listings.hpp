@@ -51,13 +51,14 @@ struct solver_2D
 {
   // member fields
   arrvec_t psi, C;
-  int n;
+  int n, hlo;
   rng_t i, j;
   bcx_t bcx;
   bcy_t bcy;
 
   // ctor
   solver_2D(int nx, int ny, int hlo) :
+    hlo(hlo),
     n(0), 
     i(0, nx-1), 
     j(0, ny-1),  
@@ -74,21 +75,34 @@ struct solver_2D
   arr_t state() {
     return psi[n](i,j).reindex({0,0});
   }
-  arr_t Cx() { return C[0]; } // TODO!
-  arr_t Cy() { return C[1]; } // TODO!
 
-  //
+  arr_t courant(int d) 
+  { 
+    return C[d](i-h,j-h).reindex({0,0}); 
+  }
+
+  // helper methods invoked by solve()
   virtual void advop() = 0;
 
-  void cycle() { n = (n + 1) % 2 - 2; }
+  void cycle() 
+  { 
+    n = (n + 1) % 2 - 2; 
+  }
+
+  void xchng(const arr_t &arr) 
+  { 
+    bcx.fill_halos(arr);
+    bcy.fill_halos(arr);
+  }
 
   // integration logic
   void solve(const int nt) 
   {
     for (int t = 0; t < nt; ++t) 
     {
-      bcx.fill_halos(psi[n]);
-      bcy.fill_halos(psi[n]);
+      xchng(C[0]);
+      xchng(C[1]);
+      xchng(psi[n]);
       advop();
       cycle();
     }
@@ -136,10 +150,10 @@ struct cyclic
   {} 
 
   // method invoked by the solver
-  void fill_halos(const arr_t &psi)
+  void fill_halos(const arr_t &arr)
   {
-    psi(left_halo) = psi(rght_edge);     
-    psi(rght_halo) = psi(left_edge);     
+    arr(left_halo) = arr(rght_edge);     
+    arr(rght_halo) = arr(left_edge);     
   }
 };
 namespace donorcell
@@ -228,6 +242,21 @@ namespace mpdata
       psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
     ) / 2
   )
+
+  template<int d>
+  inline auto C_bar(
+    const arr_t &C, 
+    const rng_t &i, 
+    const rng_t &j
+  ) return_macro(
+    (
+      C(pi<d>(i+1, j+h)) + 
+      C(pi<d>(i,   j+h)) +
+      C(pi<d>(i+1, j-h)) + 
+      C(pi<d>(i,   j-h)) 
+    ) / 4
+  )
+
 //listing16
   template<int d>
   inline auto antidiff_2D(
@@ -239,12 +268,7 @@ namespace mpdata
     * (1 - abs(C[d](pi<d>(i+h, j)))) 
     * A<d>(psi, i, j) 
     - C[d](pi<d>(i+h, j)) 
-    * ( // TODO: vmean
-      C[d-1](pi<d>(i+1, j+h)) + 
-      C[d-1](pi<d>(i,   j+h)) +
-      C[d-1](pi<d>(i+1, j-h)) + 
-      C[d-1](pi<d>(i,   j-h)) 
-    ) / 4
+    * C_bar<d>(C[d-1], i, j)
     * B<d>(psi, i, j)
   ) 
 };
@@ -253,58 +277,52 @@ template<int n_iters, class bcx_t, class bcy_t>
 struct mpdata_2D : solver_2D<bcx_t, bcy_t>
 {
   // member fields
-  arrvec_t tmp0, tmp1;
-  const rng_t im, jm;
-
-  static const int n_steps = n_iters;
-  static const int n_halos = n_iters;
+  arrvec_t tmp[2];
 
   // ctor
   mpdata_2D(int nx, int ny) : 
-    solver_2D<bcx_t, bcy_t>(nx, ny, n_iters),
-    im(this->i.first() - 1, this->i.last()), jm(this->j.first() - 1, this->j.last())
+    solver_2D<bcx_t, bcy_t>(nx, ny, 1)
   {
-    // TODO: tmp vector (as in Fortran)
-    const int hlo = n_halos;
-    tmp0.push_back(new arr_t(this->i^h^hlo, this->j^hlo));
-    tmp0.push_back(new arr_t(this->i^hlo, this->j^h^hlo));
-    if (n_iters <= 2) return;
-    tmp1.push_back(new arr_t(this->i^h^hlo, this->j^hlo));
-    tmp1.push_back(new arr_t(this->i^hlo, this->j^h^hlo));
+    for (int n = 0; n < (n_iters > 2 ? 2 : 1); ++n)
+    {
+      tmp[n].push_back(new arr_t(this->i^h^this->hlo, this->j^this->hlo));
+      tmp[n].push_back(new arr_t(this->i^this->hlo, this->j^h^this->hlo));
+    }
   }
 
   // method invoked by the solver
   void advop()
   {
-    for (int step = 0; step < n_steps; ++step) 
+    for (int step = 0; step < n_iters; ++step) 
     {
       if (step == 0) 
         donorcell::op_2D(this->psi, this->n, this->C, this->i, this->j);
       else
       {
         this->cycle();
-        this->bcx.fill_halos(this->psi[this->n]);
-        this->bcy.fill_halos(this->psi[this->n]);
+        this->xchng(this->psi[this->n]);
 
         // choosing input/output for antidiff. C
         const arrvec_t 
           &C_unco = (step == 1) 
             ? this->C 
             : (step % 2) 
-              ? tmp1  // odd steps
-              : tmp0, // even steps
+              ? tmp[1]  // odd steps
+              : tmp[0], // even steps
           &C_corr = (step  % 2) 
-            ? tmp0    // odd steps
-            : tmp1;   // even steps
+            ? tmp[0]    // odd steps
+            : tmp[1];   // even steps
 
         // calculating the antidiffusive velocities
-        const int hlo = n_steps - 1 - step;
-        C_corr[0](im+h, this->j^hlo) = mpdata::antidiff_2D<0>(
-          this->psi[this->n], im, this->j^hlo, C_unco
+        C_corr[0](this->i+h, this->j) = mpdata::antidiff_2D<0>(
+          this->psi[this->n], this->i, this->j, C_unco
         );
-        C_corr[1](this->i^hlo, jm+h) = mpdata::antidiff_2D<1>(
-          this->psi[this->n], jm, this->i ^ hlo, C_unco
+        this->xchng(C_corr[0]);
+
+        C_corr[1](this->i, this->j+h) = mpdata::antidiff_2D<1>(
+          this->psi[this->n], this->j, this->i, C_unco
         );
+        this->xchng(C_corr[1]);
 
         // donor-cell step 
         donorcell::op_2D(this->psi, this->n, C_corr, this->i, this->j);

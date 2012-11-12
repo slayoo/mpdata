@@ -12,8 +12,8 @@ void setup(T &solver, int n[2], real_t C[2]) {
     -sqr(i-n[x]/2.) / (2.*pow(n[x]/10, 2))
     -sqr(j-n[y]/2.) / (2.*pow(n[y]/10, 2))
   );  
-  solver.Cx() = C[x]; 
-  solver.Cy() = C[y];
+  solver.courant(x) = C[x]; 
+  solver.courant(y) = C[y];
 }
 
 int main() {
