@@ -29,26 +29,27 @@ one = Shift(1,1)
 hlf = Shift(1,0)
 #listing05
 class Solver_2D(object):
-  # ctor
-  def __init__(self, adv, n_iters, bcx, bcy, nx, ny):
+  # ctor-like method
+  def __init__(self, 
+    adv, n_iters, bcx, bcy, nx, ny
+  ):
     self.adv = adv(n_iters, nx, ny)
     self.n = 0
 
     hlo = self.adv.n_halos
-
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
-
     self.bcx = bcx(0, self.i, hlo)
     self.bcy = bcy(1, self.j, hlo)
 
+    hlo = 2 * self.adv.n_halos
     self.psi = (
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t) 
+      numpy.empty((nx+hlo, ny+hlo), real_t),
+      numpy.empty((nx+hlo, ny+hlo), real_t) 
     )
     self.C = (
-      numpy.empty((nx+1+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo,   ny+1+2*hlo), real_t)
+      numpy.empty((nx+1+hlo, ny  +hlo), real_t),
+      numpy.empty((nx  +hlo, ny+1+hlo), real_t)
     )
 
   # accessor methods
@@ -161,15 +162,16 @@ class Mpdata(object):
   def __init__(self, n_iters, nx, ny):
     self.n_steps = n_iters
     self.n_halos = n_iters
-    hlo = self.n_halos
+
+    hlo = 2 * self.n_halos
     self.tmp0 = (
-      numpy.empty(( nx+1+2*hlo, ny+2*hlo), real_t),
-      numpy.empty(( nx+2*hlo,   ny+1+2*hlo), real_t)
+      numpy.empty(( nx+1+hlo, ny  +hlo), real_t),
+      numpy.empty(( nx  +hlo, ny+1+hlo), real_t)
     )
     if n_iters > 2:
       self.tmp1 = (
-        numpy.empty(( nx+1+2*hlo, ny+2*hlo), real_t),
-        numpy.empty(( nx+2*hlo,   ny+1+2*hlo), real_t)
+        numpy.empty(( nx+1+hlo, ny  +hlo), real_t),
+        numpy.empty(( nx  +hlo, ny+1+hlo), real_t)
       )
 
   def op_2D(self, psi, n, C, i, j, step):
@@ -177,23 +179,19 @@ class Mpdata(object):
       donorcell_2D(psi, n, C, i, j)
     else:
       if step == 1:
-        C_unco, C_corr = C, self.tmp0 #zmienic tmp0,1 na tuple tmp
+        C_unco, C_corr = C, self.tmp0 # TODO: tmp tuple
       elif step % 2:
         C_unco, C_corr = self.tmp1, self.tmp0
       else:
         C_unco, C_corr = self.tmp0, self.tmp1
-        
-        
-      im = slice(i.start - 1, i.stop) # przeniesc do konstruktora
+
+      im = slice(i.start - 1, i.stop) 
       jm = slice(j.start - 1, j.stop)
 
-      # not sure if this is ok, ask Sylwester
-      # TO DO: should we write similar class to Shift??
-      ih = slice(i.start - (self.n_steps - 1 - step), i.stop +  (self.n_steps - 1 - step)) 
-      jh = slice(j.start -  (self.n_steps - 1 - step), j.stop +  (self.n_steps - 1 - step))
-
-      print "rozmiar psi", psi[n].shape, im, jm, ih, jh, self.n_halos
-      
+      hlo = self.n_steps - 1 - step # TODO: check it!
+      ih = slice(i.start - hlo, i.stop + hlo) 
+      jh = slice(j.start - hlo, j.stop + hlo)
+        
       C_corr[0][im+hlf, jh] = (
         antidiff_2D(0, psi[n], im, jh, C_unco)) 
       C_corr[1][ih, jm+hlf] = (

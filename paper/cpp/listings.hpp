@@ -46,27 +46,26 @@ inline rng_t operator^(
   ); 
 } 
 //listing07
-template<class adv_t, class bcx_t, class bcy_t>
+template<class bcx_t, class bcy_t>
 struct solver_2D
 {
   // member fields
   arrvec_t psi, C;
   int n;
   rng_t i, j;
-  adv_t adv;
   bcx_t bcx;
   bcy_t bcy;
 
   // ctor
-  solver_2D(int nx, int ny) :
-    n(0), i(0, nx-1), j(0, ny-1), adv(i, j), 
-    bcx(i, j, adv_t::n_halos), 
-    bcy(j, i, adv_t::n_halos)
+  solver_2D(int nx, int ny, int hlo) :
+    n(0), 
+    i(0, nx-1), 
+    j(0, ny-1),  
+    bcx(i, j, hlo), 
+    bcy(j, i, hlo)
   {
-    const int hlo = adv.n_halos;
     for (int l = 0; l < 2; ++l) 
       psi.push_back(new arr_t(i^hlo, j^hlo));
-    // +/-hlo (Blitz requires equal lower bounds)
     C.push_back(new arr_t(i^h^hlo, j^hlo));
     C.push_back(new arr_t(i^hlo, j^h^hlo));
   }
@@ -75,18 +74,23 @@ struct solver_2D
   arr_t state() {
     return psi[n](i,j).reindex({0,0});
   }
-  arr_t Cx() { return C[0]; } 
-  arr_t Cy() { return C[1]; } 
+  arr_t Cx() { return C[0]; } // TODO!
+  arr_t Cy() { return C[1]; } // TODO!
+
+  //
+  virtual void advop() = 0;
+
+  void cycle() { n = (n + 1) % 2 - 2; }
 
   // integration logic
-  void solve(const int nt) {
-    for (int t = 0; t < nt; ++t) {
-      for (int s = 0; s < adv.n_steps; ++s) {
-        bcx.fill_halos(psi[n]);
-        bcy.fill_halos(psi[n]);
-        adv.op_2D(psi, n, C, s);
-        n = (n + 1) % 2;
-      }
+  void solve(const int nt) 
+  {
+    for (int t = 0; t < nt; ++t) 
+    {
+      bcx.fill_halos(psi[n]);
+      bcy.fill_halos(psi[n]);
+      advop();
+      cycle();
     }
   }
 };
@@ -138,149 +142,173 @@ struct cyclic
     psi(rght_halo) = psi(left_edge);     
   }
 };
+namespace donorcell
+{
 //listing10
-template<class T1, class T2, class T3> 
-inline auto F(
-  const T1 &psi_l, const T2 &psi_r, const T3 &C
-) 
-return_macro(
-  (
-    (C + abs(C)) * psi_l + 
-    (C - abs(C)) * psi_r
-  ) / 2
-)
-//listing11
-template<int d>  
-inline auto donorcell( 
-  const arr_t &psi, const arr_t &C, 
-  const rng_t &i, const rng_t &j
-) return_macro(
-  F(
-    psi(pi<d>(i,   j)), 
-    psi(pi<d>(i+1, j)), 
-      C(pi<d>(i+h, j))
-  ) -
-  F(
-    psi(pi<d>(i-1, j)), 
-    psi(pi<d>(i,   j)), 
-      C(pi<d>(i-h, j))
-  )
-)
-//listing12
-inline void donorcell_2D(
-  const arrvec_t &psi, const int n,
-  const arrvec_t &C, 
-  const rng_t &i, const rng_t &j
-) { 
-  psi[n+1](i,j) = psi[n](i,j)
-    - donorcell<0>(psi[n], C[0], i, j)
-    - donorcell<1>(psi[n], C[1], j, i); 
-}
-//listing13
-template<class nom_t, class den_t>
-inline auto frac(
-  const nom_t &nom, const den_t &den
-) return_macro(
-  where(den > 0, nom / den, 0)
-) 
-//listing14
-template<int d>
-inline auto A(const arr_t &psi, 
-  const rng_t &i, const rng_t &j
-) return_macro(
-  frac(
-    psi(pi<d>(i+1, j)) - psi(pi<d>(i,j)),
-    psi(pi<d>(i+1, j)) + psi(pi<d>(i,j))
+  template<class T1, class T2, class T3> 
+  inline auto F(
+    const T1 &psi_l, const T2 &psi_r, const T3 &C
   ) 
-) 
+  return_macro(
+    (
+      (C + abs(C)) * psi_l + 
+      (C - abs(C)) * psi_r
+    ) / 2
+  )
+//listing11
+  template<int d>  
+  inline auto donorcell( 
+    const arr_t &psi, const arr_t &C, 
+    const rng_t &i, const rng_t &j
+  ) return_macro(
+    F(
+      psi(pi<d>(i,   j)), 
+      psi(pi<d>(i+1, j)), 
+        C(pi<d>(i+h, j))
+    ) -
+    F(
+      psi(pi<d>(i-1, j)), 
+      psi(pi<d>(i,   j)), 
+        C(pi<d>(i-h, j))
+    )
+  )
+//listing12
+  void op_2D(
+    const arrvec_t &psi, const int n,
+    const arrvec_t &C, 
+    const rng_t &i, const rng_t &j
+  ) { 
+    psi[n+1](i,j) = psi[n](i,j)
+      - donorcell<0>(psi[n], C[0], i, j)
+      - donorcell<1>(psi[n], C[1], j, i); 
+  }
+};
+//listing
+template<class bcx_t, class bcy_t>
+struct donorcell_2D : solver_2D<bcx_t, bcy_t> 
+{
+  // ctor
+  donorcell_2D(int nx, int ny) :
+    solver_2D<bcx_t, bcy_t>(nx, ny, 1)
+  {}  
+
+  void advop()
+  {
+    donorcell::op_2D(this->psi, this->n, this->C, this->i, this->j);
+  }
+};
+namespace mpdata
+{
+//listing13
+  template<class nom_t, class den_t>
+  inline auto frac(
+    const nom_t &nom, const den_t &den
+  ) return_macro(
+    where(den > 0, nom / den, 0)
+  ) 
+//listing14
+  template<int d>
+  inline auto A(const arr_t &psi, 
+    const rng_t &i, const rng_t &j
+  ) return_macro(
+    frac(
+      psi(pi<d>(i+1, j)) - psi(pi<d>(i,j)),
+      psi(pi<d>(i+1, j)) + psi(pi<d>(i,j))
+    ) 
+  ) 
 //listing15
-template<int d>
-inline auto B(const arr_t &psi, 
-  const rng_t &i, const rng_t &j
-) return_macro(
- frac(
-    psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) -
-    psi(pi<d>(i+1, j-1)) - psi(pi<d>(i, j-1)),
-    psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) +
-    psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
-  ) / 2
-)
+  template<int d>
+  inline auto B(const arr_t &psi, 
+    const rng_t &i, const rng_t &j
+  ) return_macro(
+   frac(
+      psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) -
+      psi(pi<d>(i+1, j-1)) - psi(pi<d>(i, j-1)),
+      psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) +
+      psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
+    ) / 2
+  )
 //listing16
-template<int d>
-inline auto antidiff_2D(
-  const arr_t &psi, 
-  const rng_t &i, const rng_t &j,
-  const arrvec_t &C
-) return_macro(
-  abs(C[d](pi<d>(i+h, j))) 
-  * (1 - abs(C[d](pi<d>(i+h, j)))) 
-  * A<d>(psi, i, j) 
-  - C[d](pi<d>(i+h, j)) 
-  * ( // TODO: vmean
-    C[d-1](pi<d>(i+1, j+h)) + 
-    C[d-1](pi<d>(i,   j+h)) +
-    C[d-1](pi<d>(i+1, j-h)) + 
-    C[d-1](pi<d>(i,   j-h)) 
-  ) / 4
-  * B<d>(psi, i, j)
-) 
+  template<int d>
+  inline auto antidiff_2D(
+    const arr_t &psi, 
+    const rng_t &i, const rng_t &j,
+    const arrvec_t &C
+  ) return_macro(
+    abs(C[d](pi<d>(i+h, j))) 
+    * (1 - abs(C[d](pi<d>(i+h, j)))) 
+    * A<d>(psi, i, j) 
+    - C[d](pi<d>(i+h, j)) 
+    * ( // TODO: vmean
+      C[d-1](pi<d>(i+1, j+h)) + 
+      C[d-1](pi<d>(i,   j+h)) +
+      C[d-1](pi<d>(i+1, j-h)) + 
+      C[d-1](pi<d>(i,   j-h)) 
+    ) / 4
+    * B<d>(psi, i, j)
+  ) 
+};
 //listing17
-template<int n_iters>
-struct mpdata 
+template<int n_iters, class bcx_t, class bcy_t>
+struct mpdata_2D : solver_2D<bcx_t, bcy_t>
 {
   // member fields
   arrvec_t tmp0, tmp1;
-  const rng_t i, j, im, jm;
+  const rng_t im, jm;
 
   static const int n_steps = n_iters;
   static const int n_halos = n_iters;
 
   // ctor
-  mpdata(const rng_t &i, const rng_t &j)
-    // im, jm: extended ranges as we only use C_+1/2 
-    : i(i), j(j), im(i.first() - 1, i.last()), jm(j.first() - 1, j.last())
+  mpdata_2D(int nx, int ny) : 
+    solver_2D<bcx_t, bcy_t>(nx, ny, n_iters),
+    im(this->i.first() - 1, this->i.last()), jm(this->j.first() - 1, this->j.last())
   {
     // TODO: tmp vector (as in Fortran)
     const int hlo = n_halos;
-    tmp0.push_back(new arr_t(i^h^hlo, j^hlo));
-    tmp0.push_back(new arr_t(i^hlo, j^h^hlo));
+    tmp0.push_back(new arr_t(this->i^h^hlo, this->j^hlo));
+    tmp0.push_back(new arr_t(this->i^hlo, this->j^h^hlo));
     if (n_iters <= 2) return;
-    tmp1.push_back(new arr_t(i^h^hlo, j^hlo));
-    tmp1.push_back(new arr_t(i^hlo, j^h^hlo));
+    tmp1.push_back(new arr_t(this->i^h^hlo, this->j^hlo));
+    tmp1.push_back(new arr_t(this->i^hlo, this->j^h^hlo));
   }
 
   // method invoked by the solver
-  inline void op_2D( 
-    const arrvec_t &psi, const int n, 
-    const arrvec_t &C, 
-    const int step
-  ) {
-    if (step == 0) 
-      donorcell_2D(psi, n, C, i, j);
-    else
+  void advop()
+  {
+    for (int step = 0; step < n_steps; ++step) 
     {
-      // choosing input/output for antidiff. C
-      const arrvec_t 
-        &C_unco = (step == 1) 
-          ? C 
-          : (step % 2) 
-            ? tmp1  // odd steps
-            : tmp0, // even steps
-        &C_corr = (step  % 2) 
-          ? tmp0    // odd steps
-          : tmp1;   // even steps
+      if (step == 0) 
+        donorcell::op_2D(this->psi, this->n, this->C, this->i, this->j);
+      else
+      {
+        this->cycle();
+        this->bcx.fill_halos(this->psi[this->n]);
+        this->bcy.fill_halos(this->psi[this->n]);
 
-      // calculating the antidiffusive velocities
-      const int hlo = n_steps - 1 - step;
-      C_corr[0](im+h, j^hlo) = antidiff_2D<0>(
-        psi[n], im, j^hlo, C_unco
-      );
-      C_corr[1](i^hlo, jm+h) = antidiff_2D<1>(
-        psi[n], jm, i ^ hlo, C_unco
-      );
+        // choosing input/output for antidiff. C
+        const arrvec_t 
+          &C_unco = (step == 1) 
+            ? this->C 
+            : (step % 2) 
+              ? tmp1  // odd steps
+              : tmp0, // even steps
+          &C_corr = (step  % 2) 
+            ? tmp0    // odd steps
+            : tmp1;   // even steps
 
-      // donor-cell step 
-      donorcell_2D(psi, n, C_corr, i, j);
+        // calculating the antidiffusive velocities
+        const int hlo = n_steps - 1 - step;
+        C_corr[0](im+h, this->j^hlo) = mpdata::antidiff_2D<0>(
+          this->psi[this->n], im, this->j^hlo, C_unco
+        );
+        C_corr[1](this->i^hlo, jm+h) = mpdata::antidiff_2D<1>(
+          this->psi[this->n], jm, this->i ^ hlo, C_unco
+        );
+
+        // donor-cell step 
+        donorcell::op_2D(this->psi, this->n, C_corr, this->i, this->j);
+      }
     }
   }
 };

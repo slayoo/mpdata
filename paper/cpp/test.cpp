@@ -30,7 +30,7 @@ void test(char **argv)
     fin(argv[7]),
     fout(argv[8]);
 
-  solver_2D<mpdata<it>, cyclic<0>, cyclic<1>> slv(nx, ny); 
+  mpdata_2D<it, cyclic<0>, cyclic<1>> slv(nx, ny); 
   slv.state() = read_file(fin, nx, ny);
   slv.Cx() = Cx; 
   slv.Cy() = Cy; 

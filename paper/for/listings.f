@@ -33,26 +33,18 @@ module arrvec_m
   subroutine arrvec_ctor(O, n)
     class(arrvec_t) :: O
     integer, intent(in) :: n
-
     allocate(O%at(-n:n-1))
     allocate(O%inited(0:n-1))
     O%inited = .false.
   end subroutine
 
-  subroutine arrvec_init(O, n,    &
-    i_min, i_max, j_min, j_max       &
-  )
+  subroutine arrvec_init(O, n, i1, i2, j1, j2)
     class(arrvec_t) :: O
-    integer, intent(in) :: n,        &
-      i_min, i_max, j_min, j_max
-
+    integer, intent(in) :: n, i1, i2, j1, j2
     allocate(O%at(n)%p)
-    allocate(O%at(n)%p%a(         &
-      i_min : i_max, j_min : j_max   &
-    ))
+    allocate(O%at(n)%p%a(i1 : i2, j1 : j2))
     O%inited(n) = .true.
-    O%at(n - size(O%inited))%p &
-      => O%at(n)%p
+    O%at(n - size(O%inited))%p => O%at(n)%p
   end subroutine
 
   subroutine arrvec_dtor(O)
@@ -272,7 +264,7 @@ module solver_2D_m
     return => O%C%at(1)%p%a
   end function
 end module
-!listing
+!listing07
 module pi_m
   use real_m
   contains
@@ -294,7 +286,7 @@ module pi_m
     end select
   end function
 end module
-!listing07
+!listing08
 module cyclic_m
   use bcd_m
   use adv_m
@@ -355,7 +347,7 @@ module cyclic_m
     tmp = pi(O%d, psi, O%left_edge, O%j)
   end subroutine
 end module
-!listing08
+!listing09
 module donorcell_1D_m
   use real_m
   use arakawa_c_m
@@ -383,7 +375,7 @@ module donorcell_1D_m
     )
   end function
 end module
-!listing09
+!listing10
 module donorcell_2D_m
   use donorcell_1D_m
   use arrvec_m
@@ -399,7 +391,7 @@ module donorcell_2D_m
       - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)      
   end subroutine
 end module
-!listing10
+!listing11
 module antidiff_2D_m
   use arrvec_m
   use arakawa_c_m
@@ -463,7 +455,7 @@ module antidiff_2D_m
       * B(d, psi, i, j)
   end function
 end module
-!listing08
+!listing12
 module mpdata_m
   use adv_m
   use donorcell_2D_m
@@ -567,4 +559,4 @@ module mpdata_m
     end if
   end subroutine
 end module
-!listing09
+!listing13
