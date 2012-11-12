@@ -28,4 +28,5 @@ slv.Cy()[:] = Cy
 slv.solve(nt)
 
 if (abs(slv.state() - read_file(fout, nx, ny)) >= .5 * pow(10, -dec)).any(): 
+  print slv.state()
   raise Exception()

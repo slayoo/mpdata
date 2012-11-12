@@ -22,7 +22,7 @@ foreach(TEST ${TESTS})
   set(CY ${CMAKE_MATCH_4}) # /
   set(NT ${CMAKE_MATCH_5}) # --- number of timesteps
   set(IT ${CMAKE_MATCH_6}) # --- number of MPDATA iterations
-  set(DEC 5) # ----------------- desired precision (abs(desired-actual) < 0.5 * 10**(-decimal))
+  set(DEC 4) # ----------------- desired precision (abs(desired-actual) < 0.5 * 10**(-decimal))
 
   # passing all of the above as command-line arguments to the test programs
   set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${NAME}:in;${NAME}:out;${DEC})

@@ -35,7 +35,11 @@ void test(char **argv)
   slv.courant(0) = Cx; 
   slv.courant(1) = Cy; 
   slv.solve(nt);
-  if (max(abs(slv.state() - read_file(fout, nx, ny))) >= .5 * pow(10, -dec)) throw;
+  if (max(abs(slv.state() - read_file(fout, nx, ny))) >= .5 * pow(10, -dec)) 
+  {
+    cerr << slv.state() << endl;
+    throw;
+  }
 }
 
 int main(int argc, char **argv)
@@ -48,14 +52,21 @@ int main(int argc, char **argv)
 
   int it = atoi(argv[6]);
 
-  switch (it)
+  try
   {
-    case 1: test<1>(argv); break;
-    case 2: test<2>(argv); break;
-    case 3: test<3>(argv); break;
-    case 4: test<4>(argv); break;
-    case 5: test<5>(argv); break;
-    case 6: test<6>(argv); break;
-    default: throw;
+    switch (it)
+    {
+      case 1: test<1>(argv); break;
+      case 2: test<2>(argv); break;
+      case 3: test<3>(argv); break;
+      case 4: test<4>(argv); break;
+      case 5: test<5>(argv); break;
+      case 6: test<6>(argv); break;
+      default: throw;
+    }
+  }
+  catch (...)
+  {
+    exit(1);
   }
 }
