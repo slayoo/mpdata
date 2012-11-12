@@ -30,33 +30,33 @@ module arrvec_m
 
   contains
 
-  subroutine arrvec_ctor(O, n)
-    class(arrvec_t) :: O
+  subroutine arrvec_ctor(this, n)
+    class(arrvec_t) :: this
     integer, intent(in) :: n
-    allocate(O%at(-n:n-1))
-    allocate(O%inited(0:n-1))
-    O%inited = .false.
+    allocate(this%at(-n:n-1))
+    allocate(this%inited(0:n-1))
+    this%inited = .false.
   end subroutine
 
-  subroutine arrvec_init(O, n, i1, i2, j1, j2)
-    class(arrvec_t) :: O
+  subroutine arrvec_init(this, n, i1, i2, j1, j2)
+    class(arrvec_t) :: this
     integer, intent(in) :: n, i1, i2, j1, j2
-    allocate(O%at(n)%p)
-    allocate(O%at(n)%p%a(i1 : i2, j1 : j2))
-    O%inited(n) = .true.
-    O%at(n - size(O%inited))%p => O%at(n)%p
+    allocate(this%at(n)%p)
+    allocate(this%at(n)%p%a(i1 : i2, j1 : j2))
+    this%inited(n) = .true.
+    this%at(n - size(this%inited))%p => this%at(n)%p
   end subroutine
 
-  subroutine arrvec_dtor(O)
-    class(arrvec_t) :: O
+  subroutine arrvec_dtor(this)
+    class(arrvec_t) :: this
     integer :: i
-    do i = 0, size(O%inited) - 1
-      if (O%inited(i)) then
-        deallocate(O%at(i)%p%a)
-        deallocate(O%at(i)%p)
+    do i = 0, size(this%inited) - 1
+      if (this%inited(i)) then
+        deallocate(this%at(i)%p%a)
+        deallocate(this%at(i)%p)
       end if
     end do
-    deallocate(O%at)
+    deallocate(this%at)
   end subroutine
 end module
 !listing03
@@ -93,33 +93,6 @@ module arakawa_c_m
   end function
 end module
 !listing04
-module adv_m
-  use arrvec_m
-  implicit none
-
-  type, abstract :: adv_t
-    integer :: n_steps, n_halos
-    contains 
-    procedure(op_2D_i), deferred :: op_2D
-    procedure(adv_init_i), deferred :: init
-  end type
-
-  abstract interface
-    subroutine op_2D_i(O, psi, n, C, step)
-      import :: adv_t
-      import :: arrvec_t
-      class(adv_t) :: O
-      class(arrvec_t), pointer :: psi, C
-      integer, intent(in) :: n, step
-    end subroutine
-
-    subroutine adv_init_i(O, i, j)
-      import :: adv_t
-      class(adv_t) :: O
-      integer, intent(in), contiguous, pointer :: i(:), j(:) 
-    end subroutine
-  end interface
-end module
 !listing05
 module bcd_m
   use arrvec_m
@@ -132,137 +105,143 @@ module bcd_m
   end type
  
   abstract interface 
-    subroutine bcd_fill_halos_i(O, psi)
+    subroutine bcd_fill_halos_i(this, psi)
       import :: bcd_t, real_t
-      class(bcd_t) :: O
+      class(bcd_t) :: this
       real(real_t), pointer, contiguous :: psi(:,:) 
     end subroutine
-    subroutine bcd_init_i(O, d, i, j, hlo)
-      import :: bcd_t, real_t
-      class(bcd_t) :: O
-      integer :: d, hlo
-      integer, pointer, contiguous :: i(:), j(:)
+    subroutine bcd_init_i(this, d, nx, ny, hlo)
+      import :: bcd_t
+      class(bcd_t) :: this
+      integer :: d, i, j, hlo
     end subroutine
   end interface
 end module
 !listing06
 module solver_2D_m
   use arrvec_m
-  use adv_m
   use bcd_m
+  use arakawa_c_m
   implicit none
 
-  type :: solver_2D_t
+  type, abstract :: solver_2D_t
     class(arrvec_t), pointer :: psi, C
-    class(adv_t), pointer :: adv
-    class(bcd_t), pointer :: bcx, bcy
+    integer :: n, hlo
     integer, pointer, contiguous :: i(:), j(:) 
-    integer :: n
+    class(bcd_t), pointer :: bcx, bcy
     contains
-    procedure :: ctor  => solver_2D_ctor 
-    procedure :: solve => solver_2D_solve
-    procedure :: state => solver_2D_state
-    procedure :: Cx => solver_2D_Cx
-    procedure :: Cy => solver_2D_Cy
-    procedure :: dtor  => solver_2D_dtor 
+    procedure :: solve   => solver_2D_solve
+    procedure :: state   => solver_2D_state
+    procedure :: courant => solver_2D_courant
+    procedure :: cycle   => solver_2D_cycle
+    procedure :: xchng   => solver_2D_xchng
+    procedure(solver_2D_advop_i), deferred :: advop
   end type 
+
+  abstract interface
+    subroutine solver_2D_advop_i(this)
+      import solver_2D_t
+      class(solver_2D_t) :: this
+    end subroutine
+  end interface
 
   contains
 
-  subroutine solver_2D_ctor(O, nx,ny,adv,bcx,bcy)
+  subroutine solver_2D_ctor(this, bcx, bcy, nx, ny, hlo)
     use arakawa_c_m
-    class(solver_2D_t) :: O
-    integer, intent(in) :: nx, ny
-    class(adv_t), intent(in), pointer :: adv
+    class(solver_2D_t) :: this
     class(bcd_t), intent(in), pointer :: bcx, bcy
+    integer, intent(in) :: nx, ny, hlo
 
-    allocate(O%i(0:nx-1), O%j(0:ny-1))
+    this%n = 0
+    this%bcx => bcx
+    this%bcy => bcy
+
+    allocate(this%i(0:nx-1), this%j(0:ny-1))
     block
       integer :: c
-      O%i = (/ (c, c=0, nx-1) /)
-      O%j = (/ (c, c=0, ny-1) /)
+      this%i = (/ (c, c=0, nx-1) /)
+      this%j = (/ (c, c=0, ny-1) /)
     end block
 
-    call bcx%init(0, O%i, O%j, adv%n_halos)
-    call bcy%init(1, O%j, O%i, adv%n_halos)
-    call adv%init(O%i, O%j)
+    call bcx%init(0, nx, ny, hlo)
+    call bcy%init(1, nx, ny, hlo)
 
-    associate (hlo => adv%n_halos)
-      allocate(O%psi)
-      call O%psi%ctor(2)
-      block
-        integer :: i
-        do i=0, 1
-          call O%psi%init(i, &
-            O%i(0) -hlo, O%i(size(O%i)-1) + hlo, &
-            O%j(0) -hlo, O%j(size(O%j)-1) + hlo  &
-          ) 
-        end do
-      end block
-
-      allocate(O%C)
-      call O%C%ctor(2)
-      call O%C%init(0,                                     &
-        O%i(0) -hlo - h, O%i(size(O%i)-1) + hlo + h, &
-        O%j(0) -hlo    , O%j(size(O%j)-1) + hlo      &   
-      )
-      call O%C%init(1,                                     &
-        O%i(0) -hlo    , O%i(size(O%i)-1) + hlo,     &   
-        O%j(0) -hlo - h, O%j(size(O%j)-1) + hlo + h  &
-      )
-    end associate
-
-    O%n = 0
-
-    O%adv => adv
-    O%bcx => bcx
-    O%bcy => bcy
-  end subroutine
-
-  subroutine solver_2D_dtor(O)
-    class(solver_2D_t) :: O
-    call O%psi%dtor()
-    call O%C%dtor()
-    deallocate(O%i, O%j, O%psi)
-  end subroutine
-  
-  subroutine solver_2D_solve(O, nt)
-    class(solver_2D_t) :: O
-    integer, intent(in) :: nt
-
+    allocate(this%psi)
+    call this%psi%ctor(2)
     block
-      integer :: t, s 
-      do t = 0, nt-1
-        do s = 0, O%adv%n_steps-1
-          call O%bcx%fill_halos(O%psi%at(O%n)%p%a)
-          call O%bcy%fill_halos(O%psi%at(O%n)%p%a)
-          call O%adv%op_2D(O%psi, O%n, O%C, s)
-          O%n = mod(O%n + 1 + 2, 2) - 2
-        end do
+      integer :: i
+      do i=0, 1
+        call this%psi%init(i, &
+          0-hlo, nx-1+hlo,    &
+          0-hlo, ny-1+hlo     &
+        ) 
       end do
     end block
+
+    allocate(this%C)
+    call this%C%ctor(2)
+    call this%C%init(0,       &
+      0-hlo-h, nx-1+hlo+h,    &
+      0-hlo  , ny-1+hlo       &   
+    )
+    call this%C%init(1,       &
+      0-hlo  , nx-1+hlo,      &   
+      0-hlo-h, ny-1+hlo+h     &
+    )
   end subroutine
 
-  function solver_2D_state(O) result (return)
-    class(solver_2D_t) :: O
+  subroutine solver_2D_dtor(this)
+    class(solver_2D_t) :: this
+    call this%psi%dtor()
+    call this%C%dtor()
+    deallocate(this%i, this%j, this%psi)
+  end subroutine
+  
+  function solver_2D_state(this) result (return)
+    class(solver_2D_t) :: this
     real(real_t), pointer :: return(:,:)
-    return => O%psi%at(O%n)%p%a( &
-      O%i(0) : O%i(size(O%i)-1), &
-      O%j(0) : O%j(size(O%j)-1)  &
+    return => this%psi%at(this%n)%p%a( &
+      this%i(0) : this%i(size(this%i)-1), &
+      this%j(0) : this%j(size(this%j)-1)  &
     )
   end function
 
-  function solver_2D_Cx(O) result (return)
-    class(solver_2D_t) :: O
+  function solver_2D_courant(this, d) result (return)
+    class(solver_2D_t) :: this
+    integer :: d
     real(real_t), pointer :: return(:,:)
-    return => O%C%at(0)%p%a
+    return => this%C%at(d)%p%a(               & 
+      this%i(0)-h : this%i(size(this%i)-1)-h, &
+      this%j(0)-h : this%j(size(this%j)-1)-h  &
+    )
   end function
 
-  function solver_2D_Cy(O) result (return)
-    class(solver_2D_t) :: O
-    real(real_t), pointer :: return(:,:)
-    return => O%C%at(1)%p%a
-  end function
+  subroutine solver_2D_cycle(this)
+    class(solver_2D_t) :: this
+    this%n = mod(this%n + 1 + 2, 2) - 2
+  end subroutine
+
+  subroutine solver_2D_xchng(this, arr)
+    class(solver_2D_t) :: this
+    real(real_t), pointer, contiguous :: arr(:,:)
+    call this%bcx%fill_halos(arr)
+    call this%bcy%fill_halos(arr)
+  end subroutine
+
+  subroutine solver_2D_solve(this, nt)
+    class(solver_2D_t) :: this
+    integer, intent(in) :: nt
+    integer :: t
+
+    do t = 0, nt-1 
+      call this%xchng(this%C%at(0)%p%a)
+      call this%xchng(this%C%at(1)%p%a)
+      call this%xchng(this%psi%at(this%n)%p%a)
+      call this%advop()
+      call this%cycle()
+    end do
+  end subroutine
 end module
 !listing07
 module pi_m
@@ -289,7 +268,6 @@ end module
 !listing08
 module cyclic_m
   use bcd_m
-  use adv_m
   use pi_m
   implicit none
   
@@ -306,52 +284,51 @@ module cyclic_m
 
   contains
 
-  subroutine cyclic_init(O, d, i, j, hlo)
-    class(cyclic_t) :: O
-    integer :: d, hlo
-    integer, pointer, contiguous :: i(:), j(:) 
+  subroutine cyclic_init(this, d, nx, ny, hlo)
+    class(cyclic_t) :: this
+    integer :: d, nx, ny, hlo
 
-    O%d = d
-
-    allocate(O%left_halo(hlo))
-    allocate(O%rght_halo(hlo))
-    allocate(O%left_edge(hlo))
-    allocate(O%rght_edge(hlo))
-    allocate(O%j(size(j) + 2*hlo))
+    this%d = d
+    allocate(this%left_halo(hlo))
+    allocate(this%rght_halo(hlo))
+    allocate(this%left_edge(hlo))
+    allocate(this%rght_edge(hlo))
+    allocate(this%j(ny + 2*hlo))
 
     block
       integer :: c
-      O%left_halo = (/ (c, c = i(0) - hlo, i(0) - 1) /) 
-      O%rght_halo = (/ (c, c = i(size(i)-1) + 1, i(size(i)-1) + hlo) /) 
-      O%left_edge = (/ (c, c = i(0),  i(0) + hlo) /)
-      O%rght_edge = (/ (c, c = i(size(i) - hlo), i(size(i)-1)) /)
-      O%j         = (/ (c, c = j(0) - hlo, j(size(j)-1) + hlo) /)
+      this%left_halo = (/ (c, c = -hlo, -1) /) 
+      this%rght_halo = (/ (c, c = nx, nx-1+hlo) /) 
+      this%left_edge = (/ (c, c = 0, hlo-1) /)
+      this%rght_edge = (/ (c, c = nx-hlo, nx-1) /)
+      this%j         = (/ (c, c = -hlo, ny-1+hlo) /)
     end block
   end subroutine
 
-  subroutine cyclic_dtor(O)
-    class(cyclic_t) :: O
-    deallocate(O%left_halo)
-    deallocate(O%rght_halo)
-    !deallocate(O%left_edge) !causes a segfault :(
-    !deallocate(O%rght_edge) !causes a segfault :(
-    deallocate(O%j)
+  subroutine cyclic_dtor(this)
+    class(cyclic_t) :: this
+    deallocate(this%left_halo)
+    deallocate(this%rght_halo)
+    !deallocate(this%left_edge) !causes a segfault :(
+    !deallocate(this%rght_edge) !causes a segfault :(
+    deallocate(this%j)
   end subroutine
 
-  subroutine cyclic_fill_halos(O, psi)
-    class(cyclic_t) :: O
+  subroutine cyclic_fill_halos(this, psi)
+    class(cyclic_t) :: this
     real(real_t), pointer :: psi(:,:), tmp(:,:)
-    tmp => pi(O%d, psi, O%left_halo, O%j) 
-    tmp = pi(O%d, psi, O%rght_edge, O%j)
-    tmp => pi(O%d, psi, O%rght_halo, O%j) 
-    tmp = pi(O%d, psi, O%left_edge, O%j)
+    tmp => pi(this%d, psi, this%left_halo, this%j) 
+    tmp = pi(this%d, psi, this%rght_edge, this%j)
+    tmp => pi(this%d, psi, this%rght_halo, this%j) 
+    tmp = pi(this%d, psi, this%left_edge, this%j)
   end subroutine
 end module
 !listing09
-module donorcell_1D_m
+module donorcell_m
   use real_m
   use arakawa_c_m
   use pi_m
+  use arrvec_m
   implicit none
   contains 
 
@@ -374,14 +351,8 @@ module donorcell_1D_m
       F(pi(d, psi, i-1, j), pi(d, psi, i,   j), pi(d, C, i-h, j))   &
     )
   end function
-end module
 !listing10
-module donorcell_2D_m
-  use donorcell_1D_m
-  use arrvec_m
-  implicit none
-  contains 
-  subroutine donorcell_2D(psi, n, C, i, j)  
+  subroutine donorcell_op_2D(psi, n, C, i, j)  
     class(arrvec_t), pointer :: psi, C
     integer, intent(in) :: n
     integer, pointer, intent(in), contiguous :: i(:), j(:) 
@@ -391,8 +362,42 @@ module donorcell_2D_m
       - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)      
   end subroutine
 end module
+!listing
+module donorcell_2D_m
+  use donorcell_m
+  use solver_2D_m
+  implicit none
+  
+  type, extends(solver_2D_t) :: donorcell_2D_t
+    contains
+    procedure :: ctor => donorcell_2D_ctor
+    procedure :: dtor => donorcell_2D_dtor
+    procedure :: advop => donorcell_2D_advop
+  end type
+
+  contains
+  
+  ! ctor
+  subroutine donorcell_2D_ctor(this, bcx, bcy, nx, ny)
+    class(donorcell_2D_t) :: this
+    class(bcd_t), intent(in), pointer :: bcx, bcy
+    integer, intent(in) :: nx, ny
+    call solver_2D_ctor(this, bcx, bcy, nx, ny, 1)
+  end subroutine
+
+  ! 
+  subroutine donorcell_2D_advop(this)
+    class(donorcell_2D_t) :: this
+    call donorcell_op_2D(this%psi, this%n, this%C, this%i, this%j)
+  end subroutine
+
+  subroutine donorcell_2D_dtor(this)
+    class(donorcell_2D_t) :: this
+    call solver_2D_dtor(this)
+  end subroutine
+end module
 !listing11
-module antidiff_2D_m
+module mpdata_m
   use arrvec_m
   use arakawa_c_m
   use pi_m
@@ -434,6 +439,20 @@ module antidiff_2D_m
     ) / 2
   end function
 
+  function C_bar(d, C, i, j) result (return)
+    integer :: d
+    real(real_t), pointer, intent(in), contiguous :: C(:,:) 
+    integer, pointer, contiguous :: i(:), j(:) 
+    real(real_t) :: return(size(i), size(j))
+
+    return = (                  &
+      pi(d, C, i+1, j+h) +      &
+      pi(d, C, i,   j+h) +      &
+      pi(d, C, i+1, j-h) +      &
+      pi(d, C, i,   j-h)        &
+    ) / 4               
+  end function
+
   function antidiff_2D(d, psi, i, j, C) result (return)
     integer :: d
     integer, pointer, contiguous :: i(:), j(:) 
@@ -446,117 +465,106 @@ module antidiff_2D_m
       * (1 - abs(pi(d, C%at(d)%p%a, i+h, j))) &
       * A(d, psi, i, j)                       &
       - pi(d, C%at(d)%p%a, i+h, j)            &
-      * (                                     &
-        pi(d, C%at(d-1)%p%a, i+1, j+h) +      &
-        pi(d, C%at(d-1)%p%a, i,   j+h) +      &
-        pi(d, C%at(d-1)%p%a, i+1, j-h) +      &
-        pi(d, C%at(d-1)%p%a, i,   j-h)        &
-      ) / 4                                   &
+      * C_bar(d, C%at(d-1)%p%a, i, j)         &
       * B(d, psi, i, j)
   end function
 end module
 !listing12
-module mpdata_m
-  use adv_m
-  use donorcell_2D_m
-  use antidiff_2D_m
+module mpdata_2D_m
+  use solver_2D_m
+  use mpdata_m
+  use donorcell_m
   implicit none
   
-  type, extends(adv_t) :: mpdata_t
+  type, extends(solver_2D_t) :: mpdata_2D_t
     integer :: n_iters, n_tmp
     class(arrvec_t), pointer :: tmp(:) 
-    integer, pointer, contiguous :: i(:), j(:)
-    integer, pointer, contiguous :: im(:), jm(:) 
     contains
-    procedure :: ctor => mpdata_ctor
-    procedure :: init => mpdata_init
-    procedure :: dtor => mpdata_dtor
-    procedure :: op_2D => mpdata_op_2D
+    procedure :: ctor => mpdata_2D_ctor
+    procedure :: dtor => mpdata_2D_dtor
+    procedure :: advop => mpdata_2D_advop
   end type
 
   contains
 
-  subroutine mpdata_ctor(O, n_iters)
-    class(mpdata_t) :: O
-    integer, intent(in) :: n_iters
-    O%n_iters = n_iters
-    O%n_steps = n_iters
-    O%n_halos = n_iters
-  end subroutine 
+  subroutine mpdata_2D_ctor(this, n_iters, bcx, bcy, nx, ny)
+    class(mpdata_2D_t) :: this
+    class(bcd_t), pointer :: bcx, bcy
+    integer, intent(in) :: n_iters, nx, ny
+    integer :: hlo
 
-  subroutine mpdata_init(O, i, j)
-    class(mpdata_t) :: O
-    integer, intent(in), pointer, contiguous :: i(:), j(:)
+    hlo = 1
+    this%n_iters = n_iters
 
-    O%i => i
-    O%j => j
+    call solver_2D_ctor(this, bcx, bcy, nx, ny, hlo)
 
-    allocate(O%im(0:size(i)), O%jm(0:size(j)))  
-    block 
+    this%n_tmp = 1
+    if (n_iters > 2) this%n_tmp = 2
+    allocate(this%tmp(0:this%n_tmp)) 
+    block
       integer :: c
-      O%im = (/ (c, c=i(0)-1, j(size(i)-1)) /)
-      O%jm = (/ (c, c=j(0)-1, j(size(j)-1)) /)
+      do c=0, this%n_tmp - 1
+        call this%tmp(c)%ctor(2)
+        call this%tmp(c)%init(0,  &   
+          -hlo-h, nx-1+hlo+h,     &
+          -hlo  , ny-1+hlo        &   
+        )   
+        call this%tmp(c)%init(1,  &   
+          -hlo  , nx-1+hlo,       &   
+          -hlo-h, ny-1+hlo+h      &
+        )  
+      end do
     end block
-    
-    associate (hlo => O%n_halos)
-      O%n_tmp = 1
-      if (O%n_iters > 2) O%n_tmp = 2
-      allocate(O%tmp(0:O%n_tmp)) 
-      block
-        integer :: c
-        do c=0, O%n_tmp - 1
-          call O%tmp(c)%ctor(2)
-          call O%tmp(c)%init(0,                    &   
-            i(0) -hlo - h, i(size(i)-1) + hlo + h, &
-            j(0) -hlo    , j(size(j)-1) + hlo      &   
-          )   
-          call O%tmp(c)%init(1,                    &   
-            i(0) -hlo    , i(size(i)-1) + hlo,     &   
-            j(0) -hlo - h, j(size(j)-1) + hlo + h  &
-          )  
-        end do
-      end block
-    end associate
   end subroutine
 
-  subroutine mpdata_dtor(O)
-    class(mpdata_t) :: O
+  subroutine mpdata_2D_dtor(this)
+    class(mpdata_2D_t) :: this
     integer :: c
-    do c=0, O%n_tmp-1 
-      call O%tmp(c)%dtor()
+    do c=0, this%n_tmp-1 
+      call this%tmp(c)%dtor()
     end do
-    deallocate(O%im, O%jm, O%tmp)
+    call solver_2D_dtor(this)
   end subroutine
 
-  subroutine mpdata_op_2D(O, psi, n, C, step)
-    class(mpdata_t) :: O
-    class(arrvec_t), pointer :: psi, C
-    integer, intent(in) :: n, step
-    if (step == 0) then
-      call donorcell_2D(psi, n, C, O%i, O%j)
-    else
-      block
-        class(arrvec_t), pointer :: C_corr, C_unco
-        if (step == 1) then
-          C_unco => C
-          C_corr => O%tmp(0)
-        else if (mod(step, 2) == 1) then
-          C_unco => O%tmp(1)
-          C_corr => O%tmp(0)
-        else
-          C_unco => O%tmp(0)
-          C_corr => O%tmp(1)
-        end if
+  subroutine mpdata_2D_advop(this)
+    class(mpdata_2D_t) :: this
+    integer :: step
 
-        !TODO: hlo! / associate
-        C_corr%at(0)%p%a(O%im+h, O%j) = &
-          antidiff_2D(0, psi%at(n)%p%a, O%im, O%j, C_unco)
-        C_corr%at(1)%p%a(O%i, O%jm+h) = &
-          antidiff_2D(1, psi%at(n)%p%a, O%jm, O%i, C_unco)
+    do step=0, this%n_iters-1
+      if (step == 0) then
+        call donorcell_op_2D(this%psi, this%n, this%C, this%i, this%j)
+      else
+        call this%cycle()
+        call this%xchng(this%psi%at(this%n)%p%a)
 
-        call donorcell_2D(psi, n, C_corr, O%i, O%j)
-      end block
-    end if
+        block
+          ! chosing input/output for antidiff. C
+          class(arrvec_t), pointer :: C_corr, C_unco
+          if (step == 1) then
+            C_unco => this%C
+            C_corr => this%tmp(0)
+          else if (mod(step, 2) == 1) then
+            C_unco => this%tmp(1) ! odd step
+            C_corr => this%tmp(0) ! even step
+          else
+            C_unco => this%tmp(0) ! odd step
+            C_corr => this%tmp(1) ! even step
+          end if
+
+          ! calculating the antidiffusive velocities
+          C_corr%at(0)%p%a(this%i+h, this%j) = &
+            antidiff_2D(0, this%psi%at(this%n)%p%a, this%i, this%j, C_unco)
+          call this%xchng(C_corr%at(0)%p%a)
+
+          C_corr%at(1)%p%a(this%i, this%j+h) = &
+            antidiff_2D(1, this%psi%at(this%n)%p%a, this%j, this%i, C_unco)
+          call this%xchng(C_corr%at(1)%p%a)
+
+          ! donor-cell step
+          call donorcell_op_2D(this%psi, this%n, C_corr, this%i, this%j)
+        end block
+      end if
+    end do
   end subroutine
 end module
 !listing13

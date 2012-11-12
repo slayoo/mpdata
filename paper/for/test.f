@@ -1,6 +1,5 @@
 program test
-  use solver_2D_m
-  use mpdata_m
+  use mpdata_2D_m
   use cyclic_m
   implicit none
 
@@ -10,8 +9,7 @@ program test
   end if
 
   block
-    type(solver_2D_t) :: slv
-    type(mpdata_t), target :: adv
+    type(mpdata_2D_t) :: slv
     type(cyclic_t), target :: bcx, bcy
     integer :: nx, ny, nt, it, dec
     real(real_t) :: Cx, Cy
@@ -24,15 +22,11 @@ program test
     it = arg2int(6)
     dec = arg2int(9)
 
-    call adv%ctor(it)
-
     block
       class(bcd_t), pointer :: bcx_p, bcy_p
-      class(adv_t), pointer :: adv_p
-      adv_p => adv
       bcx_p => bcx
       bcy_p => bcy
-      call slv%ctor(nx, ny, adv_p, bcx_p, bcy_p)
+      call slv%ctor(it, bcx_p, bcy_p, nx, ny)
     end block
 
     block
@@ -42,10 +36,10 @@ program test
       call get_command_argument(7, fname)
       call read_file(fname, tmp)
 
-      tmp => slv%Cx() 
+      tmp => slv%courant(0) 
       tmp = Cx
 
-      tmp => slv%Cy() 
+      tmp => slv%courant(1) 
       tmp = Cy
     end block
 
@@ -69,7 +63,6 @@ program test
     call slv%dtor()
     call bcx%dtor()
     call bcy%dtor()
-    call adv%dtor()
   end block
 
   contains
