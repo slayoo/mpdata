@@ -9,6 +9,7 @@ try:
 except ImportError:
   pass
 import numpy
+import pdb
 #listing03
 class Shift():
   def __init__(self, plus, mnus):
@@ -29,46 +30,51 @@ one = Shift(1,1)
 hlf = Shift(1,0)
 #listing05
 class Solver_2D(object):
-  # ctor-like method
-  def __init__(self, 
-    adv, n_iters, bcx, bcy, nx, ny
-  ):
+  # ctor
+  def __init__(self, adv, n_iters, bcx, bcy, nx, ny):
     self.adv = adv(n_iters, nx, ny)
     self.n = 0
 
     hlo = self.adv.n_halos
+
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
+
+    # u nas bcx jest zawsze cycling, uzupelnia halo w psi
     self.bcx = bcx(0, self.i, hlo)
     self.bcy = bcy(1, self.j, hlo)
 
-    hlo = 2 * self.adv.n_halos
     self.psi = (
-      numpy.empty((nx+hlo, ny+hlo), real_t),
-      numpy.empty((nx+hlo, ny+hlo), real_t) 
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t) 
     )
+    #chyba mogloby byc w pierwszym (nx+1,ny) i analogicznie, tylko wtedy w donorcel trzeba by inaczej j dla C zapisywac (musialoby byc j-1)
+    #moglby byc (nx+1,..) jesli hlf byloby Shift(0,1)
     self.C = (
-      numpy.empty((nx+1+hlo, ny  +hlo), real_t),
-      numpy.empty((nx  +hlo, ny+1+hlo), real_t)
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
+      numpy.empty((nx+2*hlo,   ny+2*hlo), real_t)
     )
 
   # accessor methods
   def state(self):
     return self.psi[self.n][self.i, self.j]
   def Cx(self):
-    return self.C[0]
+    return self.C[0][self.i, self.j]
   def Cy(self):
-    return self.C[1]
+    return self.C[1][self.i, self.j]
 
-  # integration logic
+   # integration logic
   def solve(self, nt):
+    self.bcx.fill_halos_vel(self.C)
+    self.bcy.fill_halos_vel(self.C)
     for t in range(nt):
       for s in range(self.adv.n_steps):
         self.bcx.fill_halos(self.psi[self.n])
         self.bcy.fill_halos(self.psi[self.n])
         self.adv.op_2D(self.psi, self.n, 
-          self.C, self.i, self.j, s
-        )
+          self.C, self.i, self.j, s, 
+           self.bcx, self.bcy)
+        #nie rozumiem!
         self.n  = (self.n + 1) % 2 - 2
         
 #listing06
@@ -95,14 +101,20 @@ class Cyclic(object):
   def fill_halos(self, psi):
     psi[self.left_halo] = psi[self.rght_edge]
     psi[self.rght_halo] = psi[self.left_edge]
+
+  def fill_halos_vel(self, C):
+    for i in range(len(C)):
+      self.fill_halos(C[i])
+    
+    
 #listing08
-def f(psi_l, psi_r, C): 
+def f(psi_l, psi_r, C):
   return (
     (C + abs(C)) * psi_l + 
     (C - abs(C)) * psi_r
   ) / 2
 #listing09
-def donorcell(d, psi, C, i, j): 
+def donorcell(d, psi, C, i, j):
   return (
     f(
       psi[pi(d, i,     j)], 
@@ -124,6 +136,7 @@ def donorcell_2D(psi, n, C, i, j):
 #listing11
 def frac(nom, den):
   return numpy.where(den>0, nom/den, 0)
+
 #listing12
 def a_op(d, psi, i, j):
   return frac(
@@ -157,44 +170,50 @@ def antidiff_2D(d, psi, i, j, C):
     ) / 4
     * b_op(d, psi, i, j)
   )
+
+
 #listing15
 class Mpdata(object):
   def __init__(self, n_iters, nx, ny):
     self.n_steps = n_iters
-    self.n_halos = n_iters
-
-    hlo = 2 * self.n_halos
+    #mim zdaniem wystarczy zawsze jedno halo
+    self.n_halos = 1
+    hlo = self.n_halos
+    #czy w konstruktorze powinno to byc?
     self.tmp0 = (
-      numpy.empty(( nx+1+hlo, ny  +hlo), real_t),
-      numpy.empty(( nx  +hlo, ny+1+hlo), real_t)
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
+      numpy.empty((nx+2*hlo,  ny+2*hlo), real_t)
     )
     if n_iters > 2:
       self.tmp1 = (
-        numpy.empty(( nx+1+hlo, ny  +hlo), real_t),
-        numpy.empty(( nx  +hlo, ny+1+hlo), real_t)
-      )
+        numpy.empty(( nx+2*hlo, ny+2*hlo), real_t),
+        numpy.empty(( nx+2*hlo,   ny+2*hlo), real_t)
+        )
 
-  def op_2D(self, psi, n, C, i, j, step):
+  def op_2D(self, psi, n, C, i, j, step, bcx, bcy):
     if step == 0:
       donorcell_2D(psi, n, C, i, j)
     else:
       if step == 1:
-        C_unco, C_corr = C, self.tmp0 # TODO: tmp tuple
+        C_unco, C_corr = C, self.tmp0
       elif step % 2:
         C_unco, C_corr = self.tmp1, self.tmp0
       else:
         C_unco, C_corr = self.tmp0, self.tmp1
 
-      im = slice(i.start - 1, i.stop) 
-      jm = slice(j.start - 1, j.stop)
+#jesli hlh = Shift(0,1), to by to chyba nie bylo potrzebne
+      im = i - one # przeniesc do konstruktora
+      jm = j - one
 
-      hlo = self.n_steps - 1 - step # TODO: check it!
-      ih = slice(i.start - hlo, i.stop + hlo) 
-      jh = slice(j.start - hlo, j.stop + hlo)
-        
-      C_corr[0][im+hlf, jh] = (
-        antidiff_2D(0, psi[n], im, jh, C_unco)) 
-      C_corr[1][ih, jm+hlf] = (
-        antidiff_2D(1, psi[n], jm, ih, C_unco)) 
+      C_corr[0][im+hlf, j] = (
+        antidiff_2D(0, psi[n], im, j, C_unco)) 
+      C_corr[1][i, jm+hlf] = (
+        antidiff_2D(1, psi[n], jm, i, C_unco)) 
+
+      bcx.fill_halos_vel(C_corr)
+      bcy.fill_halos_vel(C_corr)
+
       donorcell_2D(psi, n, C_corr, i, j)
-#listing16
+
+
+      

@@ -35,7 +35,7 @@ foreach(TEST ${TESTS})
   add_test(NAME "pyt:${NAME}" COMMAND python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
 
   # PyPy
-  add_test(NAME "pyp:${NAME}" COMMAND pypy-c1.9 ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+  add_test(NAME "pyp:${NAME}" COMMAND pypy ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
 
   # Fortran
   add_test(NAME "for:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
