@@ -21,10 +21,10 @@ fin = sys.argv[7]
 fout = sys.argv[8]
 dec = int(sys.argv[9])
 
-slv = Solver_2D(Mpdata, it, Cyclic, Cyclic, nx, ny)
+slv = Mpdata_2D(it, Cyclic, Cyclic, nx, ny)
 slv.state()[:] = read_file(fin, nx, ny)
-slv.Cx()[:] = Cx
-slv.Cy()[:] = Cy
+slv.courant(0)[:] = Cx
+slv.courant(1)[:] = Cy
 slv.solve(nt)
 
 if (abs(slv.state() - read_file(fout, nx, ny)) >= .5 * pow(10, -dec)).any(): 

@@ -31,12 +31,8 @@ hlf = Shift(1,0)
 #listing05
 class Solver_2D(object):
   # ctor
-  def __init__(self, adv, n_iters, bcx, bcy, nx, ny):
-    self.adv = adv(n_iters, nx, ny)
+  def __init__(self, bcx, bcy, nx, ny, hlo):
     self.n = 0
-
-    hlo = self.adv.n_halos
-
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
 
@@ -58,25 +54,27 @@ class Solver_2D(object):
   # accessor methods
   def state(self):
     return self.psi[self.n][self.i, self.j]
-  def Cx(self):
-    return self.C[0][self.i, self.j]
-  def Cy(self):
-    return self.C[1][self.i, self.j]
+
+  def courant(self,d):
+    return self.C[d][self.i, self.j]
+
+  def cycle(self):
+    self.n  = (self.n + 1) % 2 - 2
+
+  def xchng(self, arr):
+    self.bcx.fill_halos(arr)
+    self.bcy.fill_halos(arr)
+
 
    # integration logic
   def solve(self, nt):
-    self.bcx.fill_halos_vel(self.C)
-    self.bcy.fill_halos_vel(self.C)
     for t in range(nt):
-      for s in range(self.adv.n_steps):
-        self.bcx.fill_halos(self.psi[self.n])
-        self.bcy.fill_halos(self.psi[self.n])
-        self.adv.op_2D(self.psi, self.n, 
-          self.C, self.i, self.j, s, 
-           self.bcx, self.bcy)
-        #nie rozumiem!
-        self.n  = (self.n + 1) % 2 - 2
-        
+      self.xchng(self.C[0])
+      self.xchng(self.C[1])
+      self.xchng(self.psi[self.n])
+      self.advop() 
+      self.cycle()
+  
 #listing06
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
@@ -102,11 +100,6 @@ class Cyclic(object):
     psi[self.left_halo] = psi[self.rght_edge]
     psi[self.rght_halo] = psi[self.left_edge]
 
-  def fill_halos_vel(self, C):
-    for i in range(len(C)):
-      self.fill_halos(C[i])
-    
-    
 #listing08
 def f(psi_l, psi_r, C):
   return (
@@ -128,11 +121,19 @@ def donorcell(d, psi, C, i, j):
     ) 
   )
 #listing10
-def donorcell_2D(psi, n, C, i, j):
+def donorcell_op_2D(psi, n, C, i, j):
   psi[n+1][i,j] = (psi[n][i,j] 
     - donorcell(0, psi[n], C[0], i, j)
     - donorcell(1, psi[n], C[1], j, i)
   )
+
+class Donorcell_2D(Solver_2D):
+  def __init__(self, bcx, bcy, nx, ny):
+    Solver_2D.__init__(self, bcx, bcy, nx, ny, 1)
+
+  def advop(self):
+    donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
+
 #listing11
 def frac(nom, den):
   return numpy.where(den>0, nom/den, 0)
@@ -173,47 +174,46 @@ def antidiff_2D(d, psi, i, j, C):
 
 
 #listing15
-class Mpdata(object):
-  def __init__(self, n_iters, nx, ny):
-    self.n_steps = n_iters
-    #mim zdaniem wystarczy zawsze jedno halo
-    self.n_halos = 1
-    hlo = self.n_halos
-    #czy w konstruktorze powinno to byc?
-    self.tmp0 = (
+class Mpdata_2D(Solver_2D):
+  def __init__(self, n_iters, bcx, bcy, nx, ny):
+    hlo = 1
+    Solver_2D.__init__(self, bcx, bcy, nx, ny, hlo)
+
+    self.n_iters = n_iters
+  
+    self.tmp = [(
       numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo,  ny+2*hlo), real_t)
-    )
+      numpy.empty((nx+2*hlo,  ny+2*hlo), real_t))]
+    
     if n_iters > 2:
-      self.tmp1 = (
+      self.tmp.append((
         numpy.empty(( nx+2*hlo, ny+2*hlo), real_t),
         numpy.empty(( nx+2*hlo,   ny+2*hlo), real_t)
-        )
+        ))
 
-  def op_2D(self, psi, n, C, i, j, step, bcx, bcy):
-    if step == 0:
-      donorcell_2D(psi, n, C, i, j)
-    else:
-      if step == 1:
-        C_unco, C_corr = C, self.tmp0
-      elif step % 2:
-        C_unco, C_corr = self.tmp1, self.tmp0
+  def advop(self):
+    for step in range(self.n_iters):
+      if step == 0:
+        donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
       else:
-        C_unco, C_corr = self.tmp0, self.tmp1
+        self.cycle()
+        self.xchng(self.psi[self.n])
+        if step == 1:
+          C_unco, C_corr = self.C, self.tmp[0]
+        elif step % 2:
+          C_unco, C_corr = self.tmp[1], self.tmp[0]
+        else:
+          C_unco, C_corr = self.tmp[0], self.tmp[1]
 
-#jesli hlh = Shift(0,1), to by to chyba nie bylo potrzebne
-      im = i - one # przeniesc do konstruktora
-      jm = j - one
+        C_corr[0][self.i+hlf, self.j] = (
+          antidiff_2D(0, self.psi[self.n], self.i, self.j, C_unco)) 
+        self.xchng(C_corr[0])
 
-      C_corr[0][im+hlf, j] = (
-        antidiff_2D(0, psi[n], im, j, C_unco)) 
-      C_corr[1][i, jm+hlf] = (
-        antidiff_2D(1, psi[n], jm, i, C_unco)) 
+        C_corr[1][self.i, self.j+hlf] = (
+          antidiff_2D(1, self.psi[self.n], self.j, self.i, C_unco)) 
+        self.xchng(C_corr[1])
 
-      bcx.fill_halos_vel(C_corr)
-      bcy.fill_halos_vel(C_corr)
-
-      donorcell_2D(psi, n, C_corr, i, j)
+        donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
 
 
       
