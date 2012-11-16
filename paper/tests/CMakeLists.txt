@@ -1,6 +1,7 @@
 # getting a list of tests
 execute_process(
   COMMAND "find" "${CMAKE_SOURCE_DIR}/tests" "-name" "*:in"
+  COMMAND "sort"
   COMMAND "cut" "-d" ":" "-f" "1"
   COMMAND "awk" "{printf(\"%s;\",$1)}" # to make it a CMake list
   OUTPUT_VARIABLE TESTS
