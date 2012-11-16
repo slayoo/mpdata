@@ -25,7 +25,7 @@ foreach(TEST ${TESTS})
   set(DEC 4) # ----------------- desired precision (abs(desired-actual) < 0.5 * 10**(-decimal))
 
   # passing all of the above as command-line arguments to the test programs
-  set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${NAME}:in;${NAME}:out;${DEC})
+  set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
 
   # C++
   add_test(NAME "cpp:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})

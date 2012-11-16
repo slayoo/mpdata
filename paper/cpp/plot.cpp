@@ -5,20 +5,19 @@
 enum {x, y};
 
 template <class T>
-void setup(T &solver, int n[2], real_t C[2]) {
+void setup(T &solver, int n[2]) {
   blitz::firstIndex i;
   blitz::secondIndex j;
   solver.state() = exp(
-    -sqr(i-n[x]/2.) / (2.*pow(n[x]/10, 2))
-    -sqr(j-n[y]/2.) / (2.*pow(n[y]/10, 2))
+    -sqr(i-n[x]/2.) / (2*pow(n[x]/10., 2))
+    -sqr(j-n[y]/2.) / (2*pow(n[y]/10., 2))
   );  
-  solver.courant(x) = C[x]; 
-  solver.courant(y) = C[y];
+  solver.courant(x) = .5; 
+  solver.courant(y) = .25;
 }
 
 int main() {
   int n[] = {24, 24}, nt = 96;
-  real_t C[] = {.5, .25};
   Gnuplot gp;
   gp << "set term pdf size 10cm, 30cm\n" 
      << "set output 'figure.pdf'\n"     
@@ -38,7 +37,7 @@ int main() {
   std::string binfmt;
   {
     donorcell_2D<cyclic<x>, cyclic<y>> solver(n[x],n[y]);
-    setup(solver, n, C);
+    setup(solver, n);
     binfmt = gp.binfmt(solver.state());
     gp << "set title 't=0'\n"
        << "splot '-' binary" << binfmt
@@ -52,7 +51,7 @@ int main() {
   } {
     const int it = 2;
     mpdata_2D<it, cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
-    setup(solver, n, C); 
+    setup(solver, n); 
     solver.solve(nt);
     gp << "set title 'mpdata<" << it << "> "
        << "t=" << nt << "'\n"
@@ -62,7 +61,7 @@ int main() {
   } {
     const int it = 7;
     mpdata_2D<it, cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
-    setup(solver, n, C); 
+    setup(solver, n); 
     solver.solve(nt); 
     gp << "set title 'mpdata<" << it << "> "
        << "t=" << nt << "'\n"
