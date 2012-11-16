@@ -9,7 +9,10 @@ try:
 except ImportError:
   pass
 import numpy
-import pdb
+try:
+  numpy.seterr(all='ignore')
+except AttributeError:
+  pass
 #listing03
 class Shift():
   def __init__(self, plus, mnus):
