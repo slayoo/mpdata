@@ -182,12 +182,12 @@ module solver_2D_m
     allocate(this%C)
     call this%C%ctor(2)
     call this%C%init(0,       &
-      0-hlo-h, nx-1+hlo+h,    &
-      0-hlo  , ny-1+hlo       &   
+      0-hlo, nx-1+hlo,        &
+      0-hlo, ny-1+hlo         &   
     )
     call this%C%init(1,       &
-      0-hlo  , nx-1+hlo,      &   
-      0-hlo-h, ny-1+hlo+h     &
+      0-hlo, nx-1+hlo,        &   
+      0-hlo, ny-1+hlo         &
     )
   end subroutine
 
@@ -506,12 +506,12 @@ module mpdata_2D_m
       do c=0, this%n_tmp - 1
         call this%tmp(c)%ctor(2)
         call this%tmp(c)%init(0,  &   
-          -hlo-h, nx-1+hlo+h,     &
-          -hlo  , ny-1+hlo        &   
+          -hlo, nx-1+hlo,         &
+          -hlo, ny-1+hlo          &   
         )   
         call this%tmp(c)%init(1,  &   
-          -hlo  , nx-1+hlo,       &   
-          -hlo-h, ny-1+hlo+h      &
+          -hlo, nx-1+hlo,         &   
+          -hlo, ny-1+hlo          &
         )  
       end do
     end block

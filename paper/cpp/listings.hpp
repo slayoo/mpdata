@@ -67,8 +67,8 @@ struct solver_2D
   {
     for (int l = 0; l < 2; ++l) 
       psi.push_back(new arr_t(i^hlo, j^hlo));
-    C.push_back(new arr_t(i^h^hlo, j^hlo));
-    C.push_back(new arr_t(i^hlo, j^h^hlo));
+    C.push_back(new arr_t(i^hlo, j^hlo));
+    C.push_back(new arr_t(i^hlo, j^hlo));
   }
 
   // accessor methods
@@ -285,8 +285,8 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
   {
     for (int n = 0; n < (n_iters > 2 ? 2 : 1); ++n)
     {
-      tmp[n].push_back(new arr_t(this->i^h^this->hlo, this->j^this->hlo));
-      tmp[n].push_back(new arr_t(this->i^this->hlo, this->j^h^this->hlo));
+      tmp[n].push_back(new arr_t(this->i^this->hlo, this->j^this->hlo));
+      tmp[n].push_back(new arr_t(this->i^this->hlo, this->j^this->hlo));
     }
   }
 

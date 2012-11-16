@@ -9,10 +9,6 @@ try:
 except ImportError:
   pass
 import numpy
-try:
-  numpy.seterr(all='ignore')
-except AttributeError:
-  pass
 #listing03
 class Shift():
   def __init__(self, plus, mnus):
@@ -33,13 +29,12 @@ one = Shift(1,1)
 hlf = Shift(1,0)
 #listing05
 class Solver_2D(object):
-  # ctor
+  # ctor-like method
   def __init__(self, bcx, bcy, nx, ny, hlo):
     self.n = 0
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
 
-    # u nas bcx jest zawsze cycling, uzupelnia halo w psi
     self.bcx = bcx(0, self.i, hlo)
     self.bcy = bcy(1, self.j, hlo)
 
@@ -47,17 +42,16 @@ class Solver_2D(object):
       numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
       numpy.empty((nx+2*hlo, ny+2*hlo), real_t) 
     )
-    #chyba mogloby byc w pierwszym (nx+1,ny) i analogicznie, tylko wtedy w donorcel trzeba by inaczej j dla C zapisywac (musialoby byc j-1)
-    #moglby byc (nx+1,..) jesli hlf byloby Shift(0,1)
     self.C = (
       numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo,   ny+2*hlo), real_t)
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t)
     )
 
   # accessor methods
   def state(self):
     return self.psi[self.n][self.i, self.j]
 
+  # helper methods invoked by solve()
   def courant(self,d):
     return self.C[d][self.i, self.j]
 
@@ -67,7 +61,6 @@ class Solver_2D(object):
   def xchng(self, arr):
     self.bcx.fill_halos(arr)
     self.bcy.fill_halos(arr)
-
 
    # integration logic
   def solve(self, nt):
@@ -139,7 +132,7 @@ class Donorcell_2D(Solver_2D):
 
 #listing11
 def frac(nom, den):
-  return numpy.where(den>0, nom/den, 0)
+  return numpy.where(den > 0, nom/den, 0)
 
 #listing12
 def a_op(d, psi, i, j):
@@ -160,22 +153,23 @@ def b_op(d, psi, i, j):
     + psi[pi(d, i,     j-one)]
   ) / 2
 #listing14
+def C_bar(d, C, i, j):
+  return (
+    C[pi(d, i+one, j+hlf)] + 
+    C[pi(d, i,     j+hlf)] +
+    C[pi(d, i+one, j-hlf)] + 
+    C[pi(d, i,     j-hlf)] 
+  ) / 4
+#listing14
 def antidiff_2D(d, psi, i, j, C):
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
     * a_op(d, psi, i, j)
     - C[d][pi(d, i+hlf, j)] 
-    * ( # zrobic f-cje vmean
-      C[d-1][pi(d, i+one, j+hlf)] + 
-      C[d-1][pi(d, i,     j+hlf)] +
-      C[d-1][pi(d, i+one, j-hlf)] + 
-      C[d-1][pi(d, i,     j-hlf)] 
-    ) / 4
+    * C_bar(d, C[d-1], i, j)
     * b_op(d, psi, i, j)
   )
-
-
 #listing15
 class Mpdata_2D(Solver_2D):
   def __init__(self, n_iters, bcx, bcy, nx, ny):
@@ -186,13 +180,14 @@ class Mpdata_2D(Solver_2D):
   
     self.tmp = [(
       numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo,  ny+2*hlo), real_t))]
+      numpy.empty((nx+2*hlo, ny+2*hlo), real_t)
+    )]
     
     if n_iters > 2:
       self.tmp.append((
         numpy.empty(( nx+2*hlo, ny+2*hlo), real_t),
-        numpy.empty(( nx+2*hlo,   ny+2*hlo), real_t)
-        ))
+        numpy.empty(( nx+2*hlo, ny+2*hlo), real_t)
+      ))
 
   def advop(self):
     for step in range(self.n_iters):
@@ -217,6 +212,3 @@ class Mpdata_2D(Solver_2D):
         self.xchng(C_corr[1])
 
         donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
-
-
-      
