@@ -343,7 +343,7 @@ module donorcell_m
     integer,pointer,intent(in),contiguous:: i(:), j(:) 
     real(real_t):: return(size(i), size(j))
     real(real_t),pointer,intent(in),          &
-      contiguous:: psi(:,:), C(:,:)           &
+      contiguous:: psi(:,:), C(:,:)           
     return = (                                &
       F(                                      &
         pi(d, psi, i,   j),                   &
@@ -389,7 +389,7 @@ module donorcell_2D_m
   contains
   
   subroutine donorcell_2D_ctor(              &
-    this, bcx, bcy, nx, ny
+    this, bcx, bcy, nx, ny                   &
   )
     class(donorcell_2D_t):: this
     class(bcd_t),intent(in),pointer:: bcx, bcy
@@ -399,8 +399,8 @@ module donorcell_2D_m
 
   subroutine donorcell_2D_advop(this)
     class(donorcell_2D_t):: this
-    call donorcell_op_2D(
-      this%psi, this%n, this%C, this%i, this%j
+    call donorcell_op_2D(                     &
+      this%psi, this%n, this%C, this%i, this%j&
     )
   end subroutine
 
