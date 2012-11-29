@@ -1,14 +1,15 @@
-set term postscript solid enhanced color size 15cm,15cm
+set term postscript solid enhanced color size 13cm,15cm
 set output 'result-20121116.ps'
 set xlabel "grid size"
 set ylabel "wall time [s]"
 set xrange [16*32 : 1024*2048]
 set yrange [.0250 : 500]
+set grid
 set xtics ("32^2" 32*32, "64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "1024^2" 1024*1024)
 set logscale xy
 set key bottom right 
 plot \
-  'result-20121116' using ($1*$1):2 index 'C++'      with linespoints title 'C++ (g++-4.7.2 -ffast)'      , \
-  'result-20121116' using ($1*$1):2 index 'Fortran'  with linespoints title 'Fortran (gfortran-4.7.2 -ffast)'  , \
+  'result-20121116' using ($1*$1):2 index 'C++'      with linespoints title 'g++ 4.7.2 -ffast)'      , \
+  'result-20121116' using ($1*$1):2 index 'Fortran'  with linespoints title 'gfortran 4.7.2 -ffast)'  , \
   'result-20121116' using ($1*$1):2 index 'CPython'  with linespoints title 'CPython 2.7.3'  , \
   'result-20121116' using ($1*$1):2 index 'PyPy-1.9' with linespoints title 'PyPy 1.9'
