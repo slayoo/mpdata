@@ -4,7 +4,7 @@ program test_arrvec
 
   allocate(psi)
   call psi%ctor(2)
-  call psi%init(0, 0, 3, 0, 4)
+  !call psi%init(0, 0, 3, 0, 4)
 
   print*, psi%at(0)%p%a
   print*, psi%at(0)%p%a(1,1)
