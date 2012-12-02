@@ -9,6 +9,7 @@ try:
 except ImportError:
   pass
 import numpy
+import pdb
 #listing03
 class Shift():
   def __init__(self, plus, mnus):
@@ -65,6 +66,7 @@ class Solver_2D(object):
    # integration logic
   def solve(self, nt):
     for t in range(nt):
+      #pdb.set_trace()
       self.xchng(self.C[0])
       self.xchng(self.C[1])
       self.xchng(self.psi[self.n])
@@ -203,12 +205,15 @@ class Mpdata_2D(Solver_2D):
         else:
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
-        C_corr[0][self.i+hlf, self.j] = (
-          antidiff_2D(0, self.psi[self.n], self.i, self.j, C_unco)) 
+        im = self.i - one
+        jm = self.j - one
+
+        C_corr[0][im+hlf, self.j] = (
+          antidiff_2D(0, self.psi[self.n], im, self.j, C_unco)) 
         self.xchng(C_corr[0])
 
-        C_corr[1][self.i, self.j+hlf] = (
-          antidiff_2D(1, self.psi[self.n], self.j, self.i, C_unco)) 
+        C_corr[1][self.i, jm+hlf] = (
+          antidiff_2D(1, self.psi[self.n], jm, self.i, C_unco)) 
         self.xchng(C_corr[1])
 
         donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
