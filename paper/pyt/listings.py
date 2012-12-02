@@ -92,9 +92,9 @@ class Cyclic(object):
     )
 
   # method invoked by the solver
-  def fill_halos(self, a):
-    a[self.left_halo] = a[self.rght_edge]
-    a[self.rght_halo] = a[self.left_edge]
+  def fill_halos(self, psi):
+    psi[self.left_halo] = psi[self.rght_edge]
+    psi[self.rght_halo] = psi[self.left_edge]
 
 #listing08
 def f(psi_l, psi_r, C):
@@ -122,25 +122,25 @@ def donorcell_op_2D(psi, n, C, i, j):
     - donorcell(0, psi[n], C[0], i, j)
     - donorcell(1, psi[n], C[1], j, i)
   )
-#listing11
+
 class Donorcell_2D(Solver_2D):
   def __init__(self, bcx, bcy, nx, ny):
-    Solver_2D.__init__(self, bcx,bcy, nx,ny, 1)
+    Solver_2D.__init__(self, bcx, bcy, nx, ny, 1)
 
   def advop(self):
-    donorcell_op_2D(
-      self.psi, self.n, self.C, self.i, self.j
-    )
-#listing12
+    donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
+
+#listing11
 def frac(nom, den):
   return numpy.where(den > 0, nom/den, 0)
-#listing13
+
+#listing12
 def a_op(d, psi, i, j):
   return frac(
     psi[pi(d, i+one, j)] - psi[pi(d, i, j)],
     psi[pi(d, i+one, j)] + psi[pi(d, i, j)]
   )
-#listing14
+#listing13
 def b_op(d, psi, i, j):
   return frac( 
       psi[pi(d, i+one, j+one)] 
@@ -152,7 +152,7 @@ def b_op(d, psi, i, j):
     + psi[pi(d, i+one, j-one)] 
     + psi[pi(d, i,     j-one)]
   ) / 2
-#listing15
+#listing14
 def C_bar(d, C, i, j):
   return (
     C[pi(d, i+one, j+hlf)] + 
@@ -160,7 +160,7 @@ def C_bar(d, C, i, j):
     C[pi(d, i+one, j-hlf)] + 
     C[pi(d, i,     j-hlf)] 
   ) / 4
-#listing16
+#listing14
 def antidiff_2D(d, psi, i, j, C):
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
@@ -170,11 +170,11 @@ def antidiff_2D(d, psi, i, j, C):
     * C_bar(d, C[d-1], i, j)
     * b_op(d, psi, i, j)
   )
-#listing17
+#listing15
 class Mpdata_2D(Solver_2D):
-  def __init__(self, n_iters, bcx,bcy, nx,ny):
+  def __init__(self, n_iters, bcx, bcy, nx, ny):
     hlo = 1
-    Solver_2D.__init__(self, bcx,bcy, nx,ny, hlo)
+    Solver_2D.__init__(self, bcx, bcy, nx, ny, hlo)
 
     self.n_iters = n_iters
   
@@ -185,15 +185,14 @@ class Mpdata_2D(Solver_2D):
     
     if n_iters > 2:
       self.tmp.append((
-        numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-        numpy.empty((nx+2*hlo, ny+2*hlo), real_t)
+        numpy.empty(( nx+2*hlo, ny+2*hlo), real_t),
+        numpy.empty(( nx+2*hlo, ny+2*hlo), real_t)
       ))
 
   def advop(self):
     for step in range(self.n_iters):
       if step == 0:
-        donorcell_op_2D(self.psi, self.n, 
-          self.C, self.i, self.j)
+        donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
       else:
         self.cycle()
         self.xchng(self.psi[self.n])
@@ -205,15 +204,11 @@ class Mpdata_2D(Solver_2D):
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
         C_corr[0][self.i+hlf, self.j] = (
-          antidiff_2D(0, self.psi[self.n], 
-            self.i, self.j, C_unco)) 
+          antidiff_2D(0, self.psi[self.n], self.i, self.j, C_unco)) 
         self.xchng(C_corr[0])
 
         C_corr[1][self.i, self.j+hlf] = (
-          antidiff_2D(1, self.psi[self.n], 
-            self.j, self.i, C_unco)) 
+          antidiff_2D(1, self.psi[self.n], self.j, self.i, C_unco)) 
         self.xchng(C_corr[1])
 
-        donorcell_op_2D(self.psi, self.n, 
-          C_corr, self.i, self.j)
-#listing18
+        donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
