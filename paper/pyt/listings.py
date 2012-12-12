@@ -28,6 +28,9 @@ class Shift():
 one = Shift(1,1) 
 hlf = Shift(1,0)
 #listing05
+def pi(d, *idx): 
+  return (idx[d], idx[d-1])
+#listing06
 class Solver_2D(object):
   # ctor-like method
   def __init__(self, bcx, bcy, nx, ny, hlo):
@@ -71,9 +74,6 @@ class Solver_2D(object):
       self.advop() 
       self.cycle()
   
-#listing06
-def pi(d, *idx): 
-  return (idx[d], idx[d-1])
 #listing07
 class Cyclic(object):
   # ctor

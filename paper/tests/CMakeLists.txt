@@ -41,4 +41,7 @@ foreach(TEST ${TESTS})
   # Fortran
   add_test(NAME "for:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
   set_tests_properties("for:${NAME}" PROPERTIES DEPENDS build_test_for)
+
+  # F77
+  #add_test(NAME)
 endforeach()

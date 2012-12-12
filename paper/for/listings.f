@@ -98,6 +98,28 @@ module arakawa_c_m
   end function
 end module
 !listing04
+module pi_m
+  use real_m
+  contains
+  function pi(d, arr, i, j) result(return)
+    integer:: d
+    real(real_t),pointer:: arr(:,:), return(:,:)
+    integer:: i(:), j(:)
+    select case (d) 
+      case (0) 
+        return => arr(                        &   
+          i(1) : i(size(i)),                  &
+          j(1) : j(size(j))                   &   
+        )   
+      case (1) 
+        return => arr(                        &   
+          j(1) : j(size(j)),                  &
+          i(1) : i(size(i))                   &   
+        )   
+    end select
+  end function
+end module
+!listing05
 module bcd_m
   use arrvec_m
   implicit none
@@ -122,7 +144,7 @@ module bcd_m
     end subroutine
   end interface
 end module
-!listing05
+!listing06
 module solver_2D_m
   use arrvec_m
   use bcd_m
@@ -238,28 +260,6 @@ module solver_2D_m
       call this%cycle()
     end do
   end subroutine
-end module
-!listing06
-module pi_m
-  use real_m
-  contains
-  function pi(d, arr, i, j) result(return)
-    integer:: d
-    real(real_t),pointer:: arr(:,:), return(:,:)
-    integer:: i(:), j(:)
-    select case (d) 
-      case (0) 
-        return => arr(                        &   
-          i(1) : i(size(i)),                  &
-          j(1) : j(size(j))                   &   
-        )   
-      case (1) 
-        return => arr(                        &   
-          j(1) : j(size(j)),                  &
-          i(1) : i(size(i))                   &   
-        )   
-    end select
-  end function
 end module
 !listing07
 module cyclic_m

@@ -46,6 +46,23 @@ inline rng_t operator^(
   ); 
 } 
 //listing07
+template<int d> 
+inline idx_t pi(const rng_t &i, const rng_t &j);
+
+template<>
+inline idx_t pi<0>(
+  const rng_t &i, const rng_t &j
+) {
+  return idx_t({i,j});
+};
+
+template<>
+inline idx_t pi<1>(
+  const rng_t &j, const rng_t &i
+) {
+  return idx_t({i,j});
+}; 
+//listing08
 template<class bcx_t, class bcy_t>
 struct solver_2D
 {
@@ -108,23 +125,6 @@ struct solver_2D
     }
   }
 };
-//listing08
-template<int d> 
-inline idx_t pi(const rng_t &i, const rng_t &j);
-
-template<>
-inline idx_t pi<0>(
-  const rng_t &i, const rng_t &j
-) {
-  return idx_t({i,j});
-};
-
-template<>
-inline idx_t pi<1>(
-  const rng_t &j, const rng_t &i
-) {
-  return idx_t({i,j});
-}; 
 //listing09
 template<int d>
 struct cyclic
