@@ -324,17 +324,17 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
             : tmp[1];   // even steps
 
         // calculating the antidiffusive C 
-        C_corr[0](this->i+h, this->j) = 
+        C_corr[0](this->i+h-1, this->j) = 
           mpdata::antidiff_2D<0>(
             this->psi[this->n], 
-            this->i, this->j, C_unco
+            this->i-1, this->j, C_unco
           );
         this->xchng(C_corr[0]);
 
-        C_corr[1](this->i, this->j+h) = 
+        C_corr[1](this->i, this->j+h-1) = 
           mpdata::antidiff_2D<1>(
             this->psi[this->n], 
-            this->j, this->i, C_unco
+            this->j-1, this->i, C_unco
         );
         this->xchng(C_corr[1]);
 

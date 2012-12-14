@@ -471,7 +471,7 @@ module mpdata_m
 !listing19
   function antidiff_2D(d, psi, i, j, C) result (return)
     integer:: d
-    integer,pointer,contiguous:: i(:), j(:) 
+    integer,pointer,contiguous :: i(:), j(:) 
     real(real_t):: return(size(i), size(j))
     real(real_t),pointer,intent(in),contiguous:: psi(:,:) 
     class(arrvec_t),pointer:: C
@@ -564,17 +564,17 @@ module mpdata_2D_m
           end if
 
           ! calculating the antidiffusive velo
-          C_corr%at( 0 )%p%a( this%i+h, this%j )&
+          C_corr%at( 0 )%p%a( this%i+h-1, this%j )&
             = antidiff_2D(0,                    &
               this%psi%at( this%n )%p%a,        & 
-              this%i, this%j, C_unco            &
+              this%i-1, this%j, C_unco            &
           )
           call this%xchng(C_corr%at(0)%p%a)
 
-          C_corr%at( 1 )%p%a( this%i, this%j+h )&
+          C_corr%at( 1 )%p%a( this%i, this%j+h-1 )&
             = antidiff_2D(1,                    &
               this%psi%at( this%n )%p%a,        &
-              this%j, this%i, C_unco            &
+              this%j-1, this%i, C_unco            &
           )
           call this%xchng(C_corr%at(1)%p%a)
 
