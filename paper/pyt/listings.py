@@ -6,6 +6,8 @@ real_t = 'float64'
 #listing02
 try:
   import numpypy
+  from _numpypy.pypy import set_invalidation
+  set_invalidation(False)
 except ImportError:
   pass
 import numpy

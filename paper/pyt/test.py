@@ -4,8 +4,10 @@ import sys
 def read_file(fname, nx, ny):
   tmp = numpy.empty((nx, ny), real_t)
   with open(fname, 'r') as f:
-    for x in range(0, nx):
-      tmp[x,:] = numpy.fromstring(f.readline(), dtype=real_t, sep='\t')
+    x = 0
+    for line in f:
+      tmp[x,:] = numpy.fromstring(line, dtype=real_t, sep='\t')
+      x += 1
   return tmp
 
 if (len(sys.argv) != (9 + 1)) : 
@@ -28,5 +30,8 @@ slv.courant(1)[:] = Cy
 slv.solve(nt)
 
 if (abs(slv.state() - read_file(fout, nx, ny)) >= .5 * pow(10, -dec)).any(): 
-  print slv.state()
+  print slv.state().dtype, slv.state()
+  tmp = read_file(fout, nx, ny)
+  print tmp.dtype, tmp
+  print numpy.max(numpy.abs(slv.state() - tmp))
   raise Exception()
