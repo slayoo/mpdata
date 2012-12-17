@@ -11,6 +11,10 @@ try:
 except ImportError:
   pass
 import numpy
+try: 
+  numpy.seterr(all='ignore')
+except AttributeError:
+  pass
 import pdb
 #listing03
 class Shift():
@@ -49,8 +53,8 @@ class Solver_2D(object):
       numpy.empty((nx+2*hlo, ny+2*hlo), real_t) 
     )
     self.C = (
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t)
+      numpy.empty((nx+hlo, ny+2*hlo), real_t),
+      numpy.empty((nx+2*hlo, ny+hlo), real_t)
     )
 
   # accessor methods
@@ -167,6 +171,7 @@ def C_bar(d, C, i, j):
   ) / 4
 #listing14
 def antidiff_2D(d, psi, i, j, C):
+  pdb.set_trace()
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
@@ -184,14 +189,14 @@ class Mpdata_2D(Solver_2D):
     self.n_iters = n_iters
   
     self.tmp = [(
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t)
+      numpy.empty((nx+hlo, ny+2*hlo), real_t),
+      numpy.empty((nx+2*hlo, ny+hlo), real_t)
     )]
     
     if n_iters > 2:
       self.tmp.append((
-        numpy.empty(( nx+2*hlo, ny+2*hlo), real_t),
-        numpy.empty(( nx+2*hlo, ny+2*hlo), real_t)
+        numpy.empty(( nx+hlo, ny+2*hlo), real_t),
+        numpy.empty(( nx+2*hlo, ny+hlo), real_t)
       ))
 
   def advop(self):
@@ -213,10 +218,13 @@ class Mpdata_2D(Solver_2D):
 
         C_corr[0][im+hlf, self.j] = (
           antidiff_2D(0, self.psi[self.n], im, self.j, C_unco)) 
+        #pdb.set_trace()       
         self.xchng(C_corr[0])
 
+        #pdb.set_trace()
         C_corr[1][self.i, jm+hlf] = (
           antidiff_2D(1, self.psi[self.n], jm, self.i, C_unco)) 
+        pdb.set_trace()
         self.xchng(C_corr[1])
 
         pdb.set_trace()
