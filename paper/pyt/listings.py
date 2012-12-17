@@ -29,7 +29,7 @@ class Shift():
     )
 #listing04
 one = Shift(1,1) 
-hlf = Shift(1,0)
+hlf = Shift(0,1)
 #listing05
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
@@ -108,6 +108,7 @@ def f(psi_l, psi_r, C):
   ) / 2
 #listing09
 def donorcell(d, psi, C, i, j):
+  #pdb.set_trace()
   return (
     f(
       psi[pi(d, i,     j)], 
@@ -207,8 +208,8 @@ class Mpdata_2D(Solver_2D):
         else:
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
-        im = self.i - one
-        jm = self.j - one
+        im = self.i
+        jm = self.j
 
         C_corr[0][im+hlf, self.j] = (
           antidiff_2D(0, self.psi[self.n], im, self.j, C_unco)) 
@@ -218,4 +219,5 @@ class Mpdata_2D(Solver_2D):
           antidiff_2D(1, self.psi[self.n], jm, self.i, C_unco)) 
         self.xchng(C_corr[1])
 
+        pdb.set_trace()
         donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
