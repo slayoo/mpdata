@@ -171,7 +171,7 @@ def C_bar(d, C, i, j):
   ) / 4
 #listing14
 def antidiff_2D(d, psi, i, j, C):
-  pdb.set_trace()
+  #pdb.set_trace()
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
@@ -224,8 +224,8 @@ class Mpdata_2D(Solver_2D):
         #pdb.set_trace()
         C_corr[1][self.i, jm+hlf] = (
           antidiff_2D(1, self.psi[self.n], jm, self.i, C_unco)) 
-        pdb.set_trace()
+        #pdb.set_trace()
         self.xchng(C_corr[1])
 
-        pdb.set_trace()
+        #pdb.set_trace()
         donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
