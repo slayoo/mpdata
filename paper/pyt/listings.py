@@ -213,8 +213,8 @@ class Mpdata_2D(Solver_2D):
         else:
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
-        im = self.i
-        jm = self.j
+        im = self.i # TODO +/- h ?
+        jm = self.j # TODO +/- h ?
 
         C_corr[0][im+hlf, self.j] = (
           antidiff_2D(0, self.psi[self.n], im, self.j, C_unco)) 

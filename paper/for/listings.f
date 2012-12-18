@@ -43,8 +43,6 @@ module arrvec_m
     integer,intent(in):: n
     integer,intent(in),dimension(:) :: i, j
     allocate(this%at(n)%p)
-print*, i(1), i(size(i))
-print*, j(1), j(size(j))
     allocate(this%at(n)%p%a(                  &
       i(1) : i(size(i)),            &
       j(1) : j(size(j))             &
@@ -118,10 +116,6 @@ module halo_m
     
     integer :: c
     return = (/ (c, c=r(1) - n, r(size(r)) + n) /)
-print*, "pmn"
-print*, r
-print*, n
-print*, return
   end function
 
   function pmh(r, h) result (return)
@@ -131,9 +125,6 @@ print*, return
     
     integer :: c
     return = (/ (c, c=r(1) - h, r(size(r)) + h) /)
-print*, "pmh"
-print*, r
-print*, return
   end function
 end module
 !listing04
@@ -502,7 +493,7 @@ module mpdata_m
 !listing19
   function antidiff_2D(d, psi, i, j, C) result (return)
     integer:: d
-    integer,pointer,contiguous :: i(:), j(:) 
+    integer, pointer, contiguous :: i(:), j(:) 
     real(real_t):: return(size(i), size(j))
     real(real_t),pointer,intent(in),contiguous:: psi(:,:) 
     class(arrvec_t),pointer:: C
@@ -526,8 +517,9 @@ module mpdata_2D_m
   implicit none
   
   type, extends(solver_2D_t):: mpdata_2D_t
-    integer:: n_iters, n_tmp
-    class(arrvec_t),pointer:: tmp(:) 
+    integer :: n_iters, n_tmp
+    integer, pointer, contiguous :: im(:), jm(:)
+    class(arrvec_t), pointer:: tmp(:) 
     contains
     procedure:: ctor => mpdata_2D_ctor
     procedure:: dtor => mpdata_2D_dtor
@@ -537,10 +529,10 @@ module mpdata_2D_m
   contains
 
   subroutine mpdata_2D_ctor(this, n_iters, bcx, bcy, nx, ny)
-    class(mpdata_2D_t):: this
-    class(bcd_t),pointer:: bcx, bcy
-    integer,intent(in):: n_iters, nx, ny
-    integer:: hlo
+    class(mpdata_2D_t) :: this
+    class(bcd_t), pointer :: bcx, bcy
+    integer, intent(in) :: n_iters, nx, ny
+    integer:: hlo, c
 
     hlo = 1
     this%n_iters = n_iters
@@ -550,14 +542,18 @@ module mpdata_2D_m
     this%n_tmp = 1
     if (n_iters > 2) this%n_tmp = 2
     allocate(this%tmp(0:this%n_tmp)) 
-    block
-      integer:: c
-      do c=0, this%n_tmp - 1
-        call this%tmp(c)%ctor(2)
-        call this%tmp(c)%init(0, this%i // h, this%j // hlo)
-        call this%tmp(c)%init(1, this%i // hlo, this%j // h)
-      end do
-    end block
+
+    do c=0, this%n_tmp - 1
+      call this%tmp(c)%ctor(2)
+      call this%tmp(c)%init(0, this%i // h, this%j // hlo)
+      call this%tmp(c)%init(1, this%i // hlo, this%j // h)
+    end do
+
+    allocate(this%im(this%i(0) : this%i(0) + nx + 1))
+    this%im = (/ (c, c=this%i(0) - 1, this%i(0) + nx) /)
+
+    allocate(this%jm(this%j(0) : this%j(0) + ny + 1))
+    this%jm = (/ (c, c=this%j(0) - 1, this%j(0) + ny) /)
   end subroutine
 
   subroutine mpdata_2D_dtor(this)
@@ -567,6 +563,7 @@ module mpdata_2D_m
       call this%tmp(c)%dtor()
     end do
     call solver_2D_dtor(this)
+    deallocate(this%im, this%jm)
   end subroutine
 
   subroutine mpdata_2D_advop(this)
@@ -596,20 +593,18 @@ module mpdata_2D_m
             C_corr => this%tmp(1) ! even step
           end if
 
-! TODO! im = i // h, jm = j // h?
-
           ! calculating the antidiffusive velo
-          C_corr%at( 0 )%p%a( this%i+h, this%j )&
+          C_corr%at( 0 )%p%a( this%im+h, this%j )&
             = antidiff_2D(0,                    &
               this%psi%at( this%n )%p%a,        & 
-              this%i, this%j, C_unco            &
+              this%im, this%j, C_unco            &
           )
           call this%bcy%fill_halos(C_corr%at(0)%p%a)
 
-          C_corr%at( 1 )%p%a( this%i, this%j+h )&
+          C_corr%at( 1 )%p%a( this%i, this%jm+h )&
             = antidiff_2D(1,                    &
               this%psi%at( this%n )%p%a,        &
-              this%j, this%i, C_unco            &
+              this%jm, this%i, C_unco            &
           )
           call this%bcx%fill_halos(C_corr%at(1)%p%a)
 
