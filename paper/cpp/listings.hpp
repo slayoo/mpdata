@@ -27,13 +27,13 @@ struct hlf_t {} h;
 inline rng_t operator+(
   const rng_t &i, const hlf_t &
 ) { 
-  return i + 1; 
+  return i; 
 } 
 
 inline rng_t operator-(
   const rng_t &i, const hlf_t &
 ) { 
-  return i; 
+  return i-1; 
 }
 //listing06
 template<class n_t>
@@ -84,8 +84,8 @@ struct solver_2D
   {
     for (int l = 0; l < 2; ++l) 
       psi.push_back(new arr_t(i^hlo, j^hlo));
-    C.push_back(new arr_t(i^hlo, j^hlo));
-    C.push_back(new arr_t(i^hlo, j^hlo));
+    C.push_back(new arr_t(i^h, j^hlo));
+    C.push_back(new arr_t(i^hlo, j^h));
   }
 
   // accessor methods
@@ -95,7 +95,7 @@ struct solver_2D
 
   arr_t courant(int d) 
   { 
-    return C[d](i-h,j-h).reindex({0,0}); 
+    return C[d]; 
   }
 
   // helper methods invoked by solve()
@@ -106,20 +106,13 @@ struct solver_2D
     n = (n + 1) % 2 - 2; 
   }
 
-  void xchng(const arr_t &arr) 
-  { 
-    bcx.fill_halos(arr);
-    bcy.fill_halos(arr);
-  }
-
   // integration logic
   void solve(const int nt) 
   {
     for (int t = 0; t < nt; ++t) 
     {
-      xchng(C[0]);
-      xchng(C[1]);
-      xchng(psi[n]);
+      bcx.fill_halos(psi[n]);
+      bcy.fill_halos(psi[n]);
       advop();
       cycle();
     }
@@ -138,16 +131,16 @@ struct cyclic
     const rng_t &i, const rng_t &j, int hlo
   ) :
     left_halo(pi<d>(
-      rng_t(i.first()-hlo, i.first()-1), j^hlo
+      rng_t(i.first()-hlo, i.first()-1), j//^hlo // TODO Range::all()
     )),
     rght_edge(pi<d>(
-      rng_t(i.last()-hlo+1, i.last()  ), j^hlo
+      rng_t(i.last()-hlo+1, i.last()  ), j//^hlo // TODO Range::all()
     )),
     rght_halo(pi<d>(
-      rng_t(i.last()+1, i.last()+hlo  ), j^hlo
+      rng_t(i.last()+1, i.last()+hlo  ), j//^hlo // TODO Range::all()
     )),
     left_edge(pi<d>(
-      rng_t(i.first(), i.first()+hlo-1), j^hlo
+      rng_t(i.first(), i.first()+hlo-1), j//^hlo // TODO Range::all()
     ))
   {} 
 
@@ -282,20 +275,23 @@ namespace mpdata
 template<int n_iters, class bcx_t, class bcy_t>
 struct mpdata_2D : solver_2D<bcx_t, bcy_t>
 {
-  // member field
+  // member fields
   arrvec_t tmp[2];
+  rng_t im, jm;
 
   // ctor
   mpdata_2D(int nx, int ny) : 
-    solver_2D<bcx_t, bcy_t>(nx, ny, 1)
+    solver_2D<bcx_t, bcy_t>(nx, ny, 1), 
+    im(this->i.first() - 1, this->i.last()),
+    jm(this->j.first() - 1, this->j.last())
   {
     int n_tmp = n_iters > 2 ? 2 : 1;
     for (int n = 0; n < n_tmp; ++n)
     {
       tmp[n].push_back(new arr_t(
-        this->i^this->hlo, this->j^this->hlo));
+        this->i^h, this->j^this->hlo));
       tmp[n].push_back(new arr_t(
-        this->i^this->hlo, this->j^this->hlo));
+        this->i^this->hlo, this->j^h));
     }
   }
 
@@ -310,7 +306,8 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
       else
       {
         this->cycle();
-        this->xchng(this->psi[this->n]);
+        this->bcx.fill_halos(this->psi[this->n]);
+        this->bcy.fill_halos(this->psi[this->n]);
 
         // choosing input/output for antidiff C
         const arrvec_t 
@@ -324,19 +321,19 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
             : tmp[1];   // even steps
 
         // calculating the antidiffusive C 
-        C_corr[0](this->i+h-1, this->j) = 
+        C_corr[0](this->im+h, this->j) = 
           mpdata::antidiff_2D<0>(
             this->psi[this->n], 
-            this->i-1, this->j, C_unco
+            this->im, this->j, C_unco
           );
-        this->xchng(C_corr[0]);
+        this->bcy.fill_halos(C_corr[0]);
 
-        C_corr[1](this->i, this->j+h-1) = 
+        C_corr[1](this->i, this->jm+h) = 
           mpdata::antidiff_2D<1>(
             this->psi[this->n], 
-            this->j-1, this->i, C_unco
+            this->jm, this->i, C_unco
         );
-        this->xchng(C_corr[1]);
+        this->bcx.fill_halos(C_corr[1]);
 
         // donor-cell step 
         donorcell::op_2D(this->psi, 
