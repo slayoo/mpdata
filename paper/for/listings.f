@@ -312,7 +312,7 @@ module cyclic_m
     allocate(this%rght_halo(hlo))
     allocate(this%left_edge(hlo))
     allocate(this%rght_edge(hlo))
-    allocate(this%j(ny + 2*hlo))
+    allocate(this%j(ny + 2*hlo)) !TODO
 
     block
       integer:: c
@@ -320,7 +320,7 @@ module cyclic_m
       this%rght_halo = (/(c, c=nx, nx-1+hlo)/) 
       this%left_edge = (/(c, c=0, hlo-1)/)
       this%rght_edge = (/(c, c=nx-hlo, nx-1)/)
-      this%j         = (/(c, c=-hlo, ny-1+hlo)/)
+      this%j         = (/(c, c=-hlo, ny-1+hlo)/) ! TODO!
     end block
   end subroutine
 
@@ -330,7 +330,7 @@ module cyclic_m
     deallocate(this%rght_halo)
     deallocate(this%left_edge)
     deallocate(this%rght_edge)
-    deallocate(this%j)
+    deallocate(this%j) ! TODO
   end subroutine
 
   subroutine cyclic_fill_halos(this, a)
@@ -549,11 +549,11 @@ module mpdata_2D_m
       call this%tmp(c)%init(1, this%i // hlo, this%j // h)
     end do
 
-    allocate(this%im(this%i(0) : this%i(0) + nx + 1))
-    this%im = (/ (c, c=this%i(0) - 1, this%i(0) + nx) /)
+    allocate(this%im(0 : nx))
+    this%im = (/ (c, c=this%i(0) - 1, this%i(nx-1)) /)
 
-    allocate(this%jm(this%j(0) : this%j(0) + ny + 1))
-    this%jm = (/ (c, c=this%j(0) - 1, this%j(0) + ny) /)
+    allocate(this%jm(0 : ny))
+    this%jm = (/ (c, c=this%j(0) - 1, this%j(ny-1)) /)
   end subroutine
 
   subroutine mpdata_2D_dtor(this)
