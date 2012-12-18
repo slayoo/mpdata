@@ -38,14 +38,16 @@ module arrvec_m
     this%inited = .false.
   end subroutine
 
-  subroutine arrvec_init(this, n, i, j, hlo)
+  subroutine arrvec_init(this, n, i, j)
     class(arrvec_t):: this
-    integer,intent(in):: n, hlo
-    integer,intent(in),pointer:: i(:), j(:)
+    integer,intent(in):: n
+    integer,intent(in),dimension(:) :: i, j
     allocate(this%at(n)%p)
+print*, i(1), i(size(i))
+print*, j(1), j(size(j))
     allocate(this%at(n)%p%a(                  &
-      i(0)-hlo : i(size(i)-1)+hlo,            &
-      j(0)-hlo : j(size(i)-1)+hlo             &
+      i(1) : i(size(i)),            &
+      j(1) : j(size(j))             &
     ))
     this%inited(n) = .true.
     this%at(n - size(this%inited))%p          &
@@ -87,14 +89,51 @@ module arakawa_c_m
     integer,intent(in):: i
     type(half_t),intent(in):: h
     integer:: return
-    return = i + 1
+    return = i 
   end function
 
   elemental function mh(i, h) result (return)
     integer,intent(in):: i 
     type(half_t),intent(in):: h
     integer:: return
-    return = i
+    return = i - 1
+  end function
+end module
+!
+module halo_m
+  use arakawa_c_m
+  implicit none
+
+  interface operator (//)
+    module procedure pmn
+    module procedure pmh
+  end interface 
+
+  contains
+
+  function pmn(r, n) result (return)
+    integer, intent(in), dimension(:) :: r
+    integer, intent(in) :: n
+    integer, dimension(size(r)+2) :: return
+    
+    integer :: c
+    return = (/ (c, c=r(1) - n, r(size(r)) + n) /)
+print*, "pmn"
+print*, r
+print*, n
+print*, return
+  end function
+
+  function pmh(r, h) result (return)
+    integer, intent(in), dimension(:) :: r
+    type(half_t), intent(in) :: h
+    integer, dimension(size(r)+1) :: return
+    
+    integer :: c
+    return = (/ (c, c=r(1) - h, r(size(r)) + h) /)
+print*, "pmh"
+print*, r
+print*, return
   end function
 end module
 !listing04
@@ -161,7 +200,6 @@ module solver_2D_m
     procedure:: state   => solver_2D_state
     procedure:: courant => solver_2D_courant
     procedure:: cycle   => solver_2D_cycle
-    procedure:: xchng   => solver_2D_xchng
     procedure(solver_2D_advop),deferred:: advop
   end type 
 
@@ -176,6 +214,7 @@ module solver_2D_m
 
   subroutine solver_2D_ctor(this, bcx, bcy, nx, ny, hlo)
     use arakawa_c_m
+    use halo_m
     class(solver_2D_t):: this
     class(bcd_t),intent(in),pointer:: bcx,bcy
     integer,intent(in):: nx, ny, hlo
@@ -199,14 +238,14 @@ module solver_2D_m
     block
       integer:: n
       do n=0, 1
-        call this%psi%init(n, this%i, this%j, hlo)
+        call this%psi%init(n, this%i // hlo, this%j // hlo)
       end do
     end block
 
     allocate(this%C)
     call this%C%ctor(2)
-    call this%C%init(0, this%i, this%j, hlo)
-    call this%C%init(1, this%i, this%j, hlo)
+    call this%C%init(0, this%i // h, this%j // hlo)
+    call this%C%init(1, this%i // hlo, this%j // h)
   end subroutine
 
   subroutine solver_2D_dtor(this)
@@ -227,11 +266,11 @@ module solver_2D_m
 
   function solver_2D_courant(this, d) result (return)
     class(solver_2D_t):: this
-    integer:: d
-    real(real_t),pointer:: return(:,:)
+    integer :: d
+    real(real_t),pointer :: return(:,:)
     return => this%C%at(d)%p%a(               & 
-      this%i(0)-h : this%i(size(this%i)-1)-h, &
-      this%j(0)-h : this%j(size(this%j)-1)-h  &
+      this%i(0)-h : this%i(size(this%i)-1)+h, &
+      this%j(0)-h : this%j(size(this%j)-1)+h  &
     )
   end function
 
@@ -240,22 +279,14 @@ module solver_2D_m
     this%n = mod(this%n + 1 + 2, 2) - 2
   end subroutine
 
-  subroutine solver_2D_xchng(this, arr)
-    class(solver_2D_t):: this
-    real(real_t),pointer,contiguous:: arr(:,:)
-    call this%bcx%fill_halos(arr)
-    call this%bcy%fill_halos(arr)
-  end subroutine
-
   subroutine solver_2D_solve(this, nt)
     class(solver_2D_t):: this
     integer,intent(in):: nt
     integer:: t
 
     do t = 0, nt-1 
-      call this%xchng(this%C%at(0)%p%a)
-      call this%xchng(this%C%at(1)%p%a)
-      call this%xchng(this%psi%at(this%n)%p%a)
+      call this%bcx%fill_halos(this%psi%at(this%n)%p%a)
+      call this%bcy%fill_halos(this%psi%at(this%n)%p%a)
       call this%advop()
       call this%cycle()
     end do
@@ -491,6 +522,7 @@ module mpdata_2D_m
   use solver_2D_m
   use mpdata_m
   use donorcell_m
+  use halo_m
   implicit none
   
   type, extends(solver_2D_t):: mpdata_2D_t
@@ -522,8 +554,8 @@ module mpdata_2D_m
       integer:: c
       do c=0, this%n_tmp - 1
         call this%tmp(c)%ctor(2)
-        call this%tmp(c)%init(0, this%i, this%j, hlo)
-        call this%tmp(c)%init(1, this%i, this%j, hlo)
+        call this%tmp(c)%init(0, this%i // h, this%j // hlo)
+        call this%tmp(c)%init(1, this%i // hlo, this%j // h)
       end do
     end block
   end subroutine
@@ -547,7 +579,8 @@ module mpdata_2D_m
           this%C, this%i, this%j)
       else
         call this%cycle()
-        call this%xchng(this%psi%at(this%n)%p%a)
+        call this%bcx%fill_halos(this%psi%at(this%n)%p%a)
+        call this%bcy%fill_halos(this%psi%at(this%n)%p%a)
 
         block
           ! chosing input/output for antidiff. C
@@ -563,20 +596,22 @@ module mpdata_2D_m
             C_corr => this%tmp(1) ! even step
           end if
 
+! TODO! im = i // h, jm = j // h?
+
           ! calculating the antidiffusive velo
-          C_corr%at( 0 )%p%a( this%i+h-1, this%j )&
+          C_corr%at( 0 )%p%a( this%i+h, this%j )&
             = antidiff_2D(0,                    &
               this%psi%at( this%n )%p%a,        & 
-              this%i-1, this%j, C_unco            &
+              this%i, this%j, C_unco            &
           )
-          call this%xchng(C_corr%at(0)%p%a)
+          call this%bcy%fill_halos(C_corr%at(0)%p%a)
 
-          C_corr%at( 1 )%p%a( this%i, this%j+h-1 )&
+          C_corr%at( 1 )%p%a( this%i, this%j+h )&
             = antidiff_2D(1,                    &
               this%psi%at( this%n )%p%a,        &
-              this%j-1, this%i, C_unco            &
+              this%j, this%i, C_unco            &
           )
-          call this%xchng(C_corr%at(1)%p%a)
+          call this%bcx%fill_halos(C_corr%at(1)%p%a)
 
           ! donor-cell step
           call donorcell_op_2D(this%psi, this%n,&
