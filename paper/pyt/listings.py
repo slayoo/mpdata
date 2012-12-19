@@ -63,22 +63,17 @@ class Solver_2D(object):
 
   # helper methods invoked by solve()
   def courant(self,d):
-    return self.C[d][self.i, self.j]
+    return self.C[d][:]
 
   def cycle(self):
     self.n  = (self.n + 1) % 2 - 2
-
-  def xchng(self, arr):
-    self.bcx.fill_halos(arr)
-    self.bcy.fill_halos(arr)
 
    # integration logic
   def solve(self, nt):
     for t in range(nt):
       #pdb.set_trace()
-      self.xchng(self.C[0])
-      self.xchng(self.C[1])
-      self.xchng(self.psi[self.n])
+      self.bcx.fill_halos(self.psi[self.n])
+      self.bcy.fill_halos(self.psi[self.n])
       self.advop() 
       self.cycle()
   
@@ -185,6 +180,8 @@ class Mpdata_2D(Solver_2D):
   def __init__(self, n_iters, bcx, bcy, nx, ny):
     hlo = 1
     Solver_2D.__init__(self, bcx, bcy, nx, ny, hlo)
+    self.im = slice(self.i.start-1, self.i.stop)
+    self.jm = slice(self.j.start-1, self.j.stop)
 
     self.n_iters = n_iters
   
@@ -205,7 +202,8 @@ class Mpdata_2D(Solver_2D):
         donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
       else:
         self.cycle()
-        self.xchng(self.psi[self.n])
+        self.bcx.fill_halos(self.psi[self.n])
+        self.bcy.fill_halos(self.psi[self.n])
         print "step", step
         if step == 1:
           #pdb.set_trace()
@@ -216,21 +214,21 @@ class Mpdata_2D(Solver_2D):
         else:
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
-        im = self.i # TODO +/- h ?
-        jm = self.j # TODO +/- h ?
-
+      
         #pdb.set_trace()
-        C_corr[0][im+hlf, self.j] = (
-          antidiff_2D(0, self.psi[self.n], im, self.j, C_unco)) 
+        C_corr[0][self.im+hlf, self.j] = (
+          antidiff_2D(0, self.psi[self.n], self.im, self.j, C_unco)) 
         #pdb.set_trace()       
-        self.xchng(C_corr[0])
+        self.bcy.fill_halos(C_corr[0])
+        #self.bcx.fill_halos(C_corr[0])
 
         print "C_corr[1] przed wyliczenim, powinno byc tablica z zerami, w PyPy nie jest (niezerowe elementy sa chyba z C_corr[0])", C_corr[1] 
         #pdb.set_trace()
-        C_corr[1][self.i, jm+hlf] = (
-          antidiff_2D(1, self.psi[self.n], jm, self.i, C_unco)) 
+        C_corr[1][self.i, self.jm+hlf] = (
+          antidiff_2D(1, self.psi[self.n], self.jm, self.i, C_unco)) 
         #pdb.set_trace()
-        self.xchng(C_corr[1])
+        self.bcx.fill_halos(C_corr[1])
+        #self.bcy.fill_halos(C_corr[1])
 
         #pdb.set_trace()
         donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
