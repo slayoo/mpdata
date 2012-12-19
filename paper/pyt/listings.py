@@ -207,7 +207,6 @@ class Mpdata_2D(Solver_2D):
         print "step", step
         if step == 1:
           #pdb.set_trace()
-          print "print tmp[0] przy definiowaniu C_corr, w PyPy juz jest niezerowe miejsce", self.tmp[0]
           C_unco, C_corr = self.C, self.tmp[0]
         elif step % 2:
           C_unco, C_corr = self.tmp[1], self.tmp[0]
@@ -218,11 +217,13 @@ class Mpdata_2D(Solver_2D):
         #pdb.set_trace()
         C_corr[0][self.im+hlf, self.j] = (
           antidiff_2D(0, self.psi[self.n], self.im, self.j, C_unco)) 
-        #pdb.set_trace()       
+        
         self.bcy.fill_halos(C_corr[0])
+        print "C_corr[0][4:5] jest pusta tablica, bo 4 wychodzi poza rozmiar, C_corr[0][4:5] = \n ",  C_corr[0][4:5]
+        C_corr[0][4:5] = 100
         #self.bcx.fill_halos(C_corr[0])
 
-        print "C_corr[1] przed wyliczenim, powinno byc tablica z zerami, w PyPy nie jest (niezerowe elementy sa chyba z C_corr[0])", C_corr[1] 
+        print "po wykonaniu C_corr[0][4:5] = 100 PyPy wpisuje liczby w pierwsze miejsca kolejnej tablic z tupli C_corr, czyli C_corr[1], C_corr[1] = \n", C_corr[1] 
         #pdb.set_trace()
         C_corr[1][self.i, self.jm+hlf] = (
           antidiff_2D(1, self.psi[self.n], self.jm, self.i, C_unco)) 
