@@ -34,6 +34,9 @@ class Shift():
 #listing04
 one = Shift(1,1) 
 hlf = Shift(0,1)
+#
+def pm(sl, n):
+  return slice(sl.start - n, sl.stop+n)
 #listing05
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
@@ -42,6 +45,7 @@ class Solver_2D(object):
   # ctor-like method
   def __init__(self, bcx, bcy, nx, ny, hlo):
     self.n = 0
+    self.hlo = hlo
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
 
@@ -72,8 +76,8 @@ class Solver_2D(object):
   def solve(self, nt):
     for t in range(nt):
       #pdb.set_trace()
-      self.bcx.fill_halos(self.psi[self.n])
-      self.bcy.fill_halos(self.psi[self.n])
+      self.bcx.fill_halos(self.psi[self.n], pm(self.j, self.hlo))
+      self.bcy.fill_halos(self.psi[self.n], pm(self.i, self.hlo))
       self.advop() 
       self.cycle()
   
@@ -81,23 +85,16 @@ class Solver_2D(object):
 class Cyclic(object):
   # ctor
   def __init__(self, d, i, hlo): 
-    self.left_halo = pi(d, 
-      slice(i.start-hlo, i.start), slice(None)
-    )
-    self.rght_edge = pi(d, 
-      slice(i.stop-hlo, i.stop),   slice(None)
-    )
-    self.rght_halo = pi(d, 
-      slice(i.stop, i.stop+hlo),   slice(None)
-    )
-    self.left_edge = pi(d, 
-      slice(i.start, i.start+hlo), slice(None)
-    )
+    self.d = d
+    self.left_halo = slice(i.start-hlo, i.start    )
+    self.rght_edge = slice(i.stop -hlo, i.stop     )
+    self.rght_halo = slice(i.stop,      i.stop +hlo)
+    self.left_edge = slice(i.start,     i.start+hlo)
 
   # method invoked by the solver
-  def fill_halos(self, psi):
-    psi[self.left_halo] = psi[self.rght_edge]
-    psi[self.rght_halo] = psi[self.left_edge]
+  def fill_halos(self, psi, j):
+    psi[pi(self.d, self.left_halo, j)] = psi[pi(self.d, self.rght_edge, j)]
+    psi[pi(self.d, self.rght_halo, j)] = psi[pi(self.d, self.left_edge, j)]
 
 #listing08
 def f(psi_l, psi_r, C):
@@ -202,8 +199,8 @@ class Mpdata_2D(Solver_2D):
         donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
       else:
         self.cycle()
-        self.bcx.fill_halos(self.psi[self.n])
-        self.bcy.fill_halos(self.psi[self.n])
+        self.bcx.fill_halos(self.psi[self.n], pm(self.j, self.hlo))
+        self.bcy.fill_halos(self.psi[self.n], pm(self.i, self.hlo))
         print "step", step
         if step == 1:
           #pdb.set_trace()
@@ -213,23 +210,13 @@ class Mpdata_2D(Solver_2D):
         else:
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
-      
-        #pdb.set_trace()
         C_corr[0][self.im+hlf, self.j] = (
           antidiff_2D(0, self.psi[self.n], self.im, self.j, C_unco)) 
         
-        self.bcy.fill_halos(C_corr[0])
-        print "C_corr[0][4:5] jest pusta tablica, bo 4 wychodzi poza rozmiar, C_corr[0][4:5] = \n ",  C_corr[0][4:5]
-        C_corr[0][4:5] = 100
-        #self.bcx.fill_halos(C_corr[0])
-
-        print "po wykonaniu C_corr[0][4:5] = 100 PyPy wpisuje liczby w pierwsze miejsca kolejnej tablic z tupli C_corr, czyli C_corr[1], C_corr[1] = \n", C_corr[1] 
-        #pdb.set_trace()
         C_corr[1][self.i, self.jm+hlf] = (
           antidiff_2D(1, self.psi[self.n], self.jm, self.i, C_unco)) 
-        #pdb.set_trace()
-        self.bcx.fill_halos(C_corr[1])
-        #self.bcy.fill_halos(C_corr[1])
 
-        #pdb.set_trace()
+        self.bcy.fill_halos(C_corr[0], self.im)
+        self.bcx.fill_halos(C_corr[1], self.jm)
+
         donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
