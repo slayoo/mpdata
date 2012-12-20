@@ -111,8 +111,8 @@ struct solver_2D
   {
     for (int t = 0; t < nt; ++t) 
     {
-      bcx.fill_halos(psi[n]);
-      bcy.fill_halos(psi[n]);
+      bcx.fill_halos(psi[n], j^hlo);
+      bcy.fill_halos(psi[n], i^hlo);
       advop();
       cycle();
     }
@@ -123,32 +123,24 @@ template<int d>
 struct cyclic
 {
   // member fields
-  idx_t left_halo, rght_halo;
-  idx_t left_edge, rght_edge;;
+  rng_t left_halo, rght_halo;
+  rng_t left_edge, rght_edge;;
 
   // ctor
   cyclic(
     const rng_t &i, const rng_t &j, int hlo
   ) :
-    left_halo(pi<d>(
-      rng_t(i.first()-hlo, i.first()-1), j//^hlo // TODO Range::all()
-    )),
-    rght_edge(pi<d>(
-      rng_t(i.last()-hlo+1, i.last()  ), j//^hlo // TODO Range::all()
-    )),
-    rght_halo(pi<d>(
-      rng_t(i.last()+1, i.last()+hlo  ), j//^hlo // TODO Range::all()
-    )),
-    left_edge(pi<d>(
-      rng_t(i.first(), i.first()+hlo-1), j//^hlo // TODO Range::all()
-    ))
+    left_halo(i.first()-hlo, i.first()-1),
+    rght_edge(i.last()-hlo+1, i.last()  ),
+    rght_halo(i.last()+1, i.last()+hlo  ),
+    left_edge(i.first(), i.first()+hlo-1)
   {} 
 
   // method invoked by the solver
-  void fill_halos(const arr_t &a)
+  void fill_halos(const arr_t &a, const rng_t &j)
   {
-    a(left_halo) = a(rght_edge);     
-    a(rght_halo) = a(left_edge);     
+    a(pi<d>(left_halo, j)) = a(pi<d>(rght_edge, j));     
+    a(pi<d>(rght_halo, j)) = a(pi<d>(left_edge, j));     
   }
 };
 //listing10
@@ -306,8 +298,8 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
       else
       {
         this->cycle();
-        this->bcx.fill_halos(this->psi[this->n]);
-        this->bcy.fill_halos(this->psi[this->n]);
+        this->bcx.fill_halos(this->psi[this->n], this->j^this->hlo);
+        this->bcy.fill_halos(this->psi[this->n], this->i^this->hlo);
 
         // choosing input/output for antidiff C
         const arrvec_t 
@@ -326,14 +318,14 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
             this->psi[this->n], 
             this->im, this->j, C_unco
           );
-        this->bcy.fill_halos(C_corr[0]);
+        this->bcy.fill_halos(C_corr[0], this->i^h);
 
         C_corr[1](this->i, this->jm+h) = 
           mpdata::antidiff_2D<1>(
             this->psi[this->n], 
             this->jm, this->i, C_unco
         );
-        this->bcx.fill_halos(C_corr[1]);
+        this->bcx.fill_halos(C_corr[1], this->j^h);
 
         // donor-cell step 
         donorcell::op_2D(this->psi, 
