@@ -10,28 +10,32 @@ def read_file(fname, nx, ny):
       x += 1
   return tmp
 
-if (len(sys.argv) != (9 + 1)) : 
-  raise Exception('expecting 9 arguments (nx, ny, Cx, Cy, nt, it, f.in, f.out, dec)')
+def main():
+  if (len(sys.argv) != (9 + 1)) : 
+    raise Exception('expecting 9 arguments (nx, ny, Cx, Cy, nt, it, f.in, f.out, dec)')
 
-nx = int(sys.argv[1])
-ny = int(sys.argv[2])
-Cx = float(sys.argv[3])
-Cy = float(sys.argv[4])
-nt = int(sys.argv[5])
-it = int(sys.argv[6])
-fin = sys.argv[7]
-fout = sys.argv[8]
-dec = int(sys.argv[9])
+  nx = int(sys.argv[1])
+  ny = int(sys.argv[2])
+  Cx = float(sys.argv[3])
+  Cy = float(sys.argv[4])
+  nt = int(sys.argv[5])
+  it = int(sys.argv[6])
+  fin = sys.argv[7]
+  fout = sys.argv[8]
+  dec = int(sys.argv[9])
 
-slv = Mpdata_2D(it, Cyclic, Cyclic, nx, ny)
-slv.state()[:] = read_file(fin, nx, ny)
-slv.courant(0)[:] = Cx
-slv.courant(1)[:] = Cy
-slv.solve(nt)
+  slv = Mpdata_2D(it, Cyclic, Cyclic, nx, ny)
+  slv.state()[:] = read_file(fin, nx, ny)
+  slv.courant(0)[:] = Cx
+  slv.courant(1)[:] = Cy
+  slv.solve(nt)
 
-if (abs(slv.state() - read_file(fout, nx, ny)) >= .5 * pow(10, -dec)).any(): 
-  print slv.state().dtype, slv.state()
-  tmp = read_file(fout, nx, ny)
-  print tmp.dtype, tmp
-  print numpy.max(numpy.abs(slv.state() - tmp))
-  raise Exception()
+  if (abs(slv.state() - read_file(fout, nx, ny)) >= .5 * pow(10, -dec)).any(): 
+    print slv.state().dtype, slv.state()
+    tmp = read_file(fout, nx, ny)
+    print tmp.dtype, tmp
+    print numpy.max(numpy.abs(slv.state() - tmp))
+    raise Exception()
+
+if __name__ == "__main__":
+    main()

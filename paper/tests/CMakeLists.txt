@@ -36,6 +36,9 @@ function(add_tests dir)
     # PyPy
     add_test(NAME "pyp:${NAME}" COMMAND pypy ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
 
+    # Cython
+    add_test(NAME "cyt:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/pyt/test-cython ${ARG})
+
     # Fortran
     add_test(NAME "for:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
     set_tests_properties("for:${NAME}" PROPERTIES DEPENDS build_test_for)
