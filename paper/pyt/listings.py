@@ -15,7 +15,6 @@ try:
   numpy.seterr(all='ignore')
 except AttributeError:
   pass
-import pdb
 #listing03
 class Shift():
   def __init__(self, plus, mnus):
@@ -75,7 +74,6 @@ class Solver_2D(object):
    # integration logic
   def solve(self, nt):
     for t in range(nt):
-      #pdb.set_trace()
       self.bcx.fill_halos(self.psi[self.n], pm(self.j, self.hlo))
       self.bcy.fill_halos(self.psi[self.n], pm(self.i, self.hlo))
       self.advop() 
@@ -104,7 +102,6 @@ def f(psi_l, psi_r, C):
   ) / 2
 #listing09
 def donorcell(d, psi, C, i, j):
-  #pdb.set_trace()
   return (
     f(
       psi[pi(d, i,     j)], 
@@ -163,7 +160,6 @@ def C_bar(d, C, i, j):
   ) / 4
 #listing14
 def antidiff_2D(d, psi, i, j, C):
-  #pdb.set_trace()
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
@@ -186,7 +182,6 @@ class Mpdata_2D(Solver_2D):
       numpy.zeros((nx+hlo, ny+2*hlo), real_t),
       numpy.zeros((nx+2*hlo, ny+hlo), real_t)
     )]
-    print "tmp[0] po zdef, wszedzie sa zera, jest ok", self.tmp[0]
     if n_iters > 2:
       self.tmp.append((
         numpy.zeros(( nx+hlo, ny+2*hlo), real_t),
@@ -201,9 +196,7 @@ class Mpdata_2D(Solver_2D):
         self.cycle()
         self.bcx.fill_halos(self.psi[self.n], pm(self.j, self.hlo))
         self.bcy.fill_halos(self.psi[self.n], pm(self.i, self.hlo))
-        print "step", step
         if step == 1:
-          #pdb.set_trace()
           C_unco, C_corr = self.C, self.tmp[0]
         elif step % 2:
           C_unco, C_corr = self.tmp[1], self.tmp[0]
@@ -212,11 +205,10 @@ class Mpdata_2D(Solver_2D):
 
         C_corr[0][self.im+hlf, self.j] = (
           antidiff_2D(0, self.psi[self.n], self.im, self.j, C_unco)) 
+        self.bcx.fill_halos(C_corr[1], self.jm)
         
         C_corr[1][self.i, self.jm+hlf] = (
           antidiff_2D(1, self.psi[self.n], self.jm, self.i, C_unco)) 
-
         self.bcy.fill_halos(C_corr[0], self.im)
-        self.bcx.fill_halos(C_corr[1], self.jm)
 
         donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
