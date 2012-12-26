@@ -12,36 +12,36 @@ module arrvec_m
   implicit none
 
   type:: arr_t
-    real(real_t),pointer,contiguous:: a(:,:)
+    real(real_t), pointer, contiguous :: a(:,:)
   end type
 
   type:: arrptr_t
-    class(arr_t),pointer:: p
+    class(arr_t), pointer :: p
   end type
 
   type:: arrvec_t
-    class(arrptr_t),pointer:: at(:)
-    logical,pointer,contiguous:: inited(:)
+    class(arrptr_t), pointer :: at(:)
+    logical, pointer, contiguous :: inited(:)
     contains
-    procedure:: ctor => arrvec_ctor
-    procedure:: init => arrvec_init
-    procedure:: dtor => arrvec_dtor
+    procedure :: ctor => arrvec_ctor
+    procedure :: init => arrvec_init
+    procedure :: dtor => arrvec_dtor
   end type
 
   contains
 
   subroutine arrvec_ctor(this, n)
     class(arrvec_t):: this
-    integer,intent(in):: n
+    integer, intent(in) :: n
     allocate(this%at( -n : n-1 ))
     allocate(this%inited( 0 : n-1 ))
     this%inited = .false.
   end subroutine
 
   subroutine arrvec_init(this, n, i, j)
-    class(arrvec_t):: this
-    integer,intent(in):: n
-    integer,intent(in),dimension(:) :: i, j
+    class(arrvec_t) :: this
+    integer, intent(in) :: n
+    integer, intent(in), dimension(:) :: i, j
     allocate(this%at(n)%p)
     allocate(this%at(n)%p%a(                  &
       i(1) : i(size(i)),            &
@@ -68,10 +68,10 @@ end module
 module arakawa_c_m
   implicit none
 
-  type:: half_t
+  type :: half_t
   end type
 
-  type(half_t):: h
+  type(half_t) :: h
 
   interface operator (+)
     module procedure ph
@@ -84,16 +84,16 @@ module arakawa_c_m
   contains
 
   elemental function ph(i, h) result (return)
-    integer,intent(in):: i
-    type(half_t),intent(in):: h
-    integer:: return
+    integer, intent(in) :: i
+    type(half_t), intent(in) :: h
+    integer :: return
     return = i 
   end function
 
   elemental function mh(i, h) result (return)
-    integer,intent(in):: i 
-    type(half_t),intent(in):: h
-    integer:: return
+    integer, intent(in) :: i 
+    type(half_t), intent(in) :: h
+    integer :: return
     return = i - 1
   end function
 end module
@@ -156,21 +156,21 @@ module bcd_m
 
   type,abstract:: bcd_t
     contains
-    procedure(bcd_fill_halos),deferred::  &
-      fill_halos
-    procedure(bcd_init),deferred:: init
+    procedure(bcd_fill_halos), deferred :: fill_halos
+    procedure(bcd_init), deferred :: init
   end type
  
   abstract interface 
-    subroutine bcd_fill_halos(this, a)
-      import:: bcd_t, real_t
-      class(bcd_t):: this
-      real(real_t),pointer,contiguous:: a(:,:) 
+    subroutine bcd_fill_halos(this, a, j)
+      import :: bcd_t, real_t
+      class(bcd_t ):: this
+      real(real_t), pointer, contiguous :: a(:,:) 
+      integer, dimension(:) :: j
     end subroutine
     subroutine bcd_init(this, d, nx, ny, hlo)
-      import:: bcd_t
-      class(bcd_t):: this
-      integer:: d, i, j, hlo
+      import :: bcd_t
+      class(bcd_t) :: this
+      integer :: d, i, j, hlo
     end subroutine
   end interface
 end module
@@ -179,6 +179,7 @@ module solver_2D_m
   use arrvec_m
   use bcd_m
   use arakawa_c_m
+  use halo_m
   implicit none
 
   type,abstract:: solver_2D_t
@@ -211,6 +212,7 @@ module solver_2D_m
     integer,intent(in):: nx, ny, hlo
 
     this%n = 0
+    this%hlo = hlo
     this%bcx => bcx
     this%bcy => bcy
 
@@ -271,13 +273,13 @@ module solver_2D_m
   end subroutine
 
   subroutine solver_2D_solve(this, nt)
-    class(solver_2D_t):: this
-    integer,intent(in):: nt
-    integer:: t
+    class(solver_2D_t) :: this
+    integer, intent(in) :: nt
+    integer :: t
 
     do t = 0, nt-1 
-      call this%bcx%fill_halos(this%psi%at(this%n)%p%a)
-      call this%bcy%fill_halos(this%psi%at(this%n)%p%a)
+      call this%bcx%fill_halos(this%psi%at(this%n)%p%a, this%j // this%hlo)
+      call this%bcy%fill_halos(this%psi%at(this%n)%p%a, this%i // this%hlo)
       call this%advop()
       call this%cycle()
     end do
@@ -289,12 +291,9 @@ module cyclic_m
   use pi_m
   implicit none
   
-  type,extends(bcd_t):: cyclic_t
-    integer:: d
-    integer,pointer,contiguous::              &
-      left_halo(:), rght_halo(:),             &
-      left_edge(:), rght_edge(:) 
-    integer,pointer,contiguous:: j(:)
+  type, extends(bcd_t) :: cyclic_t
+    integer :: d
+    integer, pointer, contiguous :: left_halo(:), rght_halo(:), left_edge(:), rght_edge(:) 
     contains
     procedure:: init => cyclic_init
     procedure:: dtor => cyclic_dtor 
@@ -312,15 +311,13 @@ module cyclic_m
     allocate(this%rght_halo(hlo))
     allocate(this%left_edge(hlo))
     allocate(this%rght_edge(hlo))
-    allocate(this%j(ny + 2*hlo)) !TODO
 
     block
-      integer:: c
+      integer :: c
       this%left_halo = (/(c, c=-hlo, -1)/) 
       this%rght_halo = (/(c, c=nx, nx-1+hlo)/) 
       this%left_edge = (/(c, c=0, hlo-1)/)
       this%rght_edge = (/(c, c=nx-hlo, nx-1)/)
-      this%j         = (/(c, c=-hlo, ny-1+hlo)/) ! TODO!
     end block
   end subroutine
 
@@ -330,16 +327,16 @@ module cyclic_m
     deallocate(this%rght_halo)
     deallocate(this%left_edge)
     deallocate(this%rght_edge)
-    deallocate(this%j) ! TODO
   end subroutine
 
-  subroutine cyclic_fill_halos(this, a)
+  subroutine cyclic_fill_halos(this, a, j)
     class(cyclic_t):: this
-    real(real_t),pointer:: a(:,:), tmp(:,:)
-    tmp => pi(this%d, a, this%left_halo, this%j) 
-    tmp =  pi(this%d, a, this%rght_edge, this%j)
-    tmp => pi(this%d, a, this%rght_halo, this%j) 
-    tmp =  pi(this%d, a, this%left_edge, this%j)
+    real(real_t), pointer :: a(:,:), tmp(:,:)
+    integer, dimension(:) :: j
+    tmp => pi(this%d, a, this%left_halo, j) 
+    tmp =  pi(this%d, a, this%rght_edge, j)
+    tmp => pi(this%d, a, this%rght_halo, j) 
+    tmp =  pi(this%d, a, this%left_edge, j)
   end subroutine
 end module
 !listing08
@@ -497,7 +494,6 @@ module mpdata_m
     real(real_t):: return(size(i), size(j))
     real(real_t),pointer,intent(in),contiguous:: psi(:,:) 
     class(arrvec_t),pointer:: C
- 
     return =                                  &
       abs(pi(d, C%at(d)%p%a, i+h, j))         &
       * (1 - abs(pi(d, C%at(d)%p%a, i+h, j))) &
@@ -576,12 +572,12 @@ module mpdata_2D_m
           this%C, this%i, this%j)
       else
         call this%cycle()
-        call this%bcx%fill_halos(this%psi%at(this%n)%p%a)
-        call this%bcy%fill_halos(this%psi%at(this%n)%p%a)
+        call this%bcx%fill_halos(this%psi%at(this%n)%p%a, this%j // this%hlo)
+        call this%bcy%fill_halos(this%psi%at(this%n)%p%a, this%i // this%hlo)
 
         block
           ! chosing input/output for antidiff. C
-          class(arrvec_t),pointer:: C_corr, C_unco
+          class(arrvec_t), pointer :: C_corr, C_unco
           if (step == 1) then
             C_unco => this%C
             C_corr => this%tmp(0)
@@ -594,23 +590,22 @@ module mpdata_2D_m
           end if
 
           ! calculating the antidiffusive velo
-          C_corr%at( 0 )%p%a( this%im+h, this%j )&
-            = antidiff_2D(0,                    &
-              this%psi%at( this%n )%p%a,        & 
-              this%im, this%j, C_unco            &
+          C_corr%at( 0 )%p%a( this%im+h, this%j ) &
+            = antidiff_2D(0,                      &
+              this%psi%at( this%n )%p%a,          & 
+              this%im, this%j, C_unco             &
           )
-          call this%bcy%fill_halos(C_corr%at(0)%p%a)
+          call this%bcy%fill_halos(C_corr%at(0)%p%a, this%i // h)
 
-          C_corr%at( 1 )%p%a( this%i, this%jm+h )&
-            = antidiff_2D(1,                    &
-              this%psi%at( this%n )%p%a,        &
-              this%jm, this%i, C_unco            &
+          C_corr%at( 1 )%p%a( this%i, this%jm+h ) &
+            = antidiff_2D(1,                      &
+              this%psi%at( this%n )%p%a,          &
+              this%jm, this%i, C_unco             &
           )
-          call this%bcx%fill_halos(C_corr%at(1)%p%a)
+          call this%bcx%fill_halos(C_corr%at(1)%p%a, this%j // h)
 
           ! donor-cell step
-          call donorcell_op_2D(this%psi, this%n,&
-            C_corr, this%i, this%j)
+          call donorcell_op_2D(this%psi, this%n, C_corr, this%i, this%j)
         end block
       end if
     end do
