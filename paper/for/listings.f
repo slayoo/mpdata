@@ -167,10 +167,10 @@ module bcd_m
       real(real_t), pointer, contiguous :: a(:,:) 
       integer, dimension(:) :: j
     end subroutine
-    subroutine bcd_init(this, d, nx, ny, hlo)
+    subroutine bcd_init(this, d, n, hlo)
       import :: bcd_t
       class(bcd_t) :: this
-      integer :: d, i, j, hlo
+      integer :: d, n, hlo
     end subroutine
   end interface
 end module
@@ -223,8 +223,8 @@ module solver_2D_m
       this%j = (/ (c, c=0, ny-1) /)
     end block
 
-    call bcx%init(0, nx, ny, hlo)
-    call bcy%init(1, nx, ny, hlo)
+    call bcx%init(0, nx, hlo)
+    call bcy%init(1, ny, hlo)
 
     allocate(this%psi)
     call this%psi%ctor(2)
@@ -302,9 +302,9 @@ module cyclic_m
 
   contains
 
-  subroutine cyclic_init(this, d, nx, ny, hlo)
+  subroutine cyclic_init(this, d, n, hlo)
     class(cyclic_t):: this
-    integer:: d, nx, ny, hlo
+    integer:: d, n, hlo
 
     this%d = d
     allocate(this%left_halo(hlo))
@@ -315,9 +315,9 @@ module cyclic_m
     block
       integer :: c
       this%left_halo = (/(c, c=-hlo, -1)/) 
-      this%rght_halo = (/(c, c=nx, nx-1+hlo)/) 
+      this%rght_halo = (/(c, c=n, n-1+hlo)/) 
       this%left_edge = (/(c, c=0, hlo-1)/)
-      this%rght_edge = (/(c, c=nx-hlo, nx-1)/)
+      this%rght_edge = (/(c, c=n-hlo, n-1)/)
     end block
   end subroutine
 
