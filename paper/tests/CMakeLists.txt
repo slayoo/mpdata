@@ -51,5 +51,6 @@ endfunction()
 
 add_test(build_test_for "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target test-for)
 add_test(build_test_cpp "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target test-cpp)
+add_test(build_test_cython "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target test-cython)
 add_subdirectory(sanity)
 add_subdirectory(timing)

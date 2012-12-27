@@ -48,11 +48,14 @@ program test
     block
       logical :: error = .FALSE.
       real(real_t), pointer :: tmp(:,:)
+      real :: diff
       character (len=666) :: fname
       allocate(tmp(nx,ny))
       call get_command_argument(8, fname)
       call read_file(fname, tmp)
-      if (maxval(abs(slv%state() - tmp)) >= .5 * 10.**(-dec)) error = .TRUE.
+      diff = maxval(abs(slv%state() - tmp))
+      print*, "diff=", diff
+      if (diff >= .5 * 10.**(-dec)) error = .TRUE.
       deallocate(tmp)
       if (error) then
         print*, slv%state()
@@ -91,8 +94,8 @@ program test
     open(newunit=un, file=fname, status='old', action='read' )
     block    
       integer :: i, j
-      do i=1, size(array, 2)
-        read(un, *) (array (i, j), j=1, size(array, 1))
+      do i=1, size(array, 1)
+        read(un, *) (array (i, j), j=1, size(array, 2))
       end do
     end block
     close (un)
