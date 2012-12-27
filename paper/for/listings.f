@@ -245,7 +245,12 @@ module solver_2D_m
     class(solver_2D_t):: this
     call this%psi%dtor()
     call this%C%dtor()
-    deallocate(this%i, this%j, this%psi)
+    deallocate( &
+      this%i,   &
+      this%j,   &
+      this%psi, &
+      this%C    &
+    )
   end subroutine
   
   function solver_2D_state(this) result (return)
