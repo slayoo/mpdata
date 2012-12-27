@@ -30,7 +30,9 @@ def main():
   slv.courant(1)[:] = Cy
   slv.solve(nt)
 
-  if (abs(slv.state() - read_file(fout, nx, ny)) >= .5 * pow(10, -dec)).any(): 
+  diff = numpy.amax(abs(slv.state() - read_file(fout, nx, ny)))
+  print "diff=", diff
+  if (diff >= .5 * pow(10, -dec)): 
     print slv.state().dtype, slv.state()
     tmp = read_file(fout, nx, ny)
     print tmp.dtype, tmp
