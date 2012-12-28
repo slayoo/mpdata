@@ -41,7 +41,7 @@ module arrvec_m
   subroutine arrvec_init(this, n, i, j)
     class(arrvec_t) :: this
     integer, intent(in) :: n
-    integer, intent(in), dimension(:) :: i, j
+    integer, intent(in) :: i(:), j(:)
     allocate(this%at(n)%p)
     allocate(this%at(n)%p%a(                  &
       i(1) : i(size(i)),            &
@@ -110,18 +110,18 @@ module halo_m
   contains
 
   function pmn(r, n) result (return)
-    integer, intent(in), dimension(:) :: r
+    integer, intent(in) :: r(:)
     integer, intent(in) :: n
-    integer, dimension(size(r)+2) :: return
+    integer :: return(size(r)+2)
     
     integer :: c
     return = (/ (c, c=r(1) - n, r(size(r)) + n) /)
   end function
 
   function pmh(r, h) result (return)
-    integer, intent(in), dimension(:) :: r
+    integer, intent(in) :: r(:)
     type(half_t), intent(in) :: h
-    integer, dimension(size(r)+1) :: return
+    integer :: return(size(r)+1)
     
     integer :: c
     return = (/ (c, c=r(1) - h, r(size(r)) + h) /)
@@ -130,6 +130,7 @@ end module
 !listing04
 module pi_m
   use real_m
+  implicit none
   contains
   function pi(d, arr, i, j) result(return)
     integer:: d
@@ -146,6 +147,16 @@ module pi_m
           j(1) : j(size(j)),                  &
           i(1) : i(size(i))                   &   
         )   
+    end select
+  end function
+  pure function span(d, nx, ny) result(return)
+    integer, intent(in) :: d, nx, ny
+    integer :: return
+    select case (d)
+      case (0)
+        return = nx
+      case (1)
+        return = ny
     end select
   end function
 end module
@@ -165,7 +176,7 @@ module bcd_m
       import :: bcd_t, real_t
       class(bcd_t ):: this
       real(real_t), pointer, contiguous :: a(:,:) 
-      integer, dimension(:) :: j
+      integer :: j(:)
     end subroutine
     subroutine bcd_init(this, d, n, hlo)
       import :: bcd_t
@@ -337,7 +348,7 @@ module cyclic_m
   subroutine cyclic_fill_halos(this, a, j)
     class(cyclic_t):: this
     real(real_t), pointer :: a(:,:), tmp(:,:)
-    integer, dimension(:) :: j
+    integer :: j(:)
     tmp => pi(this%d, a, this%left_halo, j) 
     tmp =  pi(this%d, a, this%rght_edge, j)
     tmp => pi(this%d, a, this%rght_halo, j) 
@@ -365,7 +376,7 @@ module donorcell_m
   function donorcell(d, psi, C, i, j) result (return)
     integer:: d
     integer,pointer,intent(in),contiguous:: i(:), j(:) 
-    real(real_t):: return(size(i), size(j))
+    real(real_t):: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
     real(real_t),pointer,intent(in),          &
       contiguous:: psi(:,:), C(:,:)           
     return = (                                &
@@ -442,7 +453,7 @@ module mpdata_m
   contains 
 !listing15
   function frac(nom, den) result (return)
-    real(real_t),intent(in):: nom(:,:), den(:,:)
+    real(real_t), intent(in):: nom(:,:), den(:,:)
     real(real_t):: return(size(nom,1), size(nom,2))
     where (den > 0)
       return = nom / den
@@ -454,8 +465,8 @@ module mpdata_m
   function A(d, psi, i, j) result (return)
     integer:: d
     real(real_t),pointer,intent(in),contiguous:: psi(:,:)
-    integer,pointer,contiguous:: i(:), j(:) 
-    real(real_t):: return(size(i), size(j))
+    integer, intent(in) :: i(:), j(:)
+    real(real_t):: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
     return = frac(                           &
       pi(d, psi, i+1, j) - pi(d, psi, i, j), &
       pi(d, psi, i+1, j) + pi(d, psi, i, j)  &
@@ -465,8 +476,8 @@ module mpdata_m
   function B(d, psi, i, j) result (return)
     integer:: d
     real(real_t),pointer,intent(in),contiguous:: psi(:,:) 
-    integer,pointer,contiguous:: i(:), j(:) 
-    real(real_t):: return(size(i), size(j))
+    integer, intent(in) :: i(:), j(:)
+    real(real_t):: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
     return = frac(                           &
       pi(d, psi, i+1, j+1)                   &
     + pi(d, psi, i,   j+1)                   &
@@ -482,8 +493,8 @@ module mpdata_m
   function C_bar(d, C, i, j) result (return)
     integer:: d
     real(real_t),pointer,intent(in),contiguous:: C(:,:) 
-    integer,pointer,contiguous:: i(:), j(:) 
-    real(real_t):: return(size(i), size(j))
+    integer, intent(in) :: i(:), j(:)
+    real(real_t):: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
 
     return = (                               &
       pi(d, C, i+1, j+h) +                   &
@@ -495,8 +506,8 @@ module mpdata_m
 !listing19
   function antidiff_2D(d, psi, i, j, C) result (return)
     integer:: d
-    integer, pointer, contiguous :: i(:), j(:) 
-    real(real_t):: return(size(i), size(j))
+    integer, intent(in) :: i(:), j(:)
+    real(real_t):: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
     real(real_t),pointer,intent(in),contiguous:: psi(:,:) 
     class(arrvec_t),pointer:: C
     return =                                  &
