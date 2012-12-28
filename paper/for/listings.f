@@ -150,14 +150,15 @@ module pi_m
         )   
     end select
   end function
-  pure function span(d, nx, ny) result(return)
-    integer, intent(in) :: d, nx, ny
+  pure function span(d, i, j) result(return)
+    integer, intent(in) :: i(:), j(:)
+    integer, intent(in) :: d
     integer :: return
     select case (d)
       case (0)
-        return = nx
+        return = size(i)
       case (1)
-        return = ny
+        return = size(j)
     end select
   end function
 end module
@@ -377,7 +378,7 @@ module donorcell_m
   function donorcell(d, psi, C, i, j) result (return)
     integer :: d
     integer, pointer, intent(in), contiguous :: i(:), j(:) 
-    real(real_t) :: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
     real(real_t),pointer,intent(in),          &
       contiguous :: psi(:,:), C(:,:)           
     return = (                                &
@@ -467,7 +468,7 @@ module mpdata_m
     integer :: d
     real(real_t), pointer, intent(in), contiguous :: psi(:,:)
     integer, intent(in) :: i(:), j(:)
-    real(real_t) :: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
     return = frac(                           &
       pi(d, psi, i+1, j) - pi(d, psi, i, j), &
       pi(d, psi, i+1, j) + pi(d, psi, i, j)  &
@@ -478,7 +479,7 @@ module mpdata_m
     integer :: d
     real(real_t), pointer, intent(in), contiguous :: psi(:,:) 
     integer, intent(in) :: i(:), j(:)
-    real(real_t) :: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
     return = frac(                           &
       pi(d, psi, i+1, j+1)                   &
     + pi(d, psi, i,   j+1)                   &
@@ -495,7 +496,7 @@ module mpdata_m
     integer :: d
     real(real_t), pointer, intent(in), contiguous :: C(:,:) 
     integer, intent(in) :: i(:), j(:)
-    real(real_t) :: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
 
     return = (                               &
       pi(d, C, i+1, j+h) +                   &
@@ -508,7 +509,7 @@ module mpdata_m
   function antidiff_2D(d, psi, i, j, C) result (return)
     integer :: d
     integer, intent(in) :: i(:), j(:)
-    real(real_t) :: return(span(d, size(i), size(j)), span(d, size(j), size(i)))
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
     real(real_t), pointer, intent(in), contiguous :: psi(:,:) 
     class(arrvec_t), pointer :: C
     return =                                  &
