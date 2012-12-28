@@ -548,10 +548,9 @@ module mpdata_2D_m
     integer, intent(in) :: n_iters, nx, ny
     integer :: hlo, c
 
-    hlo = 1
     this%n_iters = n_iters
 
-    call solver_2D_ctor(this, bcx, bcy, nx, ny, hlo)
+    call solver_2D_ctor(this, bcx, bcy, nx, ny, 1)
 
     this%n_tmp = 1
     if (n_iters > 2) this%n_tmp = 2
@@ -584,49 +583,47 @@ module mpdata_2D_m
     class(mpdata_2D_t) :: this
     integer :: step
 
-    do step=0, this%n_iters-1
-      if (step == 0) then
-        call donorcell_op_2D(this%psi, this%n, &
-          this%C, this%i, this%j)
-      else
-        call this%cycle()
-        call this%bcx%fill_halos(this%psi%at(this%n)%p%a, this%j // this%hlo)
-        call this%bcy%fill_halos(this%psi%at(this%n)%p%a, this%i // this%hlo)
+    associate (                                               &
+      i => this%i, j => this%j, im => this%im, jm => this%jm, & 
+      psi => this%psi, n => this%n, hlo => this%hlo           &
+    )
+      do step=0, this%n_iters-1
+        if (step == 0) then
+          call donorcell_op_2D(psi, n, this%C, i, j)
+        else
+          call this%cycle()
+          call this%bcx%fill_halos(psi%at( n )%p%a, j // hlo)
+          call this%bcy%fill_halos(psi%at( n )%p%a, i // hlo)
 
-        block
-          ! chosing input/output for antidiff. C
-          class(arrvec_t), pointer :: C_corr, C_unco
-          if (step == 1) then
-            C_unco => this%C
-            C_corr => this%tmp(0)
-          else if (mod(step, 2) == 1) then
-            C_unco => this%tmp(1) ! odd step
-            C_corr => this%tmp(0) ! even step
-          else
-            C_unco => this%tmp(0) ! odd step
-            C_corr => this%tmp(1) ! even step
-          end if
+          block
+            ! chosing input/output for antidiff. C
+            class(arrvec_t), pointer :: C_corr, C_unco
+            if (step == 1) then
+              C_unco => this%C
+              C_corr => this%tmp(0)
+            else if (mod(step, 2) == 1) then
+              C_unco => this%tmp(1) ! odd step
+              C_corr => this%tmp(0) ! even step
+            else
+              C_unco => this%tmp(0) ! odd step
+              C_corr => this%tmp(1) ! even step
+            end if
 
-          ! calculating the antidiffusive velo
-          C_corr%at( 0 )%p%a( this%im+h, this%j ) &
-            = antidiff_2D(0,                      &
-              this%psi%at( this%n )%p%a,          & 
-              this%im, this%j, C_unco             &
-          )
-          call this%bcy%fill_halos(C_corr%at(0)%p%a, this%i // h)
+            ! calculating the antidiffusive velo
+            C_corr%at( 0 )%p%a( im+h, j ) &
+              = antidiff_2D(0, psi%at( n )%p%a, im, j, C_unco )
+            call this%bcy%fill_halos(C_corr%at(0)%p%a, i // h)
 
-          C_corr%at( 1 )%p%a( this%i, this%jm+h ) &
-            = antidiff_2D(1,                      &
-              this%psi%at( this%n )%p%a,          &
-              this%jm, this%i, C_unco             &
-          )
-          call this%bcx%fill_halos(C_corr%at(1)%p%a, this%j // h)
+            C_corr%at( 1 )%p%a( i, jm+h ) &
+              = antidiff_2D(1, psi%at( n )%p%a, jm, i, C_unco )
+            call this%bcx%fill_halos(C_corr%at(1)%p%a, j // h)
 
-          ! donor-cell step
-          call donorcell_op_2D(this%psi, this%n, C_corr, this%i, this%j)
-        end block
-      end if
-    end do
+            ! donor-cell step
+            call donorcell_op_2D(psi, n, C_corr, i, j)
+          end block
+        end if
+      end do
+    end associate
   end subroutine
 end module
 !listing22
