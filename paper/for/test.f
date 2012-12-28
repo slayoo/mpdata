@@ -1,5 +1,5 @@
 program test
-  use mpdata_2D_m
+  use solver_mpdata_m
   use cyclic_m
   implicit none
 
@@ -9,7 +9,7 @@ program test
   end if
 
   block
-    type(mpdata_2D_t) :: slv
+    type(mpdata_t) :: slv
     type(cyclic_t), target :: bcx, bcy
     integer :: nx, ny, nt, it, dec
     real(real_t) :: Cx, Cy

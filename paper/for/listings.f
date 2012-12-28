@@ -188,39 +188,39 @@ module bcd_m
   end interface
 end module
 !listing06
-module solver_2D_m
+module solver_m
   use arrvec_m
   use bcd_m
   use arakawa_c_m
   use halo_m
   implicit none
 
-  type, abstract :: solver_2D_t
+  type, abstract :: solver_t
     class(arrvec_t), pointer :: psi, C
     integer :: n, hlo
     integer, pointer, contiguous :: i(:), j(:) 
     class(bcd_t), pointer :: bcx, bcy
     contains
-    procedure :: solve   => solver_2D_solve
-    procedure :: state   => solver_2D_state
-    procedure :: courant => solver_2D_courant
-    procedure :: cycle   => solver_2D_cycle
-    procedure(solver_2D_advop), deferred :: advop
+    procedure :: solve   => solver_solve
+    procedure :: state   => solver_state
+    procedure :: courant => solver_courant
+    procedure :: cycle   => solver_cycle
+    procedure(solver_advop), deferred :: advop
   end type 
 
   abstract interface
-    subroutine solver_2D_advop(this)
-      import solver_2D_t
-      class(solver_2D_t) :: this
+    subroutine solver_advop(this)
+      import solver_t
+      class(solver_t) :: this
     end subroutine
   end interface
 
   contains
 
-  subroutine solver_2D_ctor(this, bcx, bcy, nx, ny, hlo)
+  subroutine solver_ctor(this, bcx, bcy, nx, ny, hlo)
     use arakawa_c_m
     use halo_m
-    class(solver_2D_t) :: this
+    class(solver_t) :: this
     class(bcd_t), intent(in), pointer :: bcx,bcy
     integer, intent(in) :: nx, ny, hlo
 
@@ -254,8 +254,8 @@ module solver_2D_m
     call this%C%init(1, this%i // hlo, this%j // h)
   end subroutine
 
-  subroutine solver_2D_dtor(this)
-    class(solver_2D_t) :: this
+  subroutine solver_dtor(this)
+    class(solver_t) :: this
     call this%psi%dtor()
     call this%C%dtor()
     deallocate( &
@@ -266,8 +266,8 @@ module solver_2D_m
     )
   end subroutine
   
-  function solver_2D_state(this) result (return)
-    class(solver_2D_t) :: this
+  function solver_state(this) result (return)
+    class(solver_t) :: this
     real(real_t), pointer :: return(:,:)
     return => this%psi%at(this%n)%p%a( &
       this%i(0) : this%i(size(this%i)-1), &
@@ -275,8 +275,8 @@ module solver_2D_m
     )
   end function
 
-  function solver_2D_courant(this, d) result (return)
-    class(solver_2D_t) :: this
+  function solver_courant(this, d) result (return)
+    class(solver_t) :: this
     integer :: d
     real(real_t), pointer :: return(:,:)
     return => this%C%at(d)%p%a(               & 
@@ -285,13 +285,13 @@ module solver_2D_m
     )
   end function
 
-  subroutine solver_2D_cycle(this)
-    class(solver_2D_t) :: this
+  subroutine solver_cycle(this)
+    class(solver_t) :: this
     this%n = mod(this%n + 1 + 2, 2) - 2
   end subroutine
 
-  subroutine solver_2D_solve(this, nt)
-    class(solver_2D_t) :: this
+  subroutine solver_solve(this, nt)
+    class(solver_t) :: this
     integer, intent(in) :: nt
     integer :: t
 
@@ -395,7 +395,7 @@ module donorcell_m
     )
   end function
 !listing11
-  subroutine donorcell_op_2D(psi, n, C, i, j)  
+  subroutine donorcell_op(psi, n, C, i, j)  
     class(arrvec_t), pointer :: psi, C
     integer, intent(in) :: n
     integer, pointer, intent(in), contiguous :: i(:), j(:) 
@@ -411,39 +411,39 @@ module donorcell_m
 !listing12
 end module
 !listing13
-module donorcell_2D_m
+module solver_donorcell_m
   use donorcell_m
-  use solver_2D_m
+  use solver_m
   implicit none
   
-  type, extends(solver_2D_t) :: donorcell_2D_t
+  type, extends(solver_t) :: donorcell_t
     contains
-    procedure :: ctor => donorcell_2D_ctor
-    procedure :: dtor => donorcell_2D_dtor
-    procedure :: advop => donorcell_2D_advop
+    procedure :: ctor => donorcell_ctor
+    procedure :: dtor => donorcell_dtor
+    procedure :: advop => donorcell_advop
   end type
 
   contains
   
-  subroutine donorcell_2D_ctor(              &
+  subroutine donorcell_ctor(              &
     this, bcx, bcy, nx, ny                   &
   )
-    class(donorcell_2D_t) :: this
+    class(donorcell_t) :: this
     class(bcd_t), intent(in), pointer :: bcx, bcy
     integer, intent(in) :: nx, ny
-    call solver_2D_ctor(this, bcx,bcy, nx,ny, 1)
+    call solver_ctor(this, bcx,bcy, nx,ny, 1)
   end subroutine
 
-  subroutine donorcell_2D_advop(this)
-    class(donorcell_2D_t) :: this
-    call donorcell_op_2D(                     &
+  subroutine donorcell_advop(this)
+    class(donorcell_t) :: this
+    call donorcell_op(                     &
       this%psi, this%n, this%C, this%i, this%j&
     )
   end subroutine
 
-  subroutine donorcell_2D_dtor(this)
-    class(donorcell_2D_t) :: this
-    call solver_2D_dtor(this)
+  subroutine donorcell_dtor(this)
+    class(donorcell_t) :: this
+    call solver_dtor(this)
   end subroutine
 end module
 !listing14
@@ -506,7 +506,7 @@ module mpdata_m
     ) / 4               
   end function
 !listing19
-  function antidiff_2D(d, psi, i, j, C) result (return)
+  function antidiff(d, psi, i, j, C) result (return)
     integer :: d
     integer, intent(in) :: i(:), j(:)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
@@ -523,64 +523,65 @@ module mpdata_m
 !listing20
 end module
 !listing21
-module mpdata_2D_m
-  use solver_2D_m
+module solver_mpdata_m
+  use solver_m
   use mpdata_m
   use donorcell_m
   use halo_m
   implicit none
   
-  type, extends(solver_2D_t) :: mpdata_2D_t
+  type, extends(solver_t) :: mpdata_t
     integer :: n_iters, n_tmp
     integer, pointer, contiguous :: im(:), jm(:)
     class(arrvec_t), pointer :: tmp(:) 
     contains
-    procedure :: ctor => mpdata_2D_ctor
-    procedure :: dtor => mpdata_2D_dtor
-    procedure :: advop => mpdata_2D_advop
+    procedure :: ctor => mpdata_ctor
+    procedure :: dtor => mpdata_dtor
+    procedure :: advop => mpdata_advop
   end type
 
   contains
 
-  subroutine mpdata_2D_ctor(this, n_iters, bcx, bcy, nx, ny)
-    class(mpdata_2D_t) :: this
+  subroutine mpdata_ctor(this, n_iters, bcx, bcy, nx, ny)
+    class(mpdata_t) :: this
     class(bcd_t), pointer :: bcx, bcy
     integer, intent(in) :: n_iters, nx, ny
-    integer :: hlo, c
+    integer :: c
+
+    call solver_ctor(this, bcx, bcy, nx, ny, 1)
 
     this%n_iters = n_iters
-
-    call solver_2D_ctor(this, bcx, bcy, nx, ny, 1)
-
     this%n_tmp = 1
     if (n_iters > 2) this%n_tmp = 2
     allocate(this%tmp(0:this%n_tmp)) 
 
-    do c=0, this%n_tmp - 1
-      call this%tmp(c)%ctor(2)
-      call this%tmp(c)%init(0, this%i // h, this%j // hlo)
-      call this%tmp(c)%init(1, this%i // hlo, this%j // h)
-    end do
+    associate (i => this%i, j => this%j, hlo => this%hlo)
+      do c=0, this%n_tmp - 1
+        call this%tmp(c)%ctor(2)
+        call this%tmp(c)%init(0, i // h, j // hlo)
+        call this%tmp(c)%init(1, i // hlo, j // h)
+      end do
 
-    allocate(this%im(0 : nx))
-    this%im = (/ (c, c=this%i(0) - 1, this%i(nx-1)) /)
+      allocate(this%im(0 : nx))
+      this%im = (/ (c, c=i(0) - 1, i(nx-1)) /)
 
-    allocate(this%jm(0 : ny))
-    this%jm = (/ (c, c=this%j(0) - 1, this%j(ny-1)) /)
+      allocate(this%jm(0 : ny))
+      this%jm = (/ (c, c=j(0) - 1, j(ny-1)) /)
+    end associate
   end subroutine
 
-  subroutine mpdata_2D_dtor(this)
-    class(mpdata_2D_t) :: this
+  subroutine mpdata_dtor(this)
+    class(mpdata_t) :: this
     integer :: c
     do c=0, this%n_tmp-1 
       call this%tmp(c)%dtor()
     end do
-    call solver_2D_dtor(this)
+    call solver_dtor(this)
     deallocate(this%im, this%jm)
   end subroutine
 
-  subroutine mpdata_2D_advop(this)
-    class(mpdata_2D_t) :: this
+  subroutine mpdata_advop(this)
+    class(mpdata_t) :: this
     integer :: step
 
     associate (                                               &
@@ -589,7 +590,7 @@ module mpdata_2D_m
     )
       do step=0, this%n_iters-1
         if (step == 0) then
-          call donorcell_op_2D(psi, n, this%C, i, j)
+          call donorcell_op(psi, n, this%C, i, j)
         else
           call this%cycle()
           call this%bcx%fill_halos(psi%at( n )%p%a, j // hlo)
@@ -611,15 +612,15 @@ module mpdata_2D_m
 
             ! calculating the antidiffusive velo
             C_corr%at( 0 )%p%a( im+h, j ) &
-              = antidiff_2D(0, psi%at( n )%p%a, im, j, C_unco )
+              = antidiff(0, psi%at( n )%p%a, im, j, C_unco )
             call this%bcy%fill_halos(C_corr%at(0)%p%a, i // h)
 
             C_corr%at( 1 )%p%a( i, jm+h ) &
-              = antidiff_2D(1, psi%at( n )%p%a, jm, i, C_unco )
+              = antidiff(1, psi%at( n )%p%a, jm, i, C_unco )
             call this%bcx%fill_halos(C_corr%at(1)%p%a, j // h)
 
             ! donor-cell step
-            call donorcell_op_2D(psi, n, C_corr, i, j)
+            call donorcell_op(psi, n, C_corr, i, j)
           end block
         end if
       end do
