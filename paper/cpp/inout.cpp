@@ -31,7 +31,7 @@ void inout(char **argv)
     Cx = atof(argv[3]),
     Cy = atof(argv[4]);
 
-  mpdata_2D<it, cyclic<0>, cyclic<1>> slv(nx, ny); 
+  solver_mpdata<it, cyclic<0>, cyclic<1>> slv(nx, ny); 
   {
     firstIndex i;
     secondIndex j;

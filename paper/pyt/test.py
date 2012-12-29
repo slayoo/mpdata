@@ -24,7 +24,7 @@ def main():
   fout = sys.argv[8]
   dec = int(sys.argv[9])
 
-  slv = Mpdata_2D(it, Cyclic, Cyclic, nx, ny)
+  slv = Mpdata(it, Cyclic, Cyclic, nx, ny)
   slv.state()[:] = read_file(fin, nx, ny)
   slv.courant(0)[:] = Cx
   slv.courant(1)[:] = Cy

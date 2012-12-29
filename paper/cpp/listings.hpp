@@ -64,7 +64,7 @@ inline idx_t pi<1>(
 }; 
 //listing08
 template<class bcx_t, class bcy_t>
-struct solver_2D
+struct solver
 {
   // member fields
   arrvec_t psi, C;
@@ -74,7 +74,7 @@ struct solver_2D
   bcy_t bcy;
 
   // ctor
-  solver_2D(int nx, int ny, int hlo) :
+  solver(int nx, int ny, int hlo) :
     hlo(hlo),
     n(0), 
     i(0, nx-1), 
@@ -174,7 +174,7 @@ namespace donorcell
     )
   )
 //listing13
-  void op_2D(
+  void op(
     const arrvec_t &psi, const int n,
     const arrvec_t &C, 
     const rng_t &i, const rng_t &j
@@ -187,15 +187,15 @@ namespace donorcell
 }; 
 //listing15
 template<class bcx_t, class bcy_t>
-struct donorcell_2D : solver_2D<bcx_t, bcy_t> 
+struct solver_donorcell : solver<bcx_t, bcy_t> 
 {
-  donorcell_2D(int nx, int ny) :
-    solver_2D<bcx_t, bcy_t>(nx, ny, 1)
+  solver_donorcell(int nx, int ny) :
+    solver<bcx_t, bcy_t>(nx, ny, 1)
   {}  
 
   void advop()
   {
-    donorcell::op_2D(
+    donorcell::op(
       this->psi, this->n, this->C, 
       this->i, this->j
     );
@@ -249,7 +249,7 @@ namespace mpdata
   )
 //listing21
   template<int d>
-  inline auto antidiff_2D(
+  inline auto antidiff(
     const arr_t &psi, 
     const rng_t &i, const rng_t &j,
     const arrvec_t &C
@@ -265,15 +265,15 @@ namespace mpdata
 };
 //listing23
 template<int n_iters, class bcx_t, class bcy_t>
-struct mpdata_2D : solver_2D<bcx_t, bcy_t>
+struct solver_mpdata : solver<bcx_t, bcy_t>
 {
   // member fields
   arrvec_t tmp[2];
   rng_t im, jm;
 
   // ctor
-  mpdata_2D(int nx, int ny) : 
-    solver_2D<bcx_t, bcy_t>(nx, ny, 1), 
+  solver_mpdata(int nx, int ny) : 
+    solver<bcx_t, bcy_t>(nx, ny, 1), 
     im(this->i.first() - 1, this->i.last()),
     jm(this->j.first() - 1, this->j.last())
   {
@@ -293,7 +293,7 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
     for (int step = 0; step < n_iters; ++step) 
     {
       if (step == 0) 
-        donorcell::op_2D(this->psi, 
+        donorcell::op(this->psi, 
           this->n, this->C, this->i, this->j);
       else
       {
@@ -314,21 +314,21 @@ struct mpdata_2D : solver_2D<bcx_t, bcy_t>
 
         // calculating the antidiffusive C 
         C_corr[0](this->im+h, this->j) = 
-          mpdata::antidiff_2D<0>(
+          mpdata::antidiff<0>(
             this->psi[this->n], 
             this->im, this->j, C_unco
           );
         this->bcy.fill_halos(C_corr[0], this->i^h);
 
         C_corr[1](this->i, this->jm+h) = 
-          mpdata::antidiff_2D<1>(
+          mpdata::antidiff<1>(
             this->psi[this->n], 
             this->jm, this->i, C_unco
         );
         this->bcx.fill_halos(C_corr[1], this->j^h);
 
         // donor-cell step 
-        donorcell::op_2D(this->psi, 
+        donorcell::op(this->psi, 
           this->n, C_corr, this->i, this->j);
       }
     }

@@ -40,7 +40,7 @@ def pm(sl, n):
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
 #listing06
-class Solver_2D(object):
+class Solver(object):
   # ctor-like method
   def __init__(self, bcx, bcy, nx, ny, hlo):
     self.n = 0
@@ -115,18 +115,18 @@ def donorcell(d, psi, C, i, j):
     ) 
   )
 #listing10
-def donorcell_op_2D(psi, n, C, i, j):
+def donorcell_op(psi, n, C, i, j):
   psi[n+1][i,j] = (psi[n][i,j] 
     - donorcell(0, psi[n], C[0], i, j)
     - donorcell(1, psi[n], C[1], j, i)
   )
 
-class Donorcell_2D(Solver_2D):
+class Donorcell(Solver):
   def __init__(self, bcx, bcy, nx, ny):
-    Solver_2D.__init__(self, bcx, bcy, nx, ny, 1)
+    Solver.__init__(self, bcx, bcy, nx, ny, 1)
 
   def advop(self):
-    donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
+    donorcell_op(self.psi, self.n, self.C, self.i, self.j)
 
 #listing11
 def frac(nom, den):
@@ -159,7 +159,7 @@ def C_bar(d, C, i, j):
     C[pi(d, i,     j-hlf)] 
   ) / 4
 #listing14
-def antidiff_2D(d, psi, i, j, C):
+def antidiff(d, psi, i, j, C):
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
@@ -169,10 +169,10 @@ def antidiff_2D(d, psi, i, j, C):
     * b_op(d, psi, i, j)
   )
 #listing15
-class Mpdata_2D(Solver_2D):
+class Mpdata(Solver):
   def __init__(self, n_iters, bcx, bcy, nx, ny):
     hlo = 1
-    Solver_2D.__init__(self, bcx, bcy, nx, ny, hlo)
+    Solver.__init__(self, bcx, bcy, nx, ny, hlo)
     self.im = slice(self.i.start-1, self.i.stop)
     self.jm = slice(self.j.start-1, self.j.stop)
 
@@ -191,7 +191,7 @@ class Mpdata_2D(Solver_2D):
   def advop(self):
     for step in range(self.n_iters):
       if step == 0:
-        donorcell_op_2D(self.psi, self.n, self.C, self.i, self.j)
+        donorcell_op(self.psi, self.n, self.C, self.i, self.j)
       else:
         self.cycle()
         self.bcx.fill_halos(self.psi[self.n], pm(self.j, self.hlo))
@@ -204,11 +204,11 @@ class Mpdata_2D(Solver_2D):
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
         C_corr[0][self.im+hlf, self.j] = (
-          antidiff_2D(0, self.psi[self.n], self.im, self.j, C_unco)) 
+          antidiff(0, self.psi[self.n], self.im, self.j, C_unco)) 
         self.bcx.fill_halos(C_corr[1], self.jm)
         
         C_corr[1][self.i, self.jm+hlf] = (
-          antidiff_2D(1, self.psi[self.n], self.jm, self.i, C_unco)) 
+          antidiff(1, self.psi[self.n], self.jm, self.i, C_unco)) 
         self.bcy.fill_halos(C_corr[0], self.im)
 
-        donorcell_op_2D(self.psi, self.n, C_corr, self.i, self.j)
+        donorcell_op(self.psi, self.n, C_corr, self.i, self.j)

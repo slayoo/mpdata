@@ -36,7 +36,7 @@ int main() {
      << "set pm3d at b\n";
   std::string binfmt;
   {
-    donorcell_2D<cyclic<x>, cyclic<y>> solver(n[x],n[y]);
+    solver_donorcell<cyclic<x>, cyclic<y>> solver(n[x],n[y]);
     setup(solver, n);
     binfmt = gp.binfmt(solver.state());
     gp << "set title 't=0'\n"
@@ -50,7 +50,7 @@ int main() {
     gp.sendBinary(solver.state().copy());
   } {
     const int it = 2;
-    mpdata_2D<it, cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
+    solver_mpdata<it, cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
     setup(solver, n); 
     solver.solve(nt);
     gp << "set title 'mpdata<" << it << "> "
@@ -60,7 +60,7 @@ int main() {
     gp.sendBinary(solver.state().copy());
   } {
     const int it = 7;
-    mpdata_2D<it, cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
+    solver_mpdata<it, cyclic<x>, cyclic<y>> solver(n[x],n[y]); 
     setup(solver, n); 
     solver.solve(nt); 
     gp << "set title 'mpdata<" << it << "> "
