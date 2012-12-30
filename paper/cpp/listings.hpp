@@ -37,7 +37,7 @@ inline rng_t operator-(
 }
 //listing06
 template<class n_t>
-inline rng_t operator^(
+inline rng_t ext(
   const rng_t &r, const n_t &n
 ) { 
   return rng_t(
@@ -83,9 +83,9 @@ struct solver
     bcy(j, i, hlo)
   {
     for (int l = 0; l < 2; ++l) 
-      psi.push_back(new arr_t(i^hlo, j^hlo));
-    C.push_back(new arr_t(i^h, j^hlo));
-    C.push_back(new arr_t(i^hlo, j^h));
+      psi.push_back(new arr_t(ext(i, hlo), ext(j, hlo)));
+    C.push_back(new arr_t(ext(i, h), ext(j, hlo)));
+    C.push_back(new arr_t(ext(i, hlo), ext(j, h)));
   }
 
   // accessor methods
@@ -111,8 +111,8 @@ struct solver
   {
     for (int t = 0; t < nt; ++t) 
     {
-      bcx.fill_halos(psi[n], j^hlo);
-      bcy.fill_halos(psi[n], i^hlo);
+      bcx.fill_halos(psi[n], ext(j, hlo));
+      bcy.fill_halos(psi[n], ext(i, hlo));
       advop();
       cycle();
     }
@@ -280,10 +280,8 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
     int n_tmp = n_iters > 2 ? 2 : 1;
     for (int n = 0; n < n_tmp; ++n)
     {
-      tmp[n].push_back(new arr_t(
-        this->i^h, this->j^this->hlo));
-      tmp[n].push_back(new arr_t(
-        this->i^this->hlo, this->j^h));
+      tmp[n].push_back(new arr_t(this->C[0].domain()[0], this->C[0].domain()[1]));
+      tmp[n].push_back(new arr_t(this->C[1].domain()[0], this->C[1].domain()[1]));
     }
   }
 
@@ -298,8 +296,8 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
       else
       {
         this->cycle();
-        this->bcx.fill_halos(this->psi[this->n], this->j^this->hlo);
-        this->bcy.fill_halos(this->psi[this->n], this->i^this->hlo);
+        this->bcx.fill_halos(this->psi[this->n], ext(this->j, this->hlo));
+        this->bcy.fill_halos(this->psi[this->n], ext(this->i, this->hlo));
 
         // choosing input/output for antidiff C
         const arrvec_t 
@@ -318,14 +316,14 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
             this->psi[this->n], 
             this->im, this->j, C_unco
           );
-        this->bcy.fill_halos(C_corr[0], this->i^h);
+        this->bcy.fill_halos(C_corr[0], ext(this->i, h));
 
         C_corr[1](this->i, this->jm+h) = 
           mpdata::antidiff<1>(
             this->psi[this->n], 
             this->jm, this->i, C_unco
         );
-        this->bcx.fill_halos(C_corr[1], this->j^h);
+        this->bcx.fill_halos(C_corr[1], ext(this->j, h));
 
         // donor-cell step 
         donorcell::op(this->psi, 

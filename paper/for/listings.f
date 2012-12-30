@@ -102,14 +102,14 @@ module halo_m
   use arakawa_c_m
   implicit none
 
-  interface operator (//)
-    module procedure pmn
-    module procedure pmh
+  interface ext
+    module procedure ext_n
+    module procedure ext_h
   end interface 
 
   contains
 
-  function pmn(r, n) result (return)
+  function ext_n(r, n) result (return)
     integer, intent(in) :: r(:)
     integer, intent(in) :: n
     integer :: return(size(r)+2)
@@ -118,7 +118,7 @@ module halo_m
     return = (/ (c, c=r(1) - n, r(size(r)) + n) /)
   end function
 
-  function pmh(r, h) result (return)
+  function ext_h(r, h) result (return)
     integer, intent(in) :: r(:)
     type(half_t), intent(in) :: h
     integer :: return(size(r)+1)
@@ -244,14 +244,14 @@ module solver_m
     block
       integer :: n
       do n=0, 1
-        call this%psi%init(n, this%i // hlo, this%j // hlo)
+        call this%psi%init(n, ext(this%i, hlo), ext(this%j, hlo))
       end do
     end block
 
     allocate(this%C)
     call this%C%ctor(2)
-    call this%C%init(0, this%i // h, this%j // hlo)
-    call this%C%init(1, this%i // hlo, this%j // h)
+    call this%C%init(0, ext(this%i, h), ext(this%j, hlo))
+    call this%C%init(1, ext(this%i, hlo), ext(this%j, h))
   end subroutine
 
   subroutine solver_dtor(this)
@@ -296,8 +296,8 @@ module solver_m
     integer :: t
 
     do t = 0, nt-1 
-      call this%bcx%fill_halos(this%psi%at(this%n)%p%a, this%j // this%hlo)
-      call this%bcy%fill_halos(this%psi%at(this%n)%p%a, this%i // this%hlo)
+      call this%bcx%fill_halos(this%psi%at(this%n)%p%a, ext(this%j, this%hlo))
+      call this%bcy%fill_halos(this%psi%at(this%n)%p%a, ext(this%i, this%hlo))
       call this%advop()
       call this%cycle()
     end do
@@ -558,8 +558,8 @@ module solver_mpdata_m
     associate (i => this%i, j => this%j, hlo => this%hlo)
       do c=0, this%n_tmp - 1
         call this%tmp(c)%ctor(2)
-        call this%tmp(c)%init(0, i // h, j // hlo)
-        call this%tmp(c)%init(1, i // hlo, j // h)
+        call this%tmp(c)%init(0, ext(i, h), ext(j, hlo))
+        call this%tmp(c)%init(1, ext(i, hlo), ext(j, h))
       end do
 
       allocate(this%im(0 : nx))
@@ -593,8 +593,8 @@ module solver_mpdata_m
           call donorcell_op(psi, n, this%C, i, j)
         else
           call this%cycle()
-          call this%bcx%fill_halos(psi%at( n )%p%a, j // hlo)
-          call this%bcy%fill_halos(psi%at( n )%p%a, i // hlo)
+          call this%bcx%fill_halos(psi%at( n )%p%a, ext(j, hlo))
+          call this%bcy%fill_halos(psi%at( n )%p%a, ext(i, hlo))
 
           block
             ! chosing input/output for antidiff. C
@@ -613,11 +613,11 @@ module solver_mpdata_m
             ! calculating the antidiffusive velo
             C_corr%at( 0 )%p%a( im+h, j ) &
               = antidiff(0, psi%at( n )%p%a, im, j, C_unco )
-            call this%bcy%fill_halos(C_corr%at(0)%p%a, i // h)
+            call this%bcy%fill_halos(C_corr%at(0)%p%a, ext(i, h))
 
             C_corr%at( 1 )%p%a( i, jm+h ) &
               = antidiff(1, psi%at( n )%p%a, jm, i, C_unco )
-            call this%bcx%fill_halos(C_corr%at(1)%p%a, j // h)
+            call this%bcx%fill_halos(C_corr%at(1)%p%a, ext(j, h))
 
             ! donor-cell step
             call donorcell_op(psi, n, C_corr, i, j)
