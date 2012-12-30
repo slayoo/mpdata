@@ -34,8 +34,10 @@ class Shift():
 one = Shift(1,1) 
 hlf = Shift(0,1)
 #
-def pm(sl, n):
-  return slice(sl.start - n, sl.stop+n)
+def ext(r, n):
+  if (type(n) == int) & (n == 1): 
+    n = one
+  return slice((r - n).start, (r+n).stop)
 #listing05
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
@@ -51,13 +53,30 @@ class Solver(object):
     self.bcx = bcx(0, self.i, hlo)
     self.bcy = bcy(1, self.j, hlo)
 
+    assert ext(self.i, self.hlo).start == 0
+    assert ext(self.j, self.hlo).start == 0
     self.psi = (
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo, ny+2*hlo), real_t) 
+      numpy.empty((
+        ext(self.i, self.hlo).stop, 
+        ext(self.j, self.hlo).stop
+      ), real_t),
+      numpy.empty((
+        ext(self.i, self.hlo).stop, 
+        ext(self.j, self.hlo).stop
+      ), real_t)
     )
+
+    assert ext(self.i, hlf).start == 0
+    assert ext(self.j, hlf).start == 0
     self.C = (
-      numpy.empty((nx+hlo, ny+2*hlo), real_t),
-      numpy.empty((nx+2*hlo, ny+hlo), real_t)
+      numpy.empty((
+        ext(self.i, hlf).stop, 
+        ext(self.j, self.hlo).stop
+      ), real_t),
+      numpy.empty((
+        ext(self.i, self.hlo).stop, 
+        ext(self.j, hlf).stop
+      ), real_t)
     )
 
   # accessor methods
@@ -74,8 +93,8 @@ class Solver(object):
    # integration logic
   def solve(self, nt):
     for t in range(nt):
-      self.bcx.fill_halos(self.psi[self.n], pm(self.j, self.hlo))
-      self.bcy.fill_halos(self.psi[self.n], pm(self.i, self.hlo))
+      self.bcx.fill_halos(self.psi[self.n], ext(self.j, self.hlo))
+      self.bcy.fill_halos(self.psi[self.n], ext(self.i, self.hlo))
       self.advop() 
       self.cycle()
   
@@ -171,21 +190,20 @@ def antidiff(d, psi, i, j, C):
 #listing15
 class Mpdata(Solver):
   def __init__(self, n_iters, bcx, bcy, nx, ny):
-    hlo = 1
-    Solver.__init__(self, bcx, bcy, nx, ny, hlo)
+    Solver.__init__(self, bcx, bcy, nx, ny, 1)
     self.im = slice(self.i.start-1, self.i.stop)
     self.jm = slice(self.j.start-1, self.j.stop)
 
     self.n_iters = n_iters
   
     self.tmp = [(
-      numpy.zeros((nx+hlo, ny+2*hlo), real_t),
-      numpy.zeros((nx+2*hlo, ny+hlo), real_t)
+      numpy.empty(self.C[0].shape, real_t),
+      numpy.empty(self.C[1].shape, real_t)
     )]
     if n_iters > 2:
       self.tmp.append((
-        numpy.zeros(( nx+hlo, ny+2*hlo), real_t),
-        numpy.zeros(( nx+2*hlo, ny+hlo), real_t)
+        numpy.empty(self.C[0].shape, real_t),
+        numpy.empty(self.C[1].shape, real_t)
       ))
 
   def advop(self):
@@ -194,8 +212,8 @@ class Mpdata(Solver):
         donorcell_op(self.psi, self.n, self.C, self.i, self.j)
       else:
         self.cycle()
-        self.bcx.fill_halos(self.psi[self.n], pm(self.j, self.hlo))
-        self.bcy.fill_halos(self.psi[self.n], pm(self.i, self.hlo))
+        self.bcx.fill_halos(self.psi[self.n], ext(self.j, self.hlo))
+        self.bcy.fill_halos(self.psi[self.n], ext(self.i, self.hlo))
         if step == 1:
           C_unco, C_corr = self.C, self.tmp[0]
         elif step % 2:
