@@ -26,21 +26,29 @@ function(add_tests dir)
     # passing all of the above as command-line arguments to the test programs
     set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
 
+    set(PFX "--format=time:")
+    set(SFX "\;nx=\;${NX}\;nt=\;${NY}\;nt=\;${NT}\;it=\;${IT}\;peakrss=\;%M\;cputime=\;%U\;exit=\;%x\;")
+
     # C++
-    add_test(NAME "cpp:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})
+    set(TIME_ARG "${PFX}cpp${SFX}")
+    add_test(NAME "cpp:${NAME}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})
     set_tests_properties("cpp:${NAME}" PROPERTIES DEPENDS build_test_cpp)
   
     # Python
-    add_test(NAME "pyt:${NAME}" COMMAND python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+    set(TIME_ARG "${PFX}pyt${SFX}")
+    add_test(NAME "pyt:${NAME}" COMMAND time ${TIME_ARG} python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
 
     # PyPy
-    add_test(NAME "pyp:${NAME}" COMMAND pypy ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+    set(TIME_ARG "${PFX}pyp${SFX}")
+    add_test(NAME "pyp:${NAME}" COMMAND time ${TIME_ARG} pypy ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
 
     # Cython
-    add_test(NAME "cyt:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/pyt/test-cython ${ARG})
+#    set(TIME_ARG "${PFX}cyt${SFX}")
+#    add_test(NAME "cyt:${NAME}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/pyt/test-cython ${ARG})
 
     # Fortran
-    add_test(NAME "for:${NAME}" COMMAND ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
+    set(TIME_ARG "${PFX}for${SFX}")
+    add_test(NAME "for:${NAME}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
     set_tests_properties("for:${NAME}" PROPERTIES DEPENDS build_test_for)
 
     # F77
