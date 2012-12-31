@@ -33,15 +33,18 @@ class Shift():
 #listing04
 one = Shift(1,1) 
 hlf = Shift(0,1)
-#
+#listing05
 def ext(r, n):
   if (type(n) == int) & (n == 1): 
     n = one
-  return slice((r - n).start, (r+n).stop)
-#listing05
+  return slice(
+    (r - n).start, 
+    (r + n).stop
+  )
+#listing06
 def pi(d, *idx): 
   return (idx[d], idx[d-1])
-#listing06
+#listing07
 class Solver(object):
   # ctor-like method
   def __init__(self, bcx, bcy, nx, ny, hlo):
@@ -93,12 +96,16 @@ class Solver(object):
    # integration logic
   def solve(self, nt):
     for t in range(nt):
-      self.bcx.fill_halos(self.psi[self.n], ext(self.j, self.hlo))
-      self.bcy.fill_halos(self.psi[self.n], ext(self.i, self.hlo))
+      self.bcx.fill_halos(
+        self.psi[self.n], ext(self.j, self.hlo)
+      )
+      self.bcy.fill_halos(
+        self.psi[self.n], ext(self.i, self.hlo)
+      )
       self.advop() 
       self.cycle()
   
-#listing07
+#listing08
 class Cyclic(object):
   # ctor
   def __init__(self, d, i, hlo): 
@@ -110,16 +117,20 @@ class Cyclic(object):
 
   # method invoked by the solver
   def fill_halos(self, psi, j):
-    psi[pi(self.d, self.left_halo, j)] = psi[pi(self.d, self.rght_edge, j)]
-    psi[pi(self.d, self.rght_halo, j)] = psi[pi(self.d, self.left_edge, j)]
+    psi[pi(self.d, self.left_halo, j)] = (
+      psi[pi(self.d, self.rght_edge, j)]
+    )
+    psi[pi(self.d, self.rght_halo, j)] = (
+      psi[pi(self.d, self.left_edge, j)]
+    )
 
-#listing08
+#listing09
 def f(psi_l, psi_r, C):
   return (
     (C + abs(C)) * psi_l + 
     (C - abs(C)) * psi_r
   ) / 2
-#listing09
+#listing10
 def donorcell(d, psi, C, i, j):
   return (
     f(
@@ -133,51 +144,46 @@ def donorcell(d, psi, C, i, j):
         C[pi(d, i-hlf, j)]
     ) 
   )
-#listing10
+#listing11
 def donorcell_op(psi, n, C, i, j):
   psi[n+1][i,j] = (psi[n][i,j] 
     - donorcell(0, psi[n], C[0], i, j)
     - donorcell(1, psi[n], C[1], j, i)
   )
-
+#listing12
 class Donorcell(Solver):
   def __init__(self, bcx, bcy, nx, ny):
     Solver.__init__(self, bcx, bcy, nx, ny, 1)
 
   def advop(self):
-    donorcell_op(self.psi, self.n, self.C, self.i, self.j)
-
-#listing11
+    donorcell_op(
+      self.psi, self.n, 
+      self.C, self.i, self.j
+    )
+#listing13
 def frac(nom, den):
   return numpy.where(den > 0, nom/den, 0)
-
-#listing12
+#listing14
 def a_op(d, psi, i, j):
   return frac(
     psi[pi(d, i+one, j)] - psi[pi(d, i, j)],
     psi[pi(d, i+one, j)] + psi[pi(d, i, j)]
   )
-#listing13
+#listing15
 def b_op(d, psi, i, j):
   return frac( 
-      psi[pi(d, i+one, j+one)] 
-    + psi[pi(d, i,     j+one)] 
-    - psi[pi(d, i+one, j-one)] 
-    - psi[pi(d, i,     j-one)],
-      psi[pi(d, i+one, j+one)] 
-    + psi[pi(d, i,     j+one)] 
-    + psi[pi(d, i+one, j-one)] 
-    + psi[pi(d, i,     j-one)]
+    psi[pi(d, i+one, j+one)] + psi[pi(d, i, j+one)] -
+    psi[pi(d, i+one, j-one)] - psi[pi(d, i, j-one)],
+    psi[pi(d, i+one, j+one)] + psi[pi(d, i, j+one)] +
+    psi[pi(d, i+one, j-one)] + psi[pi(d, i, j-one)]
   ) / 2
-#listing14
+#listing16
 def C_bar(d, C, i, j):
   return (
-    C[pi(d, i+one, j+hlf)] + 
-    C[pi(d, i,     j+hlf)] +
-    C[pi(d, i+one, j-hlf)] + 
-    C[pi(d, i,     j-hlf)] 
+    C[pi(d, i+one, j+hlf)] + C[pi(d, i,  j+hlf)] +
+    C[pi(d, i+one, j-hlf)] + C[pi(d, i,  j-hlf)] 
   ) / 4
-#listing14
+#listing17
 def antidiff(d, psi, i, j, C):
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
@@ -187,7 +193,7 @@ def antidiff(d, psi, i, j, C):
     * C_bar(d, C[d-1], i, j)
     * b_op(d, psi, i, j)
   )
-#listing15
+#listing18
 class Mpdata(Solver):
   def __init__(self, n_iters, bcx, bcy, nx, ny):
     Solver.__init__(self, bcx, bcy, nx, ny, 1)
@@ -209,11 +215,17 @@ class Mpdata(Solver):
   def advop(self):
     for step in range(self.n_iters):
       if step == 0:
-        donorcell_op(self.psi, self.n, self.C, self.i, self.j)
+        donorcell_op(
+          self.psi, self.n, self.C, self.i, self.j
+        )
       else:
         self.cycle()
-        self.bcx.fill_halos(self.psi[self.n], ext(self.j, self.hlo))
-        self.bcy.fill_halos(self.psi[self.n], ext(self.i, self.hlo))
+        self.bcx.fill_halos(
+          self.psi[self.n], ext(self.j, self.hlo)
+        )
+        self.bcy.fill_halos(
+          self.psi[self.n], ext(self.i, self.hlo)
+        )
         if step == 1:
           C_unco, C_corr = self.C, self.tmp[0]
         elif step % 2:
@@ -222,11 +234,18 @@ class Mpdata(Solver):
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
         C_corr[0][self.im+hlf, self.j] = (
-          antidiff(0, self.psi[self.n], self.im, self.j, C_unco)) 
+          antidiff(0, self.psi[self.n], 
+            self.im, self.j, C_unco)
+          ) 
         self.bcx.fill_halos(C_corr[1], self.jm)
         
         C_corr[1][self.i, self.jm+hlf] = (
-          antidiff(1, self.psi[self.n], self.jm, self.i, C_unco)) 
+          antidiff(1, self.psi[self.n], 
+            self.jm, self.i, C_unco)
+          ) 
         self.bcy.fill_halos(C_corr[0], self.im)
 
-        donorcell_op(self.psi, self.n, C_corr, self.i, self.j)
+        donorcell_op(
+          self.psi, self.n, C_corr, self.i, self.j
+        )
+#listing19

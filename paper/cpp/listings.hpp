@@ -14,8 +14,10 @@ using idx_t = blitz::RectDomain<2>;
 { return safeToReturn(expr); } 
 //listing04
 #include <boost/ptr_container/ptr_vector.hpp>
-struct arrvec_t : boost::ptr_vector<arr_t> {
-  const arr_t &operator[](const int i) const {   
+struct arrvec_t : boost::ptr_vector<arr_t> 
+{
+  const arr_t &operator[](const int i) const 
+  {   
     return this->at(
       (i + this->size()) % this->size()
     ); 
@@ -24,22 +26,18 @@ struct arrvec_t : boost::ptr_vector<arr_t> {
 //listing05
 struct hlf_t {} h;
 
-inline rng_t operator+(
-  const rng_t &i, const hlf_t &
-) { 
+inline rng_t operator+(const rng_t &i, const hlf_t &) 
+{ 
   return i; 
 } 
 
-inline rng_t operator-(
-  const rng_t &i, const hlf_t &
-) { 
+inline rng_t operator-(const rng_t &i, const hlf_t &) 
+{ 
   return i-1; 
 }
 //listing06
 template<class n_t>
-inline rng_t ext(
-  const rng_t &r, const n_t &n
-) { 
+inline rng_t ext(const rng_t &r, const n_t &n) { 
   return rng_t(
     (r - n).first(), 
     (r + n).last()
@@ -50,16 +48,14 @@ template<int d>
 inline idx_t pi(const rng_t &i, const rng_t &j);
 
 template<>
-inline idx_t pi<0>(
-  const rng_t &i, const rng_t &j
-) {
+inline idx_t pi<0>(const rng_t &i, const rng_t &j) 
+{
   return idx_t({i,j});
 };
 
 template<>
-inline idx_t pi<1>(
-  const rng_t &j, const rng_t &i
-) {
+inline idx_t pi<1>(const rng_t &j, const rng_t &i) 
+{
   return idx_t({i,j});
 }; 
 //listing08
@@ -241,10 +237,8 @@ namespace mpdata
     const rng_t &j
   ) return_macro(
     (
-      C(pi<d>(i+1, j+h)) + 
-      C(pi<d>(i,   j+h)) +
-      C(pi<d>(i+1, j-h)) + 
-      C(pi<d>(i,   j-h)) 
+      C(pi<d>(i+1, j+h)) + C(pi<d>(i,   j+h)) +
+      C(pi<d>(i+1, j-h)) + C(pi<d>(i,   j-h)) 
     ) / 4
   )
 //listing21
@@ -280,8 +274,12 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
     int n_tmp = n_iters > 2 ? 2 : 1;
     for (int n = 0; n < n_tmp; ++n)
     {
-      tmp[n].push_back(new arr_t(this->C[0].domain()[0], this->C[0].domain()[1]));
-      tmp[n].push_back(new arr_t(this->C[1].domain()[0], this->C[1].domain()[1]));
+      tmp[n].push_back(new arr_t(
+        this->C[0].domain()[0], this->C[0].domain()[1])
+      );
+      tmp[n].push_back(new arr_t(
+        this->C[1].domain()[0], this->C[1].domain()[1])
+      );
     }
   }
 
@@ -296,8 +294,12 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
       else
       {
         this->cycle();
-        this->bcx.fill_halos(this->psi[this->n], ext(this->j, this->hlo));
-        this->bcy.fill_halos(this->psi[this->n], ext(this->i, this->hlo));
+        this->bcx.fill_halos(
+          this->psi[this->n], ext(this->j, this->hlo)
+        );
+        this->bcy.fill_halos(
+          this->psi[this->n], ext(this->i, this->hlo)
+        );
 
         // choosing input/output for antidiff C
         const arrvec_t 
