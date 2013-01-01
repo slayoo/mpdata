@@ -1,15 +1,29 @@
-set term postscript solid enhanced color size 13cm,15cm
-set output 'result-20121116.ps'
-set xlabel "grid size"
-set ylabel "wall time [s]"
-set xrange [16*32 : 1024*2048]
-set yrange [.0250 : 500]
+set term postscript solid enhanced color size 15cm,18cm
+set xlabel "grid size (nx=ny)"
+set xrange [32*64 : 4096*8192]
 set grid
-set xtics ("32^2" 32*32, "64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "1024^2" 1024*1024)
+set xtics ("64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "1024^2" 1024*1024, "2048^2" 2048*2048, "4096^2" 4096*4096)
 set logscale xy
+
+set datafile separator ";"
+stuff = '< grep ^time: Testing/Temporary/LastTest.log'
+
 set key bottom right 
+set output 'plot-cpu.ps'
+set ylabel "CPU time per timestep [s]"
+#set yrange [.0001 : 10]
 plot \
-  'result-20121116' using ($1*$1):2 index 'C++'      with linespoints title 'g++ 4.7.2 -ffast)'      , \
-  'result-20121116' using ($1*$1):2 index 'Fortran'  with linespoints title 'gfortran 4.7.2 -ffast)'  , \
-  'result-20121116' using ($1*$1):2 index 'CPython'  with linespoints title 'CPython 2.7.3'  , \
-  'result-20121116' using ($1*$1):2 index 'PyPy-1.9' with linespoints title 'PyPy 1.9'
+  stuff.'|fgrep cpp|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 1 lw 2 title 'C++ / GCC'         , \
+  stuff.'|fgrep pyt|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 3 lw 2 title 'Python / CPython'  , \
+  stuff.'|fgrep pyp|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 4 lw 2 title 'Python / PyPy'     , \
+  stuff.'|fgrep for|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 2 lw 2 title 'Fortran / GCC'     
+
+set key top right 
+set output 'plot-mem.ps'
+set ylabel "peak memory use (rss) [B] / 8*(nx+2)*(ny+2)*sizeof(double)"
+#set yrange []
+plot \
+  stuff.'|fgrep cpp|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 1 lw 2 title 'C++ / GCC'         , \
+  stuff.'|fgrep pyt|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 3 lw 2 title 'Python / CPython'  , \
+  stuff.'|fgrep pyp|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 4 lw 2 title 'Python / PyPy'     , \
+  stuff.'|fgrep for|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 2 lw 2 title 'Fortran / GCC'     
