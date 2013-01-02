@@ -237,13 +237,13 @@ class Mpdata(Solver):
           antidiff(0, self.psi[self.n], 
             self.im, self.j, C_unco)
           ) 
-        self.bcy.fill_halos(C_corr[0], self.im)
+        self.bcy.fill_halos(C_corr[0], ext(self.i, hlf))
         
         C_corr[1][self.i, self.jm+hlf] = (
           antidiff(1, self.psi[self.n], 
             self.jm, self.i, C_unco)
           ) 
-        self.bcx.fill_halos(C_corr[1], self.jm)
+        self.bcx.fill_halos(C_corr[1], ext(self.j, hlf))
 
         donorcell_op(
           self.psi, self.n, C_corr, self.i, self.j
