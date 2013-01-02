@@ -1,4 +1,5 @@
-set term postscript solid enhanced color size 15cm,18cm
+set term postscript solid enhanced color size 15cm,30cm
+set output 'plot-cpumem.ps'
 set xlabel "grid size (nx=ny)"
 set xrange [32*64 : 4096*8192]
 set grid
@@ -8,22 +9,33 @@ set logscale xy
 set datafile separator ";"
 stuff = '< grep ^time: Testing/Temporary/LastTest.log'
 
-set key bottom right 
-set output 'plot-cpu.ps'
-set ylabel "CPU time per timestep [s]"
-#set yrange [.0001 : 10]
-plot \
-  stuff.'|fgrep cpp|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 1 lw 2 title 'C++ / GCC'         , \
-  stuff.'|fgrep pyt|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 3 lw 2 title 'Python / CPython'  , \
-  stuff.'|fgrep pyp|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 4 lw 2 title 'Python / PyPy'     , \
-  stuff.'|fgrep for|fgrep it=\;3' using ($3*$5):($12/$7) with linespoints lt 2 lw 2 title 'Fortran / GCC'     
+set multiplot layout 2,1
+
+sizeof_double = 8
+gridsize(nx, ny) = nx * ny
+kB2B(mm) = mm * 1024
+memnorm(peakrss, nx, ny) = kB2B(peakrss) / ((2*gridsize(nx+2, ny+2) + 3*gridsize(nx+1, nx+2) + 3*gridsize(nx+2, nx+1)) * sizeof_double)
+s2us(tm) = tm / 1e-6
+cpunorm(cputime, nx, ny, nt) = s2us(cputime / gridsize(nx, ny) / nt)
 
 set key top right 
-set output 'plot-mem.ps'
-set ylabel "peak memory use (rss) [B] / 8*(nx+2)*(ny+2)*sizeof(double)"
-#set yrange []
+set ylabel "peak memory use (rss) to nominal data size ratio"
+set yrange [1 : 150]
+set ytics (1, 2, 4, 8, 16, 32, 64, 128)
 plot \
-  stuff.'|fgrep cpp|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 1 lw 2 title 'C++ / GCC'         , \
-  stuff.'|fgrep pyt|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 3 lw 2 title 'Python / CPython'  , \
-  stuff.'|fgrep pyp|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 4 lw 2 title 'Python / PyPy'     , \
-  stuff.'|fgrep for|fgrep it=\;3' using ($3*$5):($10*1000/(($3+2)*($5+2)*8*8)) with linespoints lt 2 lw 2 title 'Fortran / GCC'     
+  stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
+  stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 5 linecolor rgb "blue" lw 1 title 'Python / CPython'  , \
+  stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'     , \
+  stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'     
+
+set key bottom right
+set ylabel "CPU time per timestep per grid point [{/Symbol m}s]"
+set yrange [.14 : 2]
+set ytics ("" .125*sqrt(2), " 1/4" .25, "" .25*sqrt(2), "1/2" .5, "" .5*sqrt(2), 1, "" sqrt(2), 2)
+plot \
+  stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
+  stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 5 linecolor rgb "blue"  lw 1 title 'Python / CPython'  , \
+  stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'     , \
+  stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'     
+
+unset multiplot
