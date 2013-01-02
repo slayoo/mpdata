@@ -58,7 +58,7 @@ program test
       if (diff >= .5 * 10.**(-dec)) error = .TRUE.
       deallocate(tmp)
       if (error) then
-        print*, slv%state()
+        !print*, slv%state()
         stop 1
       end if
     end block
