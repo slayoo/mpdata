@@ -280,10 +280,7 @@ module solver_m
     class(solver_t) :: this
     integer :: d
     real(real_t), pointer :: return(:,:)
-    return => this%C%at(d)%p%a(                        & 
-      this%i(0)-h : this%i(size(this%i)-1)+h,          &
-      this%j(0)-h : this%j(size(this%j)-1)+h           &
-    )
+    return => this%C%at(d)%p%a
   end function
 
   subroutine solver_cycle(this)
