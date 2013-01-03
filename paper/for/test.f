@@ -64,8 +64,6 @@ program test
     end block
 
     call slv%dtor()
-    call bcx%dtor()
-    call bcy%dtor()
   end block
 
   contains
