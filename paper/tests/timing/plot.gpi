@@ -20,8 +20,8 @@ cpunorm(cputime, nx, ny, nt) = s2us(cputime / gridsize(nx, ny) / nt)
 
 set key top right 
 set ylabel "peak memory use (rss) to nominal data size ratio"
-set yrange [1 : 150]
-set ytics (1, 2, 4, 8, 16, 32, 64, 128)
+set yrange [1 : 256]
+set ytics (1, 2, 4, 8, 16, 32, 64, 128, 256)
 plot \
   stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
   stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 5 linecolor rgb "blue" lw 1 title 'Python / CPython'  , \
@@ -30,8 +30,8 @@ plot \
 
 set key bottom right
 set ylabel "CPU time per timestep per grid point [{/Symbol m}s]"
-set yrange [.14 : 2]
-set ytics ("" .125*sqrt(2), " 1/4" .25, "" .25*sqrt(2), "1/2" .5, "" .5*sqrt(2), 1, "" sqrt(2), 2)
+set yrange [.125/sqrt(2) : 2]
+set ytics ("1/8" .125, "" .125*sqrt(2), " 1/4" .25, "" .25*sqrt(2), "1/2" .5, "" .5*sqrt(2), 1, "" sqrt(2), 2)
 plot \
   stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
   stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 5 linecolor rgb "blue"  lw 1 title 'Python / CPython'  , \
