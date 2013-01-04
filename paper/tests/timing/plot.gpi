@@ -1,15 +1,11 @@
-set term postscript solid enhanced color size 15cm,30cm
-set output 'plot-cpumem.ps'
+set term postscript solid enhanced color size 15cm,15cm
 set xlabel "grid size (nx=ny)"
 set xrange [32*64 : 4096*8192]
 set grid
 set xtics ("64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "1024^2" 1024*1024, "2048^2" 2048*2048, "4096^2" 4096*4096)
-set logscale xy
 
 set datafile separator ";"
 stuff = '< grep ^time: Testing/Temporary/LastTest.log'
-
-set multiplot layout 2,1
 
 sizeof_double = 8
 gridsize(nx, ny) = nx * ny
@@ -20,22 +16,23 @@ cpunorm(cputime, nx, ny, nt) = s2us(cputime / gridsize(nx, ny) / nt)
 
 set key top right 
 set ylabel "peak memory use (rss) to nominal data size ratio"
+set logscale xy
 set yrange [1 : 256]
-set ytics (1, 2, 4, 8, 16, 32, 64, 128, 256)
+set output 'plot-mem.ps'
 plot \
   stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
   stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 5 linecolor rgb "blue" lw 1 title 'Python / CPython'  , \
   stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'     , \
   stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'     
 
-set key bottom right
+set nokey 
 set ylabel "CPU time per timestep per grid point [{/Symbol m}s]"
-set yrange [.125/sqrt(2) : 2]
-set ytics ("1/8" .125, "" .125*sqrt(2), " 1/4" .25, "" .25*sqrt(2), "1/2" .5, "" .5*sqrt(2), 1, "" sqrt(2), 2)
+unset logscale y
+set yrange [0 : 1.4]
+set ytics .2
+set output 'plot-cpu.ps'
 plot \
   stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
   stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 5 linecolor rgb "blue"  lw 1 title 'Python / CPython'  , \
   stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'     , \
   stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13, $3, $5, $7)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'     
-
-unset multiplot
