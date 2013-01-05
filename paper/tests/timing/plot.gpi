@@ -5,7 +5,7 @@ set grid
 set xtics ("64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "1024^2" 1024*1024, "2048^2" 2048*2048)
 
 set datafile separator ";"
-stuff = '< grep "^time:" Testing/Temporary/LastTest.log.tmp'    \
+stuff = '< grep "^time:" Testing/Temporary/LastTest.log'        \
   . '| awk '' '                                                 \
   .   'BEGIN { FS=";"; huge=1e6; besttime=huge;} '              \
   .   '{ '                                                      \
