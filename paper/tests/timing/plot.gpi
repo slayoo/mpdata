@@ -7,6 +7,16 @@ set xtics ("64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "102
 set datafile separator ";"
 stuff = '< awk ''BEGIN {cnt=0; FS=";";} /^time/ { cnt++; if (cnt % 2 == 1) offset=$13; else print $0 "loadtime=;" offset; }'' Testing/Temporary/LastTest.log'
 
+hostname = system('hostname')
+cpuvdrid = system('fgrep vendor_id /proc/cpuinfo | uniq | cut -d : -f 2 | tr -d " "')
+cpufmlid = system('fgrep family /proc/cpuinfo | uniq | cut -d : -f 2 | tr -d " "')
+cpumdlid = system('fgrep -v "model name" /proc/cpuinfo | fgrep model | uniq | cut -d : -f 2 | tr -d " "')
+cpubmips = system('fgrep bogomips /proc/cpuinfo | awk ''function round(x, m) { x/=m; return m*int(x+(x<0?-0.5:0.5));} { printf("%d\n", round($3,10)); }'' | uniq')
+infostr = "host=" . hostname . "-cpu=" . cpuvdrid . "-" . cpufmlid . "-" . cpumdlid . "-bogomips=" . cpubmips
+
+#cpulabel = system('fgrep "model name" /proc/cpuinfo | uniq | cut -d : -f 2 | tr -s " "')
+#set title cpulabel
+
 sizeof_double = 8
 gridsize(nx, ny) = nx * ny
 kB2B(mm) = mm * 1024. 
@@ -14,26 +24,26 @@ memnorm(peakrss, nx, ny) = kB2B(peakrss) / ((2*gridsize(nx+2, ny+2) + 3*gridsize
 s2us(tm) = tm / 1e-6
 cpunorm(cputime, nx, ny, nt) = s2us(cputime / gridsize(nx, ny) / nt)
 
-set key top right 
+set key above
+
 set ylabel "peak memory use (rss) to nominal data size ratio"
 set logscale xy
 set yrange [1:*]
 set ytics auto
-set output 'plot-mem.ps'
+set output 'plot-mem-' . infostr . '.eps'
 plot \
   stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
-  stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 5 linecolor rgb "blue" lw 1 title 'Python / CPython'  , \
-  stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'     , \
-  stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'     
+  stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'       , \
+  stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 5 linecolor rgb "blue" lw 1 title 'Python / CPython'   , \
+  stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'      
 
-set nokey 
 set ylabel "CPU time per timestep per grid point [{/Symbol m}s]"
 unset logscale y
 set yrange [0:*]
 set ytics auto
-set output 'plot-cpu.ps'
+set output 'plot-cpu-' . infostr . '.eps'
 plot \
   stuff.'|fgrep cpp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13-$17, $3, $5, $7)) with linespoints pt 1 linecolor rgb "black" lw 1 title 'C++ / GCC'         , \
+  stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13-$17, $3, $5, $7)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'       , \
   stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13-$17, $3, $5, $7)) with linespoints pt 5 linecolor rgb "blue"  lw 1 title 'Python / CPython'  , \
-  stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13-$17, $3, $5, $7)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'     , \
-  stuff.'|fgrep for|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13-$17, $3, $5, $7)) with linespoints pt 2 linecolor rgb "red" lw 1 title 'Fortran / GCC'     
+  stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(cpunorm($13-$17, $3, $5, $7)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'    
