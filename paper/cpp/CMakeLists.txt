@@ -1,6 +1,6 @@
 set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -DNDEBUG -Wfatal-errors")
 if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -ftree-vectorizer-verbose=1")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -ftree-vectorizer-verbose=1")
 else()
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # e.g. clang++
 endif()
