@@ -50,7 +50,7 @@ plot \
   stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 5 linecolor rgb "blue" lw 1 title 'Python / CPython'   , \
   stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'      
 
-cpulabel = system('fgrep "model name" /proc/cpuinfo | uniq | cut -d : -f 2 | tr -s " " | awk ''{ gsub("\(TM\)","™"); gsub("\(R\)","^{®}"); print; }''')
+cpulabel = system('fgrep "model name" /proc/cpuinfo | uniq | cut -d : -f 2 | tr -s " " | awk ''{ gsub("\(TM\)","^{^{_{_{TM}}}} "); gsub("\(tm\)","^{^{_{_{TM}}}} "); gsub("\(R\)","^{®}"); print; }''')
 set title cpulabel
 
 set ylabel "CPU time per timestep per grid point [{/Symbol m}s]"
