@@ -19,9 +19,9 @@ template <int it>
 void test(char **argv)
 {
   int 
+    nt = atoi(argv[5]),
     nx = atoi(argv[1]), 
     ny = atoi(argv[2]),
-    nt = atoi(argv[5]),
     dec = atoi(argv[9]);
   real_t
     Cx = atof(argv[3]),

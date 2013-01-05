@@ -23,33 +23,60 @@ function(add_tests dir)
     set(IT ${CMAKE_MATCH_6}) # --- number of MPDATA iterations
     set(DEC 4) # ----------------- desired precision (abs(desired-actual) < 0.5 * 10**(-decimal))
 
-    # passing all of the above as command-line arguments to the test programs
-    set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
 
     set(PFX "--format=time:")
     set(SFX "\;nx=\;${NX}\;nt=\;${NY}\;nt=\;${NT}\;it=\;${IT}\;peakrss=\;%M\;cputime=\;%U\;exit=\;%x\;")
 
+
     # C++
-    set(TIME_ARG "${PFX}cpp${SFX}")
-    add_test(NAME "cpp:${NAME}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})
-    set_tests_properties("cpp:${NAME}" PROPERTIES DEPENDS build_test_cpp)
+    set(TIME_ARG "${PFX}cpp-loac${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
+    add_test(NAME "cpp:${NAME}-load" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})
+    set_tests_properties("cpp:${NAME}-load" PROPERTIES DEPENDS build_test_cpp)
+
+    set(TIME_ARG "${PFX}cpp-calc${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
+    add_test(NAME "cpp:${NAME}-calc" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})
+    set_tests_properties("cpp:${NAME}-calc" PROPERTIES DEPENDS build_test_cpp)
   
+
     # Python
-    set(TIME_ARG "${PFX}pyt${SFX}")
-    add_test(NAME "pyt:${NAME}" COMMAND time ${TIME_ARG} python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+    set(TIME_ARG "${PFX}pyt-load${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
+    add_test(NAME "pyt:${NAME}-load" COMMAND time ${TIME_ARG} python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+
+    set(TIME_ARG "${PFX}pyt-calc${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
+    add_test(NAME "pyt:${NAME}-calc" COMMAND time ${TIME_ARG} python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
 
     # PyPy
-    set(TIME_ARG "${PFX}pyp${SFX}")
-    add_test(NAME "pyp:${NAME}" COMMAND time ${TIME_ARG} pypy ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+    set(TIME_ARG "${PFX}pyp-load${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
+    add_test(NAME "pyp:${NAME}-load" COMMAND time ${TIME_ARG} pypy ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+
+    set(TIME_ARG "${PFX}pyp-calc${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
+    add_test(NAME "pyp:${NAME}-calc" COMMAND time ${TIME_ARG} pypy ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
 
     # Cython
 #    set(TIME_ARG "${PFX}cyt${SFX}")
-#    add_test(NAME "cyt:${NAME}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/pyt/test-cython ${ARG})
+#
+#    set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
+#    add_test(NAME "cyt:${NAME}-load" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/pyt/test-cython ${ARG})
+#
+#    set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
+#    add_test(NAME "cyt:${NAME}-calc" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/pyt/test-cython ${ARG})
 
     # Fortran
-    set(TIME_ARG "${PFX}for${SFX}")
-    add_test(NAME "for:${NAME}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
-    set_tests_properties("for:${NAME}" PROPERTIES DEPENDS build_test_for)
+    set(TIME_ARG "${PFX}for-load${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
+    add_test(NAME "for:${NAME}-load" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
+    set_tests_properties("for:${NAME}-load" PROPERTIES DEPENDS build_test_for)
+
+    set(TIME_ARG "${PFX}for-calc${SFX}")
+    set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
+    add_test(NAME "for:${NAME}-calc" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/for/test-for ${ARG})
+    set_tests_properties("for:${NAME}-calc" PROPERTIES DEPENDS build_test_for)
 
     # F77
     #add_test(NAME)
