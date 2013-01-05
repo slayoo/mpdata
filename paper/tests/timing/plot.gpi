@@ -5,7 +5,22 @@ set grid
 set xtics ("64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "1024^2" 1024*1024, "2048^2" 2048*2048)
 
 set datafile separator ";"
-stuff = '< awk ''BEGIN {cnt=0; FS=";";} /^time/ { cnt++; if (cnt % 2 == 1) offset=$13; else print $0 "loadtime=;" offset; }'' Testing/Temporary/LastTest.log'
+stuff = '< grep "^time:" Testing/Temporary/LastTest.log.tmp'    \
+  . '| awk '' '                                                 \
+  .   'BEGIN { FS=";"; huge=1e6; besttime=huge;} '              \
+  .   '{ '                                                      \
+  .   '  lines[NR%3]=$0; '                                      \
+  .   '  if (besttime > $13) { besttime = $13; bestid=NR%3; } ' \
+  .   '  if (NR%3 == 0) { print lines[bestid]; best=huge; } '   \
+  .   '} '                                                      \
+  . ' '' '                                                      \
+  . '| awk '' '                                                 \
+  .   'BEGIN {FS=";"} '                                         \
+  .   '{ '                                                      \
+  .   '  if (NR % 2 == 1) offset=$13; '                         \
+  .   '  else print $0 "loadtime=;" offset; '                   \
+  .   '} '                                                      \
+  . ' '' '
 
 hostname = system('hostname')
 cpuvdrid = system('fgrep vendor_id /proc/cpuinfo | uniq | cut -d : -f 2 | tr -d " "')
@@ -14,8 +29,8 @@ cpumdlid = system('fgrep -v "model name" /proc/cpuinfo | fgrep model | uniq | cu
 cpubmips = system('fgrep bogomips /proc/cpuinfo | awk ''function round(x, m) { x/=m; return m*int(x+(x<0?-0.5:0.5));} { printf("%d\n", round($3,10)); }'' | uniq')
 infostr = "host=" . hostname . "-cpu=" . cpuvdrid . "-" . cpufmlid . "-" . cpumdlid . "-bogomips=" . cpubmips
 
-#cpulabel = system('fgrep "model name" /proc/cpuinfo | uniq | cut -d : -f 2 | tr -s " "')
-#set title cpulabel
+cpulabel = system('fgrep "model name" /proc/cpuinfo | uniq | cut -d : -f 2 | tr -s " "')
+set title cpulabel
 
 sizeof_double = 8
 gridsize(nx, ny) = nx * ny
@@ -24,7 +39,7 @@ memnorm(peakrss, nx, ny) = kB2B(peakrss) / ((2*gridsize(nx+2, ny+2) + 3*gridsize
 s2us(tm) = tm / 1e-6
 cpunorm(cputime, nx, ny, nt) = s2us(cputime / gridsize(nx, ny) / nt)
 
-set key above
+set key top right
 
 set ylabel "peak memory use (rss) to nominal data size ratio"
 set logscale xy
