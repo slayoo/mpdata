@@ -5,12 +5,11 @@ set grid
 set xtics ("64^2" 64*64, "128^2" 128*128, "256^2" 256*256, "512^2" 512*512, "1024^2" 1024*1024, "2048^2" 2048*2048)
 
 set datafile separator ";"
-#stuff = '< grep ^time: Testing/Temporary/LastTest.log'
-stuff = '< awk ''BEGIN {cnt=0; FS=";";} /^time/ { cnt++; if (cnt % 2 == 1) offset=$13; else print $0 "loadtime=;" offset; }'' Testing/Temporary/LastTest.log.tmp'
+stuff = '< awk ''BEGIN {cnt=0; FS=";";} /^time/ { cnt++; if (cnt % 2 == 1) offset=$13; else print $0 "loadtime=;" offset; }'' Testing/Temporary/LastTest.log'
 
 sizeof_double = 8
 gridsize(nx, ny) = nx * ny
-kB2B(mm) = mm * 1024
+kB2B(mm) = mm * 1024. 
 memnorm(peakrss, nx, ny) = kB2B(peakrss) / ((2*gridsize(nx+2, ny+2) + 3*gridsize(nx+1, nx+2) + 3*gridsize(nx+2, nx+1)) * sizeof_double)
 s2us(tm) = tm / 1e-6
 cpunorm(cputime, nx, ny, nt) = s2us(cputime / gridsize(nx, ny) / nt)
