@@ -56,8 +56,6 @@ class Solver(object):
     self.bcx = bcx(0, self.i, hlo)
     self.bcy = bcy(1, self.j, hlo)
 
-    assert ext(self.i, self.hlo).start == 0
-    assert ext(self.j, self.hlo).start == 0
     self.psi = (
       numpy.empty((
         ext(self.i, self.hlo).stop, 
@@ -69,8 +67,6 @@ class Solver(object):
       ), real_t)
     )
 
-    assert ext(self.i, hlf).start == 0
-    assert ext(self.j, hlf).start == 0
     self.C = (
       numpy.empty((
         ext(self.i, hlf).stop, 

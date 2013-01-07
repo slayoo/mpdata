@@ -18,9 +18,7 @@ struct arrvec_t : boost::ptr_vector<arr_t>
 {
   const arr_t &operator[](const int i) const 
   {   
-    return this->at(
-      (i + this->size()) % this->size()
-    ); 
+    return this->at( (i + this->size()) % this->size() ); 
   }
 };
 //listing05

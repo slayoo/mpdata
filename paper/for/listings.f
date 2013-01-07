@@ -169,6 +169,7 @@ module bcd_m
       real(real_t), pointer, contiguous :: a(:,:) 
       integer :: j(2)
     end subroutine
+
     subroutine bcd_init(this, d, n, hlo)
       import :: bcd_t
       class(bcd_t) :: this
@@ -336,7 +337,7 @@ module donorcell_m
   use arrvec_m
   implicit none
   contains 
-
+!listing10
   elemental function F(psi_l, psi_r, C) result (return)
     real(real_t) :: return
     real(real_t), intent(in) :: psi_l, psi_r, C
@@ -345,7 +346,7 @@ module donorcell_m
       (C - abs(C)) * psi_r                             &
     ) / 2
   end function
-
+!listing11
   function donorcell(d, psi, C, i, j) result (return)
     integer :: d
     integer, intent(in) :: i(2), j(2) 
@@ -365,7 +366,7 @@ module donorcell_m
       )                                                &
     )
   end function
-
+!listing12
   subroutine donorcell_op(psi, n, C, i, j)  
     class(arrvec_t), pointer :: psi, C
     integer, intent(in) :: n
@@ -377,8 +378,9 @@ module donorcell_m
       - donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j) &
       - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)
   end subroutine
+!listing13
 end module
-!listing10
+!listing14
 module solver_donorcell_m
   use donorcell_m
   use solver_m
@@ -412,14 +414,14 @@ module solver_donorcell_m
     call solver_dtor(this)
   end subroutine
 end module
-!listing11
+!listing15
 module mpdata_m
   use arrvec_m
   use arakawa_c_m
   use pi_m
   implicit none
   contains 
-
+!listing16
   function frac(nom, den) result (return)
     real(real_t), intent(in) :: nom(:,:), den(:,:)
     real(real_t) :: return(size(nom, 1), size(nom, 2))
@@ -429,7 +431,7 @@ module mpdata_m
       return = 0
     end where
   end function
-
+!listing17
   function A(d, psi, i, j) result (return)
     integer :: d
     real(real_t), pointer, intent(in), contiguous ::   &
@@ -441,7 +443,7 @@ module mpdata_m
       pi(d, psi, i+1, j) + pi(d, psi, i, j)            &
     )  
   end function
-
+!listing18
   function B(d, psi, i, j) result (return)
     integer :: d
     real(real_t), pointer, intent(in), contiguous ::   &
@@ -455,7 +457,7 @@ module mpdata_m
     + pi(d, psi, i+1, j-1) + pi(d, psi, i,   j-1)      &
     ) / 2
   end function
-
+!listing19
   function C_bar(d, C, i, j) result (return)
     integer :: d
     real(real_t), pointer, intent(in), contiguous ::   &
@@ -468,7 +470,7 @@ module mpdata_m
       pi(d, C, i+1, j-h) + pi(d, C, i,   j-h)          &
     ) / 4               
   end function
-
+!listing20
   function antidiff(d, psi, i, j, C) result (return)
     integer :: d
     integer, intent(in) :: i(2), j(2)
@@ -484,8 +486,9 @@ module mpdata_m
       * C_bar(d, C%at(d-1)%p%a, i, j)                  &
       * B(d, psi, i, j)
   end function
+!listing21
 end module
-!listing12
+!listing22
 module solver_mpdata_m
   use solver_m
   use mpdata_m
@@ -551,8 +554,12 @@ module solver_mpdata_m
           call donorcell_op(this%psi, n, this%C, i, j)
         else
           call this%cycle()
-          call this%bcx%fill_halos(psi%at( n )%p%a, ext(j, hlo))
-          call this%bcy%fill_halos(psi%at( n )%p%a, ext(i, hlo))
+          call this%bcx%fill_halos(                    &
+            psi%at( n )%p%a, ext(j, hlo)               &
+          )
+          call this%bcy%fill_halos(                    &
+            psi%at( n )%p%a, ext(i, hlo)               &
+          )
 
           block
             class(arrvec_t), pointer :: C_corr, C_unco
@@ -572,12 +579,20 @@ module solver_mpdata_m
 
             ! calculating the antidiffusive velo
             tmp => pi(0, C_corr%at( 0 )%p%a, im+h, j)
-            tmp = antidiff(0, psi%at( n )%p%a, im, j, C_unco)
-            call this%bcy%fill_halos(C_corr%at(0)%p%a, ext(i, h))
+            tmp = antidiff(                            &
+              0, psi%at( n )%p%a, im, j, C_unco        &
+            )      
+            call this%bcy%fill_halos(                  &
+              C_corr%at(0)%p%a, ext(i, h)              &
+            )
 
             tmp => pi(0, C_corr%at( 1 )%p%a, i, jm+h)
-            tmp = antidiff(1, psi%at( n )%p%a, jm, i, C_unco)
-            call this%bcx%fill_halos(C_corr%at(1)%p%a, ext(j, h))
+            tmp = antidiff(                            &
+              1, psi%at( n )%p%a, jm, i, C_unco        &
+            )
+            call this%bcx%fill_halos(                  &
+              C_corr%at(1)%p%a, ext(j, h)              &
+            )
 
             ! donor-cell step
             call donorcell_op(this%psi, n, C_corr, i, j)
@@ -587,4 +602,4 @@ module solver_mpdata_m
     end associate
   end subroutine
 end module
-!listing13
+!listing23
