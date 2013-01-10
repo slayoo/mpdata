@@ -8,6 +8,7 @@ def read_file(fname, nx, ny):
     for line in f:
       tmp[x,:] = numpy.fromstring(line, dtype=real_t, sep='\t')
       x += 1
+  assert(x == nx)
   return tmp
 
 def main():
