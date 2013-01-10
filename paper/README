@@ -1,9 +1,11 @@
 In short (example for Debian):
 
-$ sudo apt-get install gcc-snapshot
-$ sudo apt-get install pypy
-$ sudo apt-get install python-numpy 
-$ sudo apt-get install gnuplot-iostream
+$ sudo apt-get install \
+  libblitz0-dev \
+  gcc-snapshot \
+  pypy \
+  python-numpy \
+  gnuplot-iostream
 
 $ cmake . \ 
   -DCMAKE_CXX_COMPILER=/usr/lib/gcc-snapshot/bin/g++ \
