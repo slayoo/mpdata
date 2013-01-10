@@ -8,21 +8,21 @@ set encoding utf8
 set key samplen .75
 
 set datafile separator ";"
-stuff = '< grep "^time:" Testing/Temporary/LastTest.log'        \
-  . '| awk '' '                                                 \
-  .   'BEGIN { FS=";"; huge=1e6; besttime=huge;} '              \
-  .   '{ '                                                      \
-  .   '  lines[NR%3]=$0; '                                      \
-  .   '  if (besttime > $13) { besttime = $13; bestid=NR%3; } ' \
-  .   '  if (NR%3 == 0) { print lines[bestid]; best=huge; } '   \
-  .   '} '                                                      \
-  . ' '' '                                                      \
-  . '| awk '' '                                                 \
-  .   'BEGIN {FS=";"} '                                         \
-  .   '{ '                                                      \
-  .   '  if (NR % 2 == 1) offset=$13; '                         \
-  .   '  else print $0 "loadtime=;" offset; '                   \
-  .   '} '                                                      \
+stuff = '< grep "^time:" Testing/Temporary/LastTest.log'          \
+  . '| awk '' '                                                   \
+  .   'BEGIN { FS=";"; huge=1e6; besttime=huge;} '                \
+  .   '{ '                                                        \
+  .   '  lines[NR%3]=$0; '                                        \
+  .   '  if (besttime > $13) { besttime = $13; bestid=NR%3; } '   \
+  .   '  if (NR%3 == 0) { print lines[bestid]; besttime=huge; } ' \
+  .   '} '                                                        \
+  . ' '' '                                                        \
+  . '| awk '' '                                                   \
+  .   'BEGIN {FS=";"} '                                           \
+  .   '{ '                                                        \
+  .   '  if (NR % 2 == 1) offset=$13; '                           \
+  .   '  else print $0 "loadtime=;" offset; '                     \
+  .   '} '                                                        \
   . ' '' '
 
 hostname = system('hostname')
