@@ -12,7 +12,7 @@ module arrvec_m
   implicit none
 
   type :: arr_t
-    real(real_t), pointer, contiguous :: a(:,:)
+    real(real_t), allocatable :: a(:,:)
   end type
 
   type :: arrptr_t
@@ -20,8 +20,8 @@ module arrvec_m
   end type
 
   type :: arrvec_t
-    class(arrptr_t), pointer :: at(:)
-    logical, pointer, contiguous :: inited(:)
+    class(arrptr_t), allocatable :: at(:)
+    integer :: length
     contains
     procedure :: ctor => arrvec_ctor
     procedure :: init => arrvec_init
@@ -33,26 +33,27 @@ module arrvec_m
   subroutine arrvec_ctor(this, n)
     class(arrvec_t) :: this
     integer, intent(in) :: n
+
+    this%length = n
     allocate(this%at( -n : n-1 ))
-    allocate(this%inited( 0 : n-1 ))
-    this%inited = .false.
   end subroutine
 
   subroutine arrvec_init(this, n, i, j)
     class(arrvec_t) :: this
     integer, intent(in) :: n
     integer, intent(in) :: i(2), j(2)
+
     allocate(this%at(n)%p)
     allocate(this%at(n)%p%a( i(1) : i(2), j(1) : j(2) ))
-    this%inited(n) = .true.
-    this%at(n - size(this%inited))%p => this%at(n)%p
+    this%at(n - this%length)%p => this%at(n)%p
   end subroutine
 
   subroutine arrvec_dtor(this)
     class(arrvec_t) :: this
+
     integer :: i
-    do i = 0, size(this%inited) - 1
-      if (this%inited(i)) then
+    do i = 0, this%length - 1
+      if (associated(this%at(i)%p)) then
         deallocate(this%at(i)%p%a)
         deallocate(this%at(i)%p)
       end if
@@ -128,7 +129,7 @@ module pi_m
   contains
   function pi(d, arr, i, j) result(return)
     integer, intent(in) :: d
-    real(real_t), intent(in), pointer :: arr(:,:)
+    real(real_t), allocatable, target :: arr(:,:)
     real(real_t), pointer :: return(:,:)
     integer, intent(in) :: i(2), j(2)
     select case (d) 
@@ -166,7 +167,7 @@ module bcd_m
     subroutine bcd_fill_halos(this, a, j)
       import :: bcd_t, real_t
       class(bcd_t ) :: this
-      real(real_t), pointer, contiguous :: a(:,:) 
+      real(real_t), allocatable :: a(:,:) 
       integer :: j(2)
     end subroutine
 
@@ -211,7 +212,7 @@ module solver_m
     use arakawa_c_m
     use halo_m
     class(solver_t) :: this
-    class(bcd_t), intent(in), pointer :: bcx,bcy
+    class(bcd_t), intent(in), pointer :: bcx, bcy
     integer, intent(in) :: nx, ny, hlo
 
     this%n = 0
@@ -321,7 +322,8 @@ module cyclic_m
 
   subroutine cyclic_fill_halos(this, a, j)
     class(cyclic_t) :: this
-    real(real_t), pointer :: a(:,:), tmp(:,:)
+    real(real_t), pointer :: tmp(:,:)
+    real(real_t), allocatable :: a(:,:)
     integer :: j(2)
     tmp => pi(this%d, a, this%left_halo, j) 
     tmp =  pi(this%d, a, this%rght_edge, j)
@@ -351,8 +353,7 @@ module donorcell_m
     integer :: d
     integer, intent(in) :: i(2), j(2) 
     real(real_t) :: return(span(d, i, j), span(d, j, i))
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:), C(:,:)           
+    real(real_t), allocatable, intent(in) :: psi(:,:), C(:,:)           
     return = (                                         &
       F(                                               &
         pi(d, psi, i,   j),                            &
@@ -434,8 +435,7 @@ module mpdata_m
 !listing17
   function A(d, psi, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:)
+    real(real_t), allocatable, intent(in) :: psi(:,:)
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
     return = frac(                                     &
@@ -446,8 +446,7 @@ module mpdata_m
 !listing18
   function B(d, psi, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:) 
+    real(real_t), allocatable, intent(in) :: psi(:,:) 
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
     return = frac(                                     &
@@ -460,8 +459,7 @@ module mpdata_m
 !listing19
   function C_bar(d, C, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in), contiguous ::   &
-      C(:,:) 
+    real(real_t), allocatable, intent(in) :: C(:,:) 
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
 
@@ -475,8 +473,7 @@ module mpdata_m
     integer :: d
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:) 
+    real(real_t), allocatable, intent(in) :: psi(:,:) 
     class(arrvec_t), pointer :: C
     return =                                           &
       abs(pi(d, C%at(d)%p%a, i+h, j))                  &
@@ -547,7 +544,7 @@ module solver_mpdata_m
 
     associate (i => this%i, j => this%j, im => this%im,&
       jm => this%jm, psi => this%psi, n => this%n,     &
-      hlo => this%hlo &
+      hlo => this%hlo, bcx => this%bcx, bcy => this%bcy &
     )
       do step=0, this%n_iters-1
         if (step == 0) then
@@ -555,10 +552,10 @@ module solver_mpdata_m
         else
           call this%cycle()
           call this%bcx%fill_halos(                    &
-            psi%at( n )%p%a, ext(j, hlo)               &
+            this%psi%at( n )%p%a, ext(j, hlo)     &
           )
           call this%bcy%fill_halos(                    &
-            psi%at( n )%p%a, ext(i, hlo)               &
+            this%psi%at( n )%p%a, ext(i, hlo)     &
           )
 
           block
