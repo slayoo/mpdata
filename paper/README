@@ -1,0 +1,25 @@
+In short (example for Debian):
+
+$ sudo apt-get install \
+  libblitz0-dev \
+  gcc-snapshot \
+  pypy \
+  python-numpy \
+  gnuplot-iostream
+
+$ cmake . \ 
+  -DCMAKE_CXX_COMPILER=/usr/lib/gcc-snapshot/bin/g++ \
+  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran
+
+$ cmake . -DCMAKE_BUILD_TYPE=Release
+
+$ make
+
+$ cd tests/sanity
+$ make test
+
+$ cd tests/timing
+$ ./inout.sh
+$ make test
+$ gnuplot plot.gpi
+$ evince plot-*.eps

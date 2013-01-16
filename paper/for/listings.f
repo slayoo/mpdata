@@ -12,7 +12,7 @@ module arrvec_m
   implicit none
 
   type :: arr_t
-    real(real_t), pointer, contiguous :: a(:,:)
+    real(real_t), allocatable :: a(:,:)
   end type
 
   type :: arrptr_t
@@ -20,8 +20,8 @@ module arrvec_m
   end type
 
   type :: arrvec_t
-    class(arrptr_t), pointer :: at(:)
-    logical, pointer, contiguous :: inited(:)
+    class(arrptr_t), allocatable :: at(:)
+    integer :: length
     contains
     procedure :: ctor => arrvec_ctor
     procedure :: init => arrvec_init
@@ -33,26 +33,27 @@ module arrvec_m
   subroutine arrvec_ctor(this, n)
     class(arrvec_t) :: this
     integer, intent(in) :: n
+
+    this%length = n
     allocate(this%at( -n : n-1 ))
-    allocate(this%inited( 0 : n-1 ))
-    this%inited = .false.
   end subroutine
 
   subroutine arrvec_init(this, n, i, j)
     class(arrvec_t) :: this
     integer, intent(in) :: n
     integer, intent(in) :: i(2), j(2)
+
     allocate(this%at(n)%p)
     allocate(this%at(n)%p%a( i(1) : i(2), j(1) : j(2) ))
-    this%inited(n) = .true.
-    this%at(n - size(this%inited))%p => this%at(n)%p
+    this%at(n - this%length)%p => this%at(n)%p
   end subroutine
 
   subroutine arrvec_dtor(this)
     class(arrvec_t) :: this
+
     integer :: i
-    do i = 0, size(this%inited) - 1
-      if (this%inited(i)) then
+    do i = 0, this%length - 1
+      if (associated(this%at(i)%p)) then
         deallocate(this%at(i)%p%a)
         deallocate(this%at(i)%p)
       end if
@@ -128,7 +129,7 @@ module pi_m
   contains
   function pi(d, arr, i, j) result(return)
     integer, intent(in) :: d
-    real(real_t), intent(in), pointer :: arr(:,:)
+    real(real_t), allocatable, target :: arr(:,:)
     real(real_t), pointer :: return(:,:)
     integer, intent(in) :: i(2), j(2)
     select case (d) 
@@ -166,9 +167,10 @@ module bcd_m
     subroutine bcd_fill_halos(this, a, j)
       import :: bcd_t, real_t
       class(bcd_t ) :: this
-      real(real_t), pointer, contiguous :: a(:,:) 
+      real(real_t), allocatable :: a(:,:) 
       integer :: j(2)
     end subroutine
+
     subroutine bcd_init(this, d, n, hlo)
       import :: bcd_t
       class(bcd_t) :: this
@@ -210,7 +212,7 @@ module solver_m
     use arakawa_c_m
     use halo_m
     class(solver_t) :: this
-    class(bcd_t), intent(in), pointer :: bcx,bcy
+    class(bcd_t), intent(in), pointer :: bcx, bcy
     integer, intent(in) :: nx, ny, hlo
 
     this%n = 0
@@ -320,7 +322,8 @@ module cyclic_m
 
   subroutine cyclic_fill_halos(this, a, j)
     class(cyclic_t) :: this
-    real(real_t), pointer :: a(:,:), tmp(:,:)
+    real(real_t), pointer :: tmp(:,:)
+    real(real_t), allocatable :: a(:,:)
     integer :: j(2)
     tmp => pi(this%d, a, this%left_halo, j) 
     tmp =  pi(this%d, a, this%rght_edge, j)
@@ -336,7 +339,7 @@ module donorcell_m
   use arrvec_m
   implicit none
   contains 
-
+!listing10
   elemental function F(psi_l, psi_r, C) result (return)
     real(real_t) :: return
     real(real_t), intent(in) :: psi_l, psi_r, C
@@ -345,13 +348,12 @@ module donorcell_m
       (C - abs(C)) * psi_r                             &
     ) / 2
   end function
-
+!listing11
   function donorcell(d, psi, C, i, j) result (return)
     integer :: d
     integer, intent(in) :: i(2), j(2) 
     real(real_t) :: return(span(d, i, j), span(d, j, i))
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:), C(:,:)           
+    real(real_t), allocatable, intent(in) :: psi(:,:), C(:,:)           
     return = (                                         &
       F(                                               &
         pi(d, psi, i,   j),                            &
@@ -365,7 +367,7 @@ module donorcell_m
       )                                                &
     )
   end function
-
+!listing12
   subroutine donorcell_op(psi, n, C, i, j)  
     class(arrvec_t), pointer :: psi, C
     integer, intent(in) :: n
@@ -377,8 +379,9 @@ module donorcell_m
       - donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j) &
       - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)
   end subroutine
+!listing13
 end module
-!listing10
+!listing14
 module solver_donorcell_m
   use donorcell_m
   use solver_m
@@ -412,14 +415,14 @@ module solver_donorcell_m
     call solver_dtor(this)
   end subroutine
 end module
-!listing11
+!listing15
 module mpdata_m
   use arrvec_m
   use arakawa_c_m
   use pi_m
   implicit none
   contains 
-
+!listing16
   function frac(nom, den) result (return)
     real(real_t), intent(in) :: nom(:,:), den(:,:)
     real(real_t) :: return(size(nom, 1), size(nom, 2))
@@ -429,11 +432,10 @@ module mpdata_m
       return = 0
     end where
   end function
-
+!listing17
   function A(d, psi, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:)
+    real(real_t), allocatable, intent(in) :: psi(:,:)
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
     return = frac(                                     &
@@ -441,11 +443,10 @@ module mpdata_m
       pi(d, psi, i+1, j) + pi(d, psi, i, j)            &
     )  
   end function
-
+!listing18
   function B(d, psi, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:) 
+    real(real_t), allocatable, intent(in) :: psi(:,:) 
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
     return = frac(                                     &
@@ -455,11 +456,10 @@ module mpdata_m
     + pi(d, psi, i+1, j-1) + pi(d, psi, i,   j-1)      &
     ) / 2
   end function
-
+!listing19
   function C_bar(d, C, i, j) result (return)
     integer :: d
-    real(real_t), pointer, intent(in), contiguous ::   &
-      C(:,:) 
+    real(real_t), allocatable, intent(in) :: C(:,:) 
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
 
@@ -468,13 +468,12 @@ module mpdata_m
       pi(d, C, i+1, j-h) + pi(d, C, i,   j-h)          &
     ) / 4               
   end function
-
+!listing20
   function antidiff(d, psi, i, j, C) result (return)
     integer :: d
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
-    real(real_t), pointer, intent(in), contiguous ::   &
-      psi(:,:) 
+    real(real_t), allocatable, intent(in) :: psi(:,:) 
     class(arrvec_t), pointer :: C
     return =                                           &
       abs(pi(d, C%at(d)%p%a, i+h, j))                  &
@@ -484,8 +483,9 @@ module mpdata_m
       * C_bar(d, C%at(d-1)%p%a, i, j)                  &
       * B(d, psi, i, j)
   end function
+!listing21
 end module
-!listing12
+!listing22
 module solver_mpdata_m
   use solver_m
   use mpdata_m
@@ -544,15 +544,19 @@ module solver_mpdata_m
 
     associate (i => this%i, j => this%j, im => this%im,&
       jm => this%jm, psi => this%psi, n => this%n,     &
-      hlo => this%hlo &
+      hlo => this%hlo, bcx => this%bcx, bcy => this%bcy &
     )
       do step=0, this%n_iters-1
         if (step == 0) then
           call donorcell_op(this%psi, n, this%C, i, j)
         else
           call this%cycle()
-          call this%bcx%fill_halos(psi%at( n )%p%a, ext(j, hlo))
-          call this%bcy%fill_halos(psi%at( n )%p%a, ext(i, hlo))
+          call this%bcx%fill_halos(                    &
+            this%psi%at( n )%p%a, ext(j, hlo)     &
+          )
+          call this%bcy%fill_halos(                    &
+            this%psi%at( n )%p%a, ext(i, hlo)     &
+          )
 
           block
             class(arrvec_t), pointer :: C_corr, C_unco
@@ -572,12 +576,20 @@ module solver_mpdata_m
 
             ! calculating the antidiffusive velo
             tmp => pi(0, C_corr%at( 0 )%p%a, im+h, j)
-            tmp = antidiff(0, psi%at( n )%p%a, im, j, C_unco)
-            call this%bcy%fill_halos(C_corr%at(0)%p%a, ext(i, h))
+            tmp = antidiff(                            &
+              0, psi%at( n )%p%a, im, j, C_unco        &
+            )      
+            call this%bcy%fill_halos(                  &
+              C_corr%at(0)%p%a, ext(i, h)              &
+            )
 
             tmp => pi(0, C_corr%at( 1 )%p%a, i, jm+h)
-            tmp = antidiff(1, psi%at( n )%p%a, jm, i, C_unco)
-            call this%bcx%fill_halos(C_corr%at(1)%p%a, ext(j, h))
+            tmp = antidiff(                            &
+              1, psi%at( n )%p%a, jm, i, C_unco        &
+            )
+            call this%bcx%fill_halos(                  &
+              C_corr%at(1)%p%a, ext(j, h)              &
+            )
 
             ! donor-cell step
             call donorcell_op(this%psi, n, C_corr, i, j)
@@ -587,4 +599,4 @@ module solver_mpdata_m
     end associate
   end subroutine
 end module
-!listing13
+!listing23

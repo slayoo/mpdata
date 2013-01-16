@@ -10,5 +10,9 @@ it=3
     time ../../cpp/inout-cpp $nxy $nxy $Cx $Cy $nt $it \
       1>"nx=${nxy}_ny=${nxy}_Cx=${Cx}_Cy=${Cy}_nt=${nt}_it=${it}:in" \
       2>"nx=${nxy}_ny=${nxy}_Cx=${Cx}_Cy=${Cy}_nt=${nt}_it=${it}:out"
+    if [ $? -ne 0 ]; then 
+      echo "calling ../../cpp/inout-cpp failed!"
+      exit 1
+    fi
   done
 #done

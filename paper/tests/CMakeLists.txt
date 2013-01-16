@@ -29,7 +29,7 @@ function(add_tests dir)
 
 
     set(PFX "--format=time:")
-    set(SFX "\;nx=\;${NX}\;nt=\;${NY}\;nt=\;${NT}\;it=\;${IT}\;peakrss=\;%M\;cputime=\;%U\;exit=\;%x\;")
+    set(SFX "\;nx=\;${NX}\;ny=\;${NY}\;nt=\;${NT}\;it=\;${IT}\;peakrss=\;%M\;cputime=\;%U\;exit=\;%x\;")
 
     set(REPEAT "0;1;2;")
 
