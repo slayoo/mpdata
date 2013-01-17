@@ -485,7 +485,7 @@
     task (iii) is handled by the accessor methods; task (iv) is handled within the \prog{solve} method:
   \codecpp{code/cpp/listings.hpp}{listing08}{listing09}{1}
   The \prog{solver} structure is an abstract definition (containing a pure virtual method) 
-     requiring its ancestors to implement at least
+     requiring its descendants to implement at least
      the \prog{advop()} method which is expected to fill \prog{psi[n+1]} with the values of \prog{psi[n]} advected
      within one timestep.
   The two template parameters \prog{bcx\_t} and \prog{bcy\_t} allow the solver to operate with 
