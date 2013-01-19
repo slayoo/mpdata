@@ -8,21 +8,21 @@ set encoding utf8
 set key samplen .75
 
 set datafile separator ";"
-stuff = '< grep "^time:" Testing/Temporary/LastTest.log'          \
-  . '| awk '' '                                                   \
-  .   'BEGIN { FS=";"; huge=1e6; besttime=huge;} '                \
-  .   '{ '                                                        \
-  .   '  lines[NR%3]=$0; '                                        \
-  .   '  if (besttime > $13) { besttime = $13; bestid=NR%3; } '   \
-  .   '  if (NR%3 == 0) { print lines[bestid]; besttime=huge; } ' \
-  .   '} '                                                        \
-  . ' '' '                                                        \
-  . '| awk '' '                                                   \
-  .   'BEGIN {FS=";"} '                                           \
-  .   '{ '                                                        \
-  .   '  if (NR % 2 == 1) offset=$13; '                           \
-  .   '  else print $0 "loadtime=;" offset; '                     \
-  .   '} '                                                        \
+stuff = '< grep "^time:" Testing/Temporary/LastTest.log'           \
+  . '| awk '' '                                                    \
+  .   'BEGIN { FS=";"; huge=1e6; besttime=huge;} '                 \
+  .   '{ '                                                         \
+  .   '  lines[NR%3]=$0; '                                         \
+  .   '  if (besttime > $13) { besttime = $13; bestid=NR%3; } '    \
+  .   '  if (NR%3 == 0) { print lines[bestid]; besttime=huge; } '  \
+  .   '} '                                                         \
+  . ' '' '                                                         \
+  . '| awk '' '                                                    \
+  .   'BEGIN {FS=";"} '                                            \
+  .   '{ '                                                         \
+  .   '  if (NR % 2 == 1) offset=$13; '                            \
+  .   '  else print $0 "loadtime=;" offset; '                      \
+  .   '} '                                                         \
   . ' '' '
 
 hostname = system('hostname')
@@ -52,8 +52,10 @@ plot \
   stuff.'|fgrep pyt|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 5 linecolor rgb "blue" lw 1 title 'Python / CPython'   , \
   stuff.'|fgrep pyp|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 4 linecolor rgb "blue" lw 2 title 'Python / PyPy'      
 
-cpulabel = system('fgrep "model name" /proc/cpuinfo | uniq | cut -d : -f 2 | tr -s " " | awk ''{ gsub("\(TM\)","^{^{_{_{TM}}}} "); gsub("\(tm\)","^{^{_{_{TM}}}} "); gsub("\(R\)","^{®}"); print; }''')
+cpulabel = system('fgrep "model name" /proc/cpuinfo | uniq | cut -d : -f 2 | tr -s " " | mawk ''{ gsub("\(TM\)","^{^{_{_{TM}}}} "); gsub("\(tm\)","^{^{_{_{TM}}}} "); gsub("\(R\)","^{®}"); print; }''')
 set title cpulabel
+
+set key top left
 
 set ylabel "CPU time per timestep per grid point [{/Symbol m}s]"
 unset logscale y
