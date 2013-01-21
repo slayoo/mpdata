@@ -47,6 +47,8 @@ function(add_tests dir)
     set(PERFTIME "${PERFTIME},dTLB-loads,dTLB-load-misses,dTLB-stores,dTLB-store-misses,dTLB-prefetches,dTLB-prefetch-misses")
     # instruction translation lookaside buffer
     set(PERFTIME "${PERFTIME},iTLB-loads,iTLB-load-misses")
+    # cycles and instructions
+    set(PERFTIME "${PERFTIME},cycles,instructions")
     # GNU time
     set(PERFTIME "${PERFTIME};time")
 
