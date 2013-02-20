@@ -6,7 +6,9 @@ $ sudo apt-get install \
   pypy \
   python-numpy \
   gnuplot-iostream \
-  clang
+  clang \
+  linux-tools \
+  time
 
 $ cmake . \ 
   -DCMAKE_CXX_COMPILER=/usr/lib/gcc-snapshot/bin/g++ \
