@@ -53,21 +53,35 @@ function(add_tests dir)
     set(PERFTIME "${PERFTIME};time")
 
 
-    # C++
+    # C++ - GCC
     foreach(N ${REPEAT})
-      set(TIME_ARG "${PFX}cpp-load-${N}${SFX}")
+      set(TIME_ARG "${PFX}gcc-load-${N}${SFX}")
       set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
-      add_test(NAME "cpp:${NAME}-load-${N}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})
-      set_tests_properties("cpp:${NAME}-load-${N}" PROPERTIES DEPENDS build_test_cpp)
+      add_test(NAME "gcc:${NAME}-load-${N}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp-gnucxx ${ARG})
+      set_tests_properties("gcc:${NAME}-load-${N}" PROPERTIES DEPENDS build_test_cpp)
     endforeach()
 
     foreach(N ${REPEAT})
-      set(TIME_ARG "${PFX}cpp-calc-${N}${SFX}")
+      set(TIME_ARG "${PFX}gcc-calc-${N}${SFX}")
       set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
-      add_test(NAME "cpp:${NAME}-calc-${N}" COMMAND ${PERFTIME} ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp ${ARG})
-      set_tests_properties("cpp:${NAME}-calc-${N}" PROPERTIES DEPENDS build_test_cpp)
+      add_test(NAME "gcc:${NAME}-calc-${N}" COMMAND ${PERFTIME} ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp-gnucxx ${ARG})
+      set_tests_properties("gcc:${NAME}-calc-${N}" PROPERTIES DEPENDS build_test_cpp)
     endforeach()
   
+    # C++ - non-GNU compiler (e.g. Clang++)
+    foreach(N ${REPEAT})
+      set(TIME_ARG "${PFX}cxx-load-${N}${SFX}")
+      set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
+      add_test(NAME "cxx:${NAME}-load-${N}" COMMAND time ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp-nongnu ${ARG})
+      set_tests_properties("cxx:${NAME}-load-${N}" PROPERTIES DEPENDS build_test_cpp)
+    endforeach()
+
+    foreach(N ${REPEAT})
+      set(TIME_ARG "${PFX}cxx-calc-${N}${SFX}")
+      set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
+      add_test(NAME "cxx:${NAME}-calc-${N}" COMMAND ${PERFTIME} ${TIME_ARG} ${CMAKE_BINARY_DIR}/cpp/test-cpp-nongnu ${ARG})
+      set_tests_properties("cxx:${NAME}-calc-${N}" PROPERTIES DEPENDS build_test_cpp)
+    endforeach()
 
     # Python
     foreach(N ${REPEAT})

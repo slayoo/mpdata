@@ -5,13 +5,26 @@ $ sudo apt-get install \
   gcc-snapshot \
   pypy \
   python-numpy \
-  gnuplot-iostream
+  gnuplot-iostream \
+  clang \
+  linux-tools \
+  time
 
 $ cmake . \ 
   -DCMAKE_CXX_COMPILER=/usr/lib/gcc-snapshot/bin/g++ \
-  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran
+  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran 
 
-$ cmake . -DCMAKE_BUILD_TYPE=Release
+$ cmake . \ 
+  -DCMAKE_BUILD_TYPE=Release
+
+$ make
+
+$ cmake . \ 
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran 
+
+$ cmake . \ 
+  -DCMAKE_BUILD_TYPE=Release
 
 $ make
 
@@ -22,4 +35,3 @@ $ cd tests/timing
 $ ./inout.sh
 $ make test
 $ gnuplot plot.gpi
-$ evince plot-*.eps

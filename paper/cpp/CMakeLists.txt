@@ -1,8 +1,8 @@
 set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -DNDEBUG -Wfatal-errors")
 if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -ftree-vectorizer-verbose=1")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native") # -ftree-vectorizer-verbose=1")
 else()
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # e.g. clang++
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native") # e.g. clang++
 endif()
 set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++0x -DBZ_DEBUG")
 
@@ -10,7 +10,11 @@ find_package(Boost COMPONENTS iostreams system REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 find_path(GNUPLOT-IOSTREAM_INCLUDE_DIR PATH_SUFFIXES gnuplot-iostream/ NAMES gnuplot-iostream.h)
 add_executable(plot-cpp plot.cpp)
-add_executable(test-cpp test.cpp)
+if(CMAKE_COMPILER_IS_GNUCXX)
+  add_executable(test-cpp-gnucxx test.cpp)
+else()
+  add_executable(test-cpp-nongnu test.cpp)
+endif()
 add_executable(inout-cpp inout.cpp)
 target_link_libraries(plot-cpp ${Boost_LIBRARIES})
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
