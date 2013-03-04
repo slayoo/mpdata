@@ -322,13 +322,13 @@ module cyclic_m
 
   subroutine cyclic_fill_halos(this, a, j)
     class(cyclic_t) :: this
-    real(real_t), pointer :: tmp(:,:)
+    real(real_t), pointer :: ptr(:,:)
     real(real_t), allocatable :: a(:,:)
     integer :: j(2)
-    tmp => pi(this%d, a, this%left_halo, j) 
-    tmp =  pi(this%d, a, this%rght_edge, j)
-    tmp => pi(this%d, a, this%rght_halo, j) 
-    tmp =  pi(this%d, a, this%left_edge, j)
+    ptr => pi(this%d, a, this%left_halo, j) 
+    ptr =  pi(this%d, a, this%rght_edge, j)
+    ptr => pi(this%d, a, this%rght_halo, j) 
+    ptr =  pi(this%d, a, this%left_edge, j)
   end subroutine
 end module
 !listing09
@@ -373,9 +373,9 @@ module donorcell_m
     integer, intent(in) :: n
     integer, intent(in) :: i(2), j(2) 
     
-    real(real_t), pointer :: tmp(:,:)
-    tmp => pi(0, psi%at(n+1)%p%a, i, j)
-    tmp = pi(0, psi%at(n)%p%a, i, j)                   &
+    real(real_t), pointer :: ptr(:,:)
+    ptr => pi(0, psi%at(n+1)%p%a, i, j)
+    ptr = pi(0, psi%at(n)%p%a, i, j)                   &
       - donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j) &
       - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)
   end subroutine
@@ -560,7 +560,7 @@ module solver_mpdata_m
 
           block
             class(arrvec_t), pointer :: C_corr, C_unco
-            real(real_t), pointer :: tmp(:,:)
+            real(real_t), pointer :: ptr(:,:)
 
             ! chosing input/output for antidiff. C
             if (step == 1) then
@@ -575,16 +575,16 @@ module solver_mpdata_m
             end if
 
             ! calculating the antidiffusive velo
-            tmp => pi(0, C_corr%at( 0 )%p%a, im+h, j)
-            tmp = antidiff(                            &
+            ptr => pi(0, C_corr%at( 0 )%p%a, im+h, j)
+            ptr = antidiff(                            &
               0, psi%at( n )%p%a, im, j, C_unco        &
             )      
             call bcy%fill_halos(                  &
               C_corr%at(0)%p%a, ext(i, h)              &
             )
 
-            tmp => pi(0, C_corr%at( 1 )%p%a, i, jm+h)
-            tmp = antidiff(                            &
+            ptr => pi(0, C_corr%at( 1 )%p%a, i, jm+h)
+            ptr = antidiff(                            &
               1, psi%at( n )%p%a, jm, i, C_unco        &
             )
             call bcx%fill_halos(                  &
