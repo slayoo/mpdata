@@ -8,17 +8,39 @@ try:
   import numpypy
   from _numpypy.pypy import set_invalidation
   set_invalidation(False)
+  print "Numpypy impported"
 except ImportError:
+  print "Not using numpypy"
   pass
+
 import numpy
 try: 
   numpy.seterr(all='ignore')
 except AttributeError:
   pass
+
+try:
+    from numba import jit, float64, int_, void
+    float64_2d=float64[:,:]
+    print "Numba or Numbapro imported"
+except ImportError:
+    def void(*args):
+        def dont_decorate(fn):
+            return fn
+        return dont_decorate
+    float64 = void
+    float64_2d = void
+    int_ = void
+    def jit(cl):
+        return cl
+    print "Not using Numba nor Numbapro"
+
+
 import pdb
 
 
 #listing07
+@jit
 class Donorcell(object):
   # ctor-like method
   def __init__(self, nx, hlo):
@@ -39,10 +61,12 @@ class Donorcell(object):
     #pdb.set_trace()
 
   # accessor methods
+  @float64()
   def state(self):
     #pdb.set_trace()
     return self.psi[self.n][self.i]
 
+  @void()
   def advop(self):
     #pdb.set_trace()                                                                       
     donorcell_op(
@@ -50,28 +74,27 @@ class Donorcell(object):
       self.C, self.i
     )
 
-
+  @void()
   def cycle(self):
     #pdb.set_trace()
     self.n  = (self.n + 1) % 2 - 2
 
-  def fill_halos(self, psi, i):
-    left_halo = slice(i.start-self.hlo, i.start    )
-    rght_edge = slice(i.stop -self.hlo, i.stop     )
-    rght_halo = slice(i.stop,      i.stop +self.hlo)
-    left_edge = slice(i.start,     i.start+self.hlo)
+  @void()
+  def fill_halos(self):
+    left_halo = slice(self.i.start-self.hlo, self.i.start    )
+    rght_edge = slice(self.i.stop -self.hlo, self.i.stop     )
+    rght_halo = slice(self.i.stop,           self.i.stop +self.hlo)
+    left_edge = slice(self.i.start,          self.i.start+self.hlo)
 
-    psi[left_halo] = psi[rght_edge]
-  
-    psi[rght_halo] = psi[left_edge]
+    self.psi[self.n][left_halo] = self.psi[self.n][rght_edge]
+    self.psi[self.n][rght_halo] = self.psi[self.n][left_edge]
 
 
    # integration logic
+  @void(int_)
   def solve(self, nt):
     for t in range(nt):
-      self.fill_halos(
-        self.psi[self.n], self.i
-      )
+      self.fill_halos()
       self.advop() 
       self.cycle()
   
