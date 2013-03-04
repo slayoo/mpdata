@@ -42,7 +42,7 @@ except ImportError:
 import pdb
 
 #listing09
-@autojit
+#@autojit - done later explicitly
 def f(psi_l, psi_r, C):
   #pdb.set_trace()
   return (
@@ -50,8 +50,9 @@ def f(psi_l, psi_r, C):
     (C - abs(C)) * psi_r
   ) / 2
 #listing10
-@autojit
-def donorcell(psi, C, i):
+#@autojit - done later explicitly
+def donorcell(psi, C, start, stop):
+  i = slice(start,stop)
   i_pl_one = slice(i.start + 1, i.stop + 1)
   i_mn_one = slice(i.start - 1, i.stop - 1)
   i_pl_hlf = i
@@ -62,13 +63,26 @@ def donorcell(psi, C, i):
     f(psi[i_mn_one,], psi[i],     C[i_mn_hlf]) 
   )
 #listing11
-@autojit
-def donorcell_op(psi, n, C, i):
+#@autojit - done later explicitly
+def donorcell_op(psi, n, C, start, stop):
+  i = slice(start,stop)
   #pdb.set_trace()
   psi[n+1][i] = (psi[n][i] 
-    - donorcell(psi[n], C, i)
+    - donorcell(psi[n], C, start, stop)
      )
 
+try:
+  fast_f = jit(float64_1d, (float64_1d, float64_1d, float64_1d))(f)
+  f = fast_f
+  fast_donorcell = jit(float64_1d, (float64_1d, float64_1d, int_, int_))(donorcell)
+  donorcell = fast_donorcell
+  fast_donorcell_op = jit(void, (float64_2d, int_, float64_1d, int_, int_))(donorcell_op)
+  donorcell_op = fast_donorcell_op
+  print "Numba or Numbapro used"
+except TypeError:
+  print "Numba and Numbapro not working"
+  
+  
 
 #listing07
 @jit
@@ -102,7 +116,7 @@ class Donorcell(object):
     #pdb.set_trace()                                                                       
     donorcell_op(
       self.psi, self.n,
-      self.C, self.i
+      self.C, self.i.start, self.i.stop
     )
 
   @void()
