@@ -20,7 +20,7 @@ except AttributeError:
   pass
 
 try:
-    from numba import jit, float64, int_, void
+    from numba import jit, float64, int_, void, autojit
     float64_1d=float64[:]
     float64_2d=float64[:,:]
     print "Numba or Numbapro imported"
@@ -35,12 +35,34 @@ except ImportError:
     int_ = void
     def jit(cl):
         return cl
+    autojit = jit
     print "Not using Numba nor Numbapro"
 
 
 import pdb
 
+#listing09
+@autojit
+def f(psi_l, psi_r, C):
+  #pdb.set_trace()
+  return (
+    (C + abs(C)) * psi_l + 
+    (C - abs(C)) * psi_r
+  ) / 2
+#listing10
+@autojit
+def donorcell(psi, C, i):
+  i_pl_one = slice(i.start + 1, i.stop + 1)
+  i_mn_one = slice(i.start - 1, i.stop - 1)
+  i_pl_hlf = i
+  i_mn_hlf = slice(i.start - 1, i.stop - 1)  
+  #pdb.set_trace()
+  return (
+    f(psi[i],      psi[i_pl_one], C[i_pl_hlf]) - 
+    f(psi[i_mn_one,], psi[i],     C[i_mn_hlf]) 
+  )
 #listing11
+@autojit
 def donorcell_op(psi, n, C, i):
   #pdb.set_trace()
   psi[n+1][i] = (psi[n][i] 
@@ -108,24 +130,6 @@ class Donorcell(object):
       self.cycle()
   
 
-#listing09
-def f(psi_l, psi_r, C):
-  #pdb.set_trace()
-  return (
-    (C + abs(C)) * psi_l + 
-    (C - abs(C)) * psi_r
-  ) / 2
-#listing10
-def donorcell(psi, C, i):
-  i_pl_one = slice(i.start + 1, i.stop + 1)
-  i_mn_one = slice(i.start - 1, i.stop - 1)
-  i_pl_hlf = i
-  i_mn_hlf = slice(i.start - 1, i.stop - 1)  
-  #pdb.set_trace()
-  return (
-    f(psi[i],      psi[i_pl_one], C[i_pl_hlf]) - 
-    f(psi[i_mn_one,], psi[i],     C[i_mn_hlf]) 
-  )
 def main(psi_in, cx, nx=3, nt=1):
   slv = Donorcell(nx,1)
   slv.state()[:] = psi_in
