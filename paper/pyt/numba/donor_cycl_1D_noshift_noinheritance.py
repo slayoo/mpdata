@@ -21,6 +21,7 @@ except AttributeError:
 
 try:
     from numba import jit, float64, int_, void
+    float64_1d=float64[:]
     float64_2d=float64[:,:]
     print "Numba or Numbapro imported"
 except ImportError:
@@ -29,6 +30,7 @@ except ImportError:
             return fn
         return dont_decorate
     float64 = void
+    float64_1d = void
     float64_2d = void
     int_ = void
     def jit(cl):
@@ -37,6 +39,13 @@ except ImportError:
 
 
 import pdb
+
+#listing11
+def donorcell_op(psi, n, C, i):
+  #pdb.set_trace()
+  psi[n+1][i] = (psi[n][i] 
+    - donorcell(psi[n], C, i)
+     )
 
 
 #listing07
@@ -61,7 +70,7 @@ class Donorcell(object):
     #pdb.set_trace()
 
   # accessor methods
-  @float64()
+  @float64_1d()
   def state(self):
     #pdb.set_trace()
     return self.psi[self.n][self.i]
@@ -117,13 +126,6 @@ def donorcell(psi, C, i):
     f(psi[i],      psi[i_pl_one], C[i_pl_hlf]) - 
     f(psi[i_mn_one,], psi[i],     C[i_mn_hlf]) 
   )
-#listing11
-def donorcell_op(psi, n, C, i):
-  #pdb.set_trace()
-  psi[n+1][i] = (psi[n][i] 
-    - donorcell(psi[n], C, i)
-     )
-
 def main(psi_in, cx, nx=3, nt=1):
   slv = Donorcell(nx,1)
   slv.state()[:] = psi_in
