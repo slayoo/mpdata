@@ -130,17 +130,26 @@ class Donorcell(object):
       self.cycle()
   
 
-def main(psi_in, cx, nx=3, nt=1):
+def main(cx, nx=3, nt=1):
+  psi_in = numpy.zeros(nx)
+  psi_in[int(nx/4)] = 1
   slv = Donorcell(nx,1)
   slv.state()[:] = psi_in
   #pdb.set_trace()
   slv.C[:] = cx
   #pdb.set_trace()
 
+  import time
+  s = time.time()
   slv.solve(nt)
-  print "psi_out", slv.state()[:]
+  e = time.time()
+  print "psi_out", slv.state()[:].max()
+  print "solved in", e - s
 
-Psi_in = numpy.array([0, 1, 0])
-Cx = 1
 
-main(Psi_in, Cx)
+import sys
+if len(sys.argv) == 2:
+  main(1, nx=10000, nt=100000)
+else:
+  main(1)
+
