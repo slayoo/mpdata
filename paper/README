@@ -12,14 +12,18 @@ $ sudo apt-get install \
 
 $ cmake . \ 
   -DCMAKE_CXX_COMPILER=/usr/lib/gcc-snapshot/bin/g++ \
-  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran \
+  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran 
+
+$ cmake . \ 
   -DCMAKE_BUILD_TYPE=Release
 
 $ make
 
 $ cmake . \ 
   -DCMAKE_CXX_COMPILER=clang++ \
-  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran \
+  -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran 
+
+$ cmake . \ 
   -DCMAKE_BUILD_TYPE=Release
 
 $ make
