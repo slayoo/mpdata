@@ -20,12 +20,12 @@ module arrvec_m
   end type
 
   type :: arrvec_t
+    class(arr_t), allocatable :: arrs(:)
     class(arrptr_t), allocatable :: at(:)
     integer :: length
     contains
     procedure :: ctor => arrvec_ctor
     procedure :: init => arrvec_init
-    procedure :: dtor => arrvec_dtor
   end type
 
   contains
@@ -36,29 +36,17 @@ module arrvec_m
 
     this%length = n
     allocate(this%at( -n : n-1 ))
+    allocate(this%arrs( 0 : n-1 ))
   end subroutine
 
   subroutine arrvec_init(this, n, i, j)
-    class(arrvec_t) :: this
+    class(arrvec_t), target :: this
     integer, intent(in) :: n
     integer, intent(in) :: i(2), j(2)
 
-    allocate(this%at(n)%p)
-    allocate(this%at(n)%p%a( i(1) : i(2), j(1) : j(2) ))
-    this%at(n - this%length)%p => this%at(n)%p
-  end subroutine
-
-  subroutine arrvec_dtor(this)
-    class(arrvec_t) :: this
-
-    integer :: i
-    do i = 0, this%length - 1
-      if (associated(this%at(i)%p)) then
-        deallocate(this%at(i)%p%a)
-        deallocate(this%at(i)%p)
-      end if
-    end do
-    deallocate(this%at)
+    allocate(this%arrs(n)%a( i(1) : i(2), j(1) : j(2) ))
+    this%at(n)%p => this%arrs(n)
+    this%at(n - this%length)%p => this%arrs(n)
   end subroutine
 end module
 !listing03
@@ -247,12 +235,6 @@ module solver_m
     )
   end subroutine
 
-  subroutine solver_dtor(this)
-    class(solver_t) :: this
-    call this%psi%dtor()
-    call this%C%dtor()
-  end subroutine
-  
   function solver_state(this) result (return)
     class(solver_t) :: this
     real(real_t), pointer :: return(:,:)
@@ -390,7 +372,6 @@ module solver_donorcell_m
   type, extends(solver_t) :: donorcell_t
     contains
     procedure :: ctor => donorcell_ctor
-    procedure :: dtor => donorcell_dtor
     procedure :: advop => donorcell_advop
   end type
 
@@ -410,11 +391,6 @@ module solver_donorcell_m
     call donorcell_op(                                 &
       this%psi, this%n, C, this%i, this%j         &
     )
-  end subroutine
-
-  subroutine donorcell_dtor(this)
-    class(donorcell_t) :: this
-    call solver_dtor(this)
   end subroutine
 end module
 !listing15
@@ -501,7 +477,6 @@ module solver_mpdata_m
     class(arrvec_t), pointer :: tmp(:) 
     contains
     procedure :: ctor => mpdata_ctor
-    procedure :: dtor => mpdata_dtor
     procedure :: advop => mpdata_advop
   end type
 
@@ -529,15 +504,6 @@ module solver_mpdata_m
       this%im = (/ i(1) - 1, i(2) /)
       this%jm = (/ j(1) - 1, j(2) /)
     end associate
-  end subroutine
-
-  subroutine mpdata_dtor(this)
-    class(mpdata_t) :: this
-    integer :: c
-    do c=0, this%n_tmp-1 
-      call this%tmp(c)%dtor()
-    end do
-    call solver_dtor(this)
   end subroutine
 
   subroutine mpdata_advop(this)
