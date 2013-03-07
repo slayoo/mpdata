@@ -277,8 +277,8 @@
   Similarly the vector field $\vec{C}$ is in fact a \{$C^{[x]}$, $C^{[y]}$\} sequence.
  
   Using an additional array dimension to represent the sequence elements is not considered for two reasons.
-  First, the arrays constituting the sequence elements may have different sizes
-      (e.g.  $C^{[x]}$ and $C^{[y]}$ on the Arakawa-C grid discussed in section~\ref{sec:grid}).
+  First, the $C^{[x]}$ and $C^{[y]}$ arrays constituting the sequence have different sizes
+    (see discussion of the Arakawa-C grid in section~\ref{sec:grid}).
   Second, the order of dimensions would need to be different for different languages to assure that
       the contiguous dimension is not used for time levels.
 
@@ -364,13 +364,12 @@
     A schematic of the Arakawa-C grid.
   }
   \end{figure}
-  The so-called Arakawa-C staggered grid \citep{Arakawa_and_Lamb_1977} depicted in Figure~\ref{fig:grid}.
+  The so-called Arakawa-C staggered grid \citep{Arakawa_and_Lamb_1977} depicted in Figure~\ref{fig:grid}
     is a natural choice for MPDATA.
-  MPDATA is a finite-difference approximation to the flux-form of the equation~(\ref{eq:adv}) 
-    resulting in a finite-volume scheme.
-  Using the Arakawa-C grid allows to evaluate the fluxes at 
-    the grid cell (finite volume) edges without interpolation.
-  
+%  MPDATA is a finite-difference approximation to the flux-form of the equation~(\ref{eq:adv}) 
+%    resulting in a finite-volume scheme.
+%  Using the Arakawa-C grid allows to evaluate the fluxes at 
+%    the grid cell (finite volume) edges without interpolation.
   As a consequence, the discretised representations of the $\psi$ scalar field, and each 
     component of the ${\vec{C}=\vec{v}\cdot\frac{\Delta t}{\Delta x}}$ vector field 
     in eq.~(\ref{eq:adv}) are defined over different grid point locations.
@@ -400,7 +399,7 @@
   Array views are obtained when indexing the arrays with objects of the Python's
     built-it \prog{slice} type (or tuples of such objects in case of multi-dimensional arrays).
   Python forbids overloading of operators of built-in types such as \prog{slices}, 
-    and does not define addition/subtraction operators for \prog{slice}/\prog{int} pairs.
+    and does not define addition/subtraction operators for \prog{slice} and \prog{int} pairs.
   Consequently, a custom logic has to be defined not only for fractional indexing,
     but also for shifting the slices by integer intervals ($i\pm1$).
   It is implemented here by declaring a \prog{Shift} class with the adequate operator overloads:
@@ -413,8 +412,7 @@
     the unity as a separate class}:
   \codepyt{code/pyt/listings.py}{listing04}{listing05}{1}
 
-  In Fortran, similarly as in C++ and Python, the logic related to employment of the Arakawa-C grid
-    allowing employment of fractional indices in array indexing is obtained through
+  In Fortran fractional array indexing is obtained through
     definition and instantiation of an object representing the half, and having appropriate
     operator overloads:
   \codefor{code/for/listings.f}{listing03}{listing04}{1}
@@ -451,17 +449,17 @@
   Blitz++ ships with the \prog{RectDomain} class (aliased here as \prog{idx\_t}) 
     for specifying array ranges in multiple dimensions.
   The $\pi$ permutation is implemented in C++ as a function \prog{pi()}
-    returning an instance of \prog{idx\_t} constructed with a permutation
-    of the \prog{i} and \prog{j} arguments of \prog{pi()}, with permutation order
-    dependant on the template parameter \prog{d}:
+    returning an instance of \prog{idx\_t}.
+  In order to ensure compile-time evaluation, the permutation order is passed 
+    via the template parameter \prog{d}:
   \codecpp{code/cpp/listings.hpp}{listing07}{listing08}{1}
+  (note the different order of \prog{i} and \prog{j} arguments in the two template specialisations).
 
   NumPy uses tuples of slices for addressing multi-dimensional arrays with a
     single object, hence the following definition of function \prog{pi()} suffices to represent $\pi$:
   \codepyt{code/pyt/listings.py}{listing06}{listing07}{1}
   
-  In the Fortran implementation an analogous behaviour is obtained by introducing
-    a function \prog{pi()} returning a pointer the array elements specified
+  In the Fortran implementation \prog{pi()} returns a pointer to the array elements specified
     by \prog{i} and \prog{j} interpreted as (i,j) or
     (j,i) depending on the value of the argument \prog{d}.
   In addition to \prog{pi()}, a helper \prog{span()} function returning the 
@@ -828,10 +826,9 @@
     performance (both Blitz++ and NumPy support Fortran's column-major ordering as well, 
     however this feature is still missing from PyPy's built-in NumPy implementation as of PyPy 1.9)
 
-  The authors do expect some performance gain could readily
-    be obtained by introducing into the codes what is referred to as
-    {\em premature optimisation} -- code rearrangements aimed solely
-    at the purpose of increasing performance.
+  The authors do expect some performance gain could 
+    be obtained by introducing into the codes some ''manual'' optimisations -- 
+    code rearrangements aimed solely at the purpose of increasing performance.
   These were avoided intentionally as they degrade code readability,
     should in principle be handled by the compilers,
     and are generally advised to be avoided \citep[e.g.][section 3.12]{bib_CERNcpp}.
@@ -929,8 +926,11 @@
 
   Python simplifies also the building and dissemination of software,
     especially if multiple architectures and operating systems are targeted.
-  However, CMake is a tool that allows to efficiently automate builds, tests and 
-    packaging of C++ and Fortran programs.
+  However, CMake\footnote{CMake is a family of open-source, cross-platform
+    tools automating building, testing and packaging of C/C++/Fortran software,
+    see http://cmake.org/ for details}
+    is a tool (or arguably the tool) that allows to efficiently automate 
+    builds, tests and packaging of C++ and Fortran programs.
 
   Python is also definitely easiest to debug among the three languages.
   There exist great debugging tools for C++, but the debugging and development is 
@@ -1054,7 +1054,7 @@
         than Fortran and CPython,}
       \item{the PyPy set-up was roughly twice slower than C++ and up to twice faster than CPython.}
     \end{itemize}
-  The three equally-structured implementations required ca. 200, 300, and 550 lines of code
+  The three equally-structured implementations required ca. 200, 300, and 550 lines of code %TODO update line numbers
     in Python, C++ and Fortran, respectively.  
 
   In addition to the source code presented within the text,
