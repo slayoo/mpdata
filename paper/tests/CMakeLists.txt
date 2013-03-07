@@ -47,7 +47,7 @@ function(add_tests dir)
     set(PERFTIME "${PERFTIME};time")
 
     set(REPEAT "0;1;2;") # repeat three times
-    set(VERS "gcc;cxx;pyt;pyp") # repeat for each version
+    set(VERS "gcc;cxx;pyt;pyp;for") # repeat for each version
 
     foreach(V ${VERS})
 
@@ -64,6 +64,9 @@ function(add_tests dir)
       elseif(${V} STREQUAL "pyp")
         # PyPy
         set(CMD pypy;${CMAKE_BINARY_DIR}/pyt/test.py)
+      elseif(${V} STREQUAL "for")
+        # Fortran
+        set(CMD ${CMAKE_BINARY_DIR}/for/test-for)
       else()
         message(FATAL_ERROR "fix VERS! (${V})") 
       endif()       
