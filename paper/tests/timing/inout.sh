@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 Cx=.2
 Cy=.5
 it=3
