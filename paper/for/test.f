@@ -62,8 +62,6 @@ program test
         stop 1
       end if
     end block
-
-    call slv%dtor()
   end block
 
   contains
