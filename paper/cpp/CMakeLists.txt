@@ -1,10 +1,10 @@
-set(CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -DNDEBUG -Wfatal-errors")
+set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors")
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native") # -ftree-vectorizer-verbose=1")
 else()
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native") # e.g. clang++
 endif()
-set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++0x -DBZ_DEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++11 -DBZ_DEBUG")
 
 find_package(Boost COMPONENTS iostreams system REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
