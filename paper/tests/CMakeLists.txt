@@ -87,13 +87,13 @@ function(add_tests dir)
     foreach(N ${REPEAT})
       set(TIME_ARG "${PFX}pyt-load-${N}${SFX}")
       set(ARG ${NX};${NY};${CX};${CY};0;${IT};${TEST}:in;${TEST}:in;${DEC})
-      add_test(NAME "pyt:${NAME}-load-${N}" COMMAND time ${TIME_ARG} python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+      add_test(NAME "pyt:${NAME}-load-${N}" COMMAND time ${TIME_ARG} python -OO ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
     endforeach()
 
     foreach(N ${REPEAT})
       set(TIME_ARG "${PFX}pyt-calc-${N}${SFX}")
       set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
-      add_test(NAME "pyt:${NAME}-calc-${N}" COMMAND ${PERFTIME} ${TIME_ARG} python ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
+      add_test(NAME "pyt:${NAME}-calc-${N}" COMMAND ${PERFTIME} ${TIME_ARG} python -OO ${CMAKE_BINARY_DIR}/pyt/test.py ${ARG})
     endforeach()
 
     # PyPy
