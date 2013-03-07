@@ -187,7 +187,7 @@ module solver_m
   implicit none
 
   type, abstract :: solver_t
-    class(arrvec_t), pointer :: psi, C
+    class(arrvec_t), allocatable :: psi, C
     integer :: n, hlo
     integer :: i(2), j(2) 
     class(bcd_t), pointer :: bcx, bcy
@@ -202,7 +202,7 @@ module solver_m
   abstract interface
     subroutine solver_advop(this)
       import solver_t
-      class(solver_t) :: this
+      class(solver_t), target :: this
     end subroutine
   end interface
 
@@ -251,7 +251,6 @@ module solver_m
     class(solver_t) :: this
     call this%psi%dtor()
     call this%C%dtor()
-    deallocate(this%psi, this%C)
   end subroutine
   
   function solver_state(this) result (return)
@@ -369,7 +368,8 @@ module donorcell_m
   end function
 !listing12
   subroutine donorcell_op(psi, n, C, i, j)  
-    class(arrvec_t), pointer :: psi, C
+    class(arrvec_t), allocatable :: psi
+    class(arrvec_t), pointer :: C
     integer, intent(in) :: n
     integer, intent(in) :: i(2), j(2) 
     
@@ -404,9 +404,11 @@ module solver_donorcell_m
   end subroutine
 
   subroutine donorcell_advop(this)
-    class(donorcell_t) :: this
+    class(donorcell_t), target :: this
+    class(arrvec_t), pointer :: C
+    C => this%C
     call donorcell_op(                                 &
-      this%psi, this%n, this%C, this%i, this%j         &
+      this%psi, this%n, C, this%i, this%j         &
     )
   end subroutine
 
@@ -539,7 +541,7 @@ module solver_mpdata_m
   end subroutine
 
   subroutine mpdata_advop(this)
-    class(mpdata_t) :: this
+    class(mpdata_t), target :: this
     integer :: step
 
     associate (i => this%i, j => this%j, im => this%im,&
@@ -548,7 +550,11 @@ module solver_mpdata_m
     )
       do step=0, this%n_iters-1
         if (step == 0) then
-          call donorcell_op(psi, n, this%C, i, j)
+          block
+            class(arrvec_t), pointer :: C
+            C => this%C
+            call donorcell_op(psi, n, C, i, j)
+          end block
         else
           call this%cycle()
           call bcx%fill_halos(                    &
