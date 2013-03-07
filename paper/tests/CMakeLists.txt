@@ -77,7 +77,7 @@ function(add_tests dir)
 
       # running it N-times using CMD for NT=NT 
       foreach(N ${REPEAT})
-	set(TIME_ARG "${PFX}gcc-calc-${N}${SFX}")
+	set(TIME_ARG "${PFX}${V}-calc-${N}${SFX}")
 	set(ARG ${NX};${NY};${CX};${CY};${NT};${IT};${TEST}:in;${TEST}:out;${DEC})
 	add_test(NAME "${V}:${NAME}-calc-${N}" COMMAND ${PERFTIME} ${TIME_ARG} ${CMD} ${ARG})
       endforeach()
