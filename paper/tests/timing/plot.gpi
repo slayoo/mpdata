@@ -1,4 +1,4 @@
-set term postscript solid enhanced color size 15cm,15cm 
+set term postscript solid enhanced color size 18cm,18cm 
 set xlabel "grid size (nx=ny)"
 set xrange [32*64 : 2048*4096]
 set grid
@@ -29,8 +29,9 @@ set key top right
 
 set ylabel "ratio of peak memory use (rss) to nominal data size"
 set logscale xy
-set yrange [1:300]
-set ytics auto
+set yrange [1:100]
+set ytics ("1.00" 1,1.25,"1.50" 1.5,1.75,"2.00" 2,10,100)
+#set ytics auto
 set output 'plot-mem-' . infostr . '.eps'
 plot \
   input.'|fgrep gcc|fgrep it=\;3' using (gridsize($3,$5)):(memnorm($11, $3, $5)) with linespoints pt 1 linecolor rgb "black" lw 2 title 'C++ / GCC'         , \
