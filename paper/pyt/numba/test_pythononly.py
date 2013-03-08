@@ -1,4 +1,4 @@
-from listings_noslice import *
+from listings import *
 import sys
 import time
 
@@ -16,7 +16,7 @@ Examples_time = {"nx" : [64, 81, 512],
                  "nt" : [4096, 2557, 64],
                  "it" : [3, 3, 3]}
 
-
+# reading array from input/output files 
 def read_file(fname, nx, ny):
   tmp = numpy.empty((nx, ny), real_t)
   with open(fname, 'r') as f:
@@ -27,8 +27,9 @@ def read_file(fname, nx, ny):
   assert(x == nx)
   return tmp
 
+# comapring array from output files with results after advection
+# dec is the accuracy of comparison, it might be needed sometimes to use smaller
 def checking_output(fin, fout, nx, ny, Cx, Cy, nt, it, dec=4):
-
   slv = Mpdata(it, Cyclic, Cyclic, nx, ny)
   slv.state()[:] = read_file(fin, nx, ny)
   slv.courant(0)[:] = Cx
@@ -49,11 +50,32 @@ def checking_output(fin, fout, nx, ny, Cx, Cy, nt, it, dec=4):
     raise Exception()
 
 def main(ex = Examples_san, kat="/glade/u/home/jarecka/mpdata/paper/tests/sanity/"):
+  print "sys", sys.argv
+# progarm should work when running without any additional command-line arguments 
+# or with one additional command-line argument "sanity" or "timing"
+  if len(sys.argv) == 1:
+    pass
+  elif len(sys.argv) == 2:
+    if sys.argv[1] == "sanity":
+      ex, kat = Examples_san, "/glade/u/home/jarecka/mpdata/paper/tests/sanity/"
+    elif sys.argv[1] == "timing":
+      ex, kat = Examples_time, "/glade/u/home/jarecka/mpdata/paper/tests/timing/"
+    else:
+      raise Exception('expecting sanity or timing as the second argument') 
+  else:
+    raise Exception('too many arguments!')
+
   for i in range(len(ex["nx"])):
     filename = kat
     arg_func = []
+    #creating neames of input/output files, some arguments needs additional operation 
     for arg in ["nx", "ny", "Cx", "Cy", "nt", "it"]:
-      if "." in str(ex[arg][i]):
+      if arg in ["nx", "ny"] and len(str(ex[arg][i])) < 4:
+        arg_val = "0"
+        for i in range(3 - len(str(ex[arg][i]))):
+          arg_val += "0"
+        arg_val += str(ex[arg][i])
+      elif "." in str(ex[arg][i]):
         arg_val = str(ex[arg][i])[1:]
       else:
         arg_val = str(ex[arg][i])
