@@ -44,6 +44,7 @@ function(add_tests dir)
     # cycles and instructions
     set(PERFTIME "${PERFTIME},cycles,instructions")
     # GNU time
+#    set(PERFTIME "time")
     set(PERFTIME "${PERFTIME};time")
 
     set(REPEAT "0;1;2;") # repeat three times
