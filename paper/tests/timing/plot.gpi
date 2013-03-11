@@ -47,7 +47,7 @@ set key top left
 
 set ylabel "CPU time per timestep per grid point [{/Symbol m}s]"
 unset logscale y
-set yrange [0:*]
+set yrange [0:1.4<*]
 set ytics auto
 set output 'plot-cpu-' . infostr . '.eps'
 plot \
