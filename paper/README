@@ -33,5 +33,8 @@ $ make test
 
 $ cd tests/timing
 $ ./inout.sh
+$ cd ../../
+$ cmake .
+$ cd tests/timing
 $ make test
 $ gnuplot plot.gpi
