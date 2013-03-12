@@ -200,7 +200,7 @@ module solver_m
     use arakawa_c_m
     use halo_m
     class(solver_t) :: this
-    class(bcd_t), intent(in), pointer :: bcx, bcy
+    class(bcd_t), intent(in), target :: bcx, bcy
     integer, intent(in) :: nx, ny, hlo
 
     this%n = 0
@@ -379,7 +379,7 @@ module solver_donorcell_m
   
   subroutine donorcell_ctor(this, bcx, bcy, nx, ny)
     class(donorcell_t) :: this
-    class(bcd_t), intent(in), pointer :: bcx, bcy
+    class(bcd_t), intent(in), target :: bcx, bcy
     integer, intent(in) :: nx, ny
     call solver_ctor(this, bcx,bcy, nx,ny, 1)
   end subroutine
@@ -484,7 +484,7 @@ module solver_mpdata_m
 
   subroutine mpdata_ctor(this, n_iters, bcx, bcy, nx, ny)
     class(mpdata_t) :: this
-    class(bcd_t), pointer :: bcx, bcy
+    class(bcd_t), target :: bcx, bcy
     integer, intent(in) :: n_iters, nx, ny
     integer :: c
 

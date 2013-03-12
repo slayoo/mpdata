@@ -686,7 +686,7 @@
 
   \begin{figure}
     \center
-    \includegraphics[height=.45\textwidth,angle=-90]{plot-mem-host=eyrie-cpu=GenuineIntel-6-15-bogomips=3190}
+    \includegraphics[height=.45\textwidth,angle=-90]{plot-mem-host=laptok-cpu=GenuineIntel-6-42-bogomips=3190}
     \caption{\label{fig:mem}
       Memory consumption statistics for the test runs described in Section~\ref{sec:perf}
         plotted as a function of grid size.
@@ -698,18 +698,18 @@
   \end{figure}
   \begin{figure}
     \center
-    \includegraphics[height=.45\textwidth,angle=-90]{plot-cpu-host=eyrie-cpu=GenuineIntel-6-15-bogomips=3190}
+    \includegraphics[height=.45\textwidth,angle=-90]{plot-cpu-host=laptok-cpu=GenuineIntel-6-42-bogomips=3190}
     \caption{\label{fig:cpu-eyrie}
       Execution time statistics for the test runs described in Section~\ref{sec:perf}
         plotted as a function of grid size.
       Values of the total user mode cpu time reported by the GNU time utility are
-        and normalised by the grid size ($nx=ny$) and the number of timesteps $nt=2^{24}/(nx \cdot ny)$.
+        and normalised by the grid size ($nx \cdot ny$) and the number of timesteps $nt=2^{24}/(nx \cdot ny)$.
       Before normalisation the time reported for an $nt=0$ run for a corresponding
         domain size is subtracted from the values.
       Both the $nt=0$ and $nt=2^{24}/()nx \cdot ny$ runs are repeated three times and
         the shortest times are taken into account only.
       Results obtained with an Intel\textsuperscript{\textregistered} 
-        Core\textsuperscript{\texttrademark} 2 Duo 1.6 GHz processor.
+        Core\textsuperscript{\texttrademark} i5 1.6 GHz processor.
     }
   \end{figure}
   \begin{figure}
@@ -725,13 +725,14 @@
   \begin{description}
     \item[C++:]{~
       \begin{itemize}
-        \item{GCC g++ 4.8.0\footnote{\label{fnt:gcc-snapshot}GNU Compiler Collection trunk revision 193662 packaged in the Debian's gcc-snapshot\_20121120-1}
-          with Blitz++ 0.10}
+        \item{GCC g++ 4.8.0\footnote{\label{fnt:gcc-snapshot}GNU Compiler Collection packaged in the Debian's gcc-snapshot\_20130222-1}
+          and Blitz++ 0.10}
+        \item{LLVM Clang 3.2 and Blitz 0.10}
       \end{itemize}
     }
     \item[Python:]{~
       \begin{itemize}
-        \item{CPython 2.7.3 with NumPy 1.6.2}
+        \item{CPython 2.7.3 and NumPy 1.7}
         \item{PyPy 1.9.0 with built-in NumPy implementation}
       \end{itemize}
     }
@@ -741,28 +742,26 @@
       \end{itemize}
     }
   \end{description}
-  All performance tests were run on a Debian GNU/Linux system with the above-listed software obtained 
-    via binary packages from the Debian's ''sid'' collection (most recent package versions at the time of writing).
+  The performance tests were run on a Debian and an Ubuntu GNU/Linux systems with the above-listed software obtained 
+    via binary packages from the distributions's package repositories (most recent package versions at the time of writing).
   The tests were performed on two 64-bit machines equipped with
-    an AMD Phenom\textsuperscript{\texttrademark} II X6 1055T (800 MHz, ca. 5600 BogoMIPS)
-    and an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark}~2~Duo P7500 (1.6 GHz, ca. 3200 BogoMIPS)
+    an AMD Phenom\textsuperscript{\texttrademark} II X6 1055T (800 MHz)
+    and an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark}~i5-2467M (1.6 GHz)
     processors.
 
-  For both C++ and Fortran the GCC compilers were invoked with the \prog{-Ofast} and \prog{-march=native} 
-    options imposing, among other optimisations, automatic vectorisation and finite-only arithmetics 
-    (i.e.  non-standard-compliant treatment of NaN and Inf values).
-  GCC compilation did result in vectorised code for C++ only (vectorised loops within the Blitz++ headers, 
-    as reported by the messages triggered by the \prog{-ftree-vectorizer-verbose} option).
-%  At least a part of possible auto-vectorisations was not done with the Fortran implementation 
-%    due to employment of non-contiguous pointers (in particular when referring to the grid elements 
-%    excluding the halo region).
+  For both C++ and Fortran the GCC compilers were invoked with the \prog{-Ofast} and the 
+    \prog{-march=native} options.
+  The Clang compiler was invoked with the \prog{-O3}, the \prog{-mllvm -vectorize}, the \prog{-ffast-math} 
+    and the \prog{-march=native} options.
 
   The Python code was tested with the standard Python implementation CPython and with PyPy.
   PyPy is an alternative implementation of Python featuring a just-in-time compiler. 
   PyPy includes a partial reimplementation of NumPy that compiles NumPy expressions into native assembler.
   Thanks to employment of lazy evaluation of array expressions (cf. Sect. \ref{sec:array})
     PyPy allows to eliminate the use of temporary matrices for storing intermediate results,
-    and to perform multiple operations on the arrays within a single array index traversal.
+    and to perform multiple operations on the arrays within a single array index traversal
+    \footnote{Lazy evaluation available in PyPy 1.9 has been temporarily removed from PyPy during a refactoring of
+      the code. It'll be reinstantiated in the codebase as soon as possible, but past PyPy 2.0 release}.
   Consequently, PyPy allows to overcome the same performance-limiting factors as those addressed by Blitz++, although 
     the underlying mechanisms are different.
   In contrast to other solutions for improving performance of NumPy-based codes such as
@@ -800,7 +799,7 @@
     for elimination of temporary storage during array operations.
 
   The CPU time statistics presented in Figures \ref{fig:cpu-eyrie} and \ref{fig:cpu-skua} reveal
-    notable differences between results obtained with the two different processors,
+    some differences between results obtained with the two different processors,
     however the results agree qualitatively leading to the following observations
     (where by referring to language names, only the results obtained with the herein considered
      program codes, and software/hardware configurations are meant):
@@ -809,9 +808,9 @@
     \item{C++ execution times are less than twice those of Fortran for grids larger than 
       256$\times$256;}
     \item{CPython requires from around 4 to almost 10 times more CPU time than Fortran depending on the grid size;}
-    \item{PyPy execution times are in most cases closer to C++ than CPython.}
+    \item{PyPy execution times are in most cases closer to C++ than to CPython.}
   \end{itemize}
-  The support for OOP features in gfortran, the NumPy support in PyPy, and the auto-vectorisation
+  The support for OOP features in gfortran, the NumPy support in PyPy, and the relevant optimisation
     mechanisms in GCC are still in active development and hence the performance with some of the set-ups may 
     likely change with newer versions of these packages. 
 
@@ -1073,8 +1072,8 @@
     \noindent 
     Thanks are due Piotr Smolarkiewicz and Hanna Pawłowska.
     \noindent
-    Authors would like to thank Tobias Burnus, Julian Cummings, Patrik Jonsson and
-      Arjen Markus for their feedback on questions posted to Blitz++ and gfortran
+    Authors would like to thank Tobias Burnus, Julian Cummings, Patrik Jonsson,
+      Arjen Markus and Janus Weil for their feedback on questions posted to Blitz++ and gfortran
       mailing lists.
     
     \noindent
@@ -1118,6 +1117,10 @@
   \subsection*{{\bf An MPDATA solver} (cf. Sect. \ref{sec:mpdatasolver})}
   \codepyt{code/pyt/listings.py}{listing18}{listing19}{1}
 
+  \subsection*{{\bf Usage example} (cf. Sect. \ref{sec:example})}
+  \ldots
+  \codepyt{code/pyt/test.py}{listing19}{listing20}{1}
+  \ldots
 
   \setcounter{section}{5} 
   \section{Fortran code for sections \ref{sec:cyclic}--\ref{sec:mpdatasolver}}\label{app:F}
@@ -1146,6 +1149,13 @@
 
   \subsection*{{\bf An MPDATA solver} (cf. Sect. \ref{sec:mpdatasolver})}
   \codefor{code/for/listings.f}{listing22}{listing23}{1}
+
+  \subsection*{{\bf Usage example} (cf. Sect. \ref{sec:example})}
+  \ldots
+  \codefor{code/for/test.f}{listing23}{listing24}{1}
+  \ldots
+  \codefor{code/for/test.f}{listing25}{listing26}{1}
+  \ldots
 
   \bibliographystyle{model1-num-names}
   \bibliography{paper}
