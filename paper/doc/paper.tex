@@ -834,18 +834,17 @@
  
   \section{Discussion on the tradeoffs of language choice}
 
-  One of the aims of this paper is to exemplify the applicability of OOP features of the three considered
-    programming languages (or language-library pairs) for representing
-    what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012} within the source code
-    of scientific software.
+  One of the aim of this paper is to exemplify OOP features of the three
+    programming languages (or language-library pairs)  trying to represent
+    what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012} within the
+     scientific software.
   Presented benchmark tests, although quite simplistic, together with the experience gained 
-    from the development of equally-structured codes in three different
-    languages provide a basis for discussion on the tradeoffs of the programming language.
+    from the development of equally structured codes in three different
+    languages provide a basis for discussion of the tradeoffs of the programming language.
   The discussion concerns in principle the development of finite-difference solvers for 
-    partial differential equations, but is likely applicable to same extent to
-    development of scientific software in general.
+    partial differential equations, but is likely applicable the scientific software in general.
   A partly objective and partly subjective summary of pros and cons of C++, Python and Fortran,
-    as observed during the development of the presented codes, in presented in the four following subsections.
+    as observed during the development of the presented codes, is presented in the four following subsections.
 
   \subsection{OOP for blackboard abstractions}
 
@@ -857,16 +856,17 @@
     languages allow to match (or surpass) \LaTeX~in its brevity of formula translation syntax.
   All three languages were shown to be capable of providing mechanisms to compactly represent such abstractions as:
   \begin{itemize}
-    \item{loop-free array arithmetics}
-    \item{definitions of functions returning array-valued expressions}
+    \item{loop-free array arithmetics;}
+    \item{definitions of functions returning array-valued expressions;}
     \item{permutations of array indices allowing dimension-independent definitions
-      of functions (see e.g. listings C.12 and C.13, P.10 and P.11, F11 and F.12)}
-    \item{fractional indexing of arrays corresponding to employment of a staggered grid}
+      of functions (see e.g. listings C.12 and C.13, P.10 and P.11, F11 and F.12);}
+    \item{fractional indexing of arrays corresponding to employment of a staggered grid;}
     \item{associating identifiers with slabs of arrays (e.g. for representing 
-      a psi[left\_halo]=psi[rght\_edge] assignment)}
+      a psi[left\_halo]=psi[rght\_edge] assignment).} (DOROTA: w zasadzie tylko przyklad rozumiem)
   \end{itemize}
-  Three issues specific to Fortran were observed which 
-    resulted in employment in some places of a more repetitive or cumbersome syntax than in C++ or Python:
+  Three issues specific to Fortran that 
+    resulted in employment of a more repetitive or cumbersome syntax than in C++ or Python
+    were observed:
   \begin{itemize}
     \item{Fortran does not feature a mechanism allowing to reuse a single piece of code (algorithm)
       with different data types (compare e.g. listings C.6, P.5 and F.4) such as
@@ -876,7 +876,8 @@
       method in listing F.8)}
     \item{Fortran's built-in array-handling features are not object-oriented,
       and hence not easily extendable via inheritance, but also subject to
-      some inherent limitations such as lack of support for arrays of arrays 
+      some inherent limitations such as lack of support for arrays of arrays
+      (DOROTA: nie podoba mi sie to 'but also', moze wystarczy tylko pierwsza czesc punktu?)
       (cf. Sect. \ref{sec:sequence})}
   \end{itemize}
   Interestingly, the limitation in extendability via inheritance was found to
@@ -905,8 +906,8 @@
     cases making it the least memory consuming set-up.
   Python has already been the language of choice for scientific software projects having code clarity 
     or ease of use as the first requirement \citep[see e.g.][]{Barnes_and_Jones_2011}.
-  PyPy's capability to improve performance of unmodified Python code may actually 
-    make Python a favourable choice even if high performance is crucial, especially
+  PyPy's capability to improve performance of unmodified Python code may 
+    make Python a favourable choice even if high performance is important, especially
     if a performance-to-development cost measure is to be considered. 
 
   \subsection{Ease of use and abuse}
@@ -923,7 +924,8 @@
     (for instance with \prog{goto} statements, employment of the preprocessor,
     or the implicit typing in Fortran).
 
-  Python simplifies also the building and dissemination of software,
+(DOROTA: zastanawiam sie, czy tego nie wyrzucic)
+  Python simplifies also building and shearing of software,
     especially if multiple architectures and operating systems are targeted.
   However, CMake\footnote{CMake is a family of open-source, cross-platform
     tools automating building, testing and packaging of C/C++/Fortran software,
@@ -933,16 +935,15 @@
 
   Python is also definitely easiest to debug among the three languages.
   There exist great debugging tools for C++, but the debugging and development is 
-    often hindered by indecipherable compiler messages flooded with lengthy type names
-    stemming from employment of templates.
+    often hindered by indecipherable compiler messages.
   OOP with Fortran is a relatively new concept, and the support for the Fortran OOP
     features among free and open source compilers, debuggers and other programming
-    aids is still not mature.
+    aids are still not mature.
     
   A factor contributing to the ease of use of the array-handling 
     facilities is the clarity of rules determining their performance.
   With both Fortran and Python, the memory footprint caused by employment
-    of temporary objects in array arithmetics is dependant on compiler optimisations.
+    of temporary objects in array arithmetics is dependent on compiler optimisations.
   In contrast, Blitz++ ensures temporary-array-free computations by design.
   Similarly, the C++ template mechanism and such features as the C++11
     \prog{constexpr} construct allow the programmer to enforce evaluation
@@ -954,21 +955,21 @@
 
   The size of the programmers' community of a given language 
     influence the availability of trained personnel, 
-    the availability of reusable software components,
-    the maturity of compilers and tools, 
-    and the volume and coverage of online and printed information resources.
+   reusable software components and information resources.
+    It also affect the maturity and quality of compilers and tools. 
+  Fortran is a domain-specific language while Python and C++ are general-purpose languages
+    with disproportionately larger users' communities.
   The OOP features were introduced to Fortran only recently, and have not gained
     wide popularity among users \citep{Worth_2008}\footnote{an anecdotal yet significant
     example being the incomplete support for syntax-highlighting of modern Fortran in Vim and Emacs editors}.
-  Fortran is no longer routinely taught at the universities \citep{Kendall_et_al_2008},
+  Fortran is almost no longer taught at the universities \citep{Kendall_et_al_2008},
     in contrast to C++ and Python.
-  An example confirming the arguably ceasing popularity of Fortran in academia 
-    is the discontinuation of all but C++ printed editions of the ''Numerical Recipes'' 
+  An example ofdecreasing popularity of Fortran in academia 
+    is the discontinuation of Fortran printed editions of the ''Numerical Recipes'' 
     series of Press et al.
-  Fortran is a domain-specific language while Python and C++ are general-purpose languages
-    with disproportionately larger users' communities.
+ 
 
-  Yet still, in the case of C++ and Python it is also the size of the particular
+  In the case of C++ and Python it is also the size of the particular
     numerical-library users' community that is of importance.
   Blitz++ is one of several packages that offer high-performance object-oriented
     array manipulation functionality with C++ (and is not necessarily optimal for every
@@ -977,10 +978,12 @@
   Consequently, numerous Python libraries adopted NumPy but
     there are apparently very few C++ libraries offering Blitz++ support out of the box
     (the gnuplot-iostream used in listing C.24 being a much-appreciated counterexample).
+ ( DOROTA: nie rozumiem nastepnego zdania)
   However, Blitz++ allows to instantiate its arrays using preexisting data what
     allows to interface with virtually any library, although requiring additional
     coding.
   
+(DOROTA: a moze skrocic to i przeniesc do 4.1?)
   The availability and quality of object-oriented 
     libraries differs among the three considered languages.
   The built-in standard libraries of Python and C++ are richer than
@@ -996,6 +999,8 @@
     is the lack of standard exception handling mechanisms in Fortran,
     long and {\em much requested by the numerical community} \citep[][Foreword]{Press_et_al_1996}.
 
+(DOROTA: nastepny akapit zaznaczylabym Fijalowi do uwaznego przejrzenia, 
+Ja nie rozumime tej czesci o numexpr itp)
   Finally, the three languages differ as well with regard to availability of 
     mechanisms for leveraging shared-memory parallelisation (e.g. with multi-core processors).
   GCC supports OpenMP with Fortran and C++, as well as the C++11 built-in support for threads.
@@ -1011,39 +1016,40 @@
 
   Three object-oriented implementations of a prototype solver 
     for the advection equation were introduced.
-  The solvers are based on MPDATA - an algorithm of particular applicability
-    in geophysical fluid dynamics \citep{Smolarkiewicz_2006}.
-  The three implementations follow the same structure but are implemented
-    in three different languages (or language/library pairs):
+  The solvers are based on the MPDATA algorithm \citep{Smolarkiewicz_2006}.
+  All implementations follow the same structure but are implemented
+    in three different language and library pairs:
   \begin{itemize}
-    \item{C++ with Blitz++,}
-    \item{Python with NumPy and}
-    \item{Fortran}
+    \item{C++ with Blitz++;}
+    \item{Python with NumPy;}
+    \item{Fortran.}
   \end{itemize}
-  It was the aim of this study to assess the capabilities of these languages
-    for object-oriented scientific programming in context of 
-    development of finite-difference partial differential equation solvers.
-  The emphasis was on the capabilities for reproduction within 
-    the program code of the mathematical abstractions used for defining the algorithms
-    in journal papers or lecture blackboards.
+(DOROTA: przelozylam to i delikatnie zmienilam, ale nadal nie rozuemi czesci 'employed tools...')
+  The fact that all considered standards are open and the employed
+    tools implementing them are free and open-source
+    is certainly a great advantage \citep{Anel_2011}.
+
+  Finite-difference partial differential equation solvers were example used to study 
+    the capabilities of these languages
+    for object-oriented scientific programming.
+  The emphasis was on the capabilities for reproduction 
+    of the mathematical abstractions used for explaining the algorithms
+    in journal papers within the program code.
 
   Presented programs were developed making use of such recent
     developments as support for C++11 and Fortran 2008 in GCC, and
     the NumPy support in the PyPy implementation of Python.
-  The key conclusion is that the considered language/library/compiler
-    set-ups offer unprecedented possibilities for using OOP to compactly 
-    and faithfully represent within the program source code 
-    the mathematical abstractions employed when describing 
-    numerical algorithms in literature.
+  The key conclusion is that all considered language/library/compiler
+    set-ups offer possibilities for using OOP to compactly 
+     represent the mathematical abstractions within the program  code. 
+(OROTA: dwa nastepne zdania bym przeformulowala, ale chce sie upewnic, co wlasciwie chcemy tu powiedziec)
   The readability and brevity of such code may contribute to its 
     auditability, indispensable for credible and reproducible research in computational science 
     \citep{Post_et_al_2005, Merali_et_al_2010, Stodden_et_al_2012}.
   Employment of OOP helps as well to keep complex programs maintainable, avoiding accumulation of the technical/code 
     debt \citep{Buschmann_2011} that besets scientific software in such domains as climate modelling
     \citep{Freeman_et_al_2010}.
-  The fact that all considered standards are open and the employed 
-    tools implementing them are free and open-source
-    is of importance as well \citep{Anel_2011}.
+
     
   The performance evaluation revealed that:
     \begin{itemize}
@@ -1062,6 +1068,7 @@
     available for download from the project repository\footnote{git repository at \url{http://github.com/slayoo/mpdata/}},
     and are released under the GNU GPL license \citep{GPLv3}.
 
+(DOROTA: to trzeba zmienic, nie wiem co dokladnie chciales powiedziec.)
   The OOP design enhances the possibilities to reuse and extend the presented code.
   Development is underway of an object-oriented C++ library featuring concepts presented herein,
     supporting integration in one to three dimensions, handling systems of equations with source terms, 
