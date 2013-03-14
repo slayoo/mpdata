@@ -447,7 +447,7 @@ module mpdata_m
     ) / 4               
   end function
 !listing20
-  function antidiff(d, psi, i, j, C) result (return)
+  function C_adf(d, psi, i, j, C) result (return)
     integer :: d
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
@@ -512,7 +512,7 @@ module solver_mpdata_m
 
     associate (i => this%i, j => this%j, im => this%im,&
       jm => this%jm, psi => this%psi, n => this%n,     &
-      hlo => this%hlo, bcx => this%bcx, bcy => this%bcy &
+      hlo => this%hlo, bcx => this%bcx, bcy => this%bcy&
     )
       do step=0, this%n_iters-1
         if (step == 0) then
@@ -523,11 +523,11 @@ module solver_mpdata_m
           end block
         else
           call this%cycle()
-          call bcx%fill_halos(                    &
-            psi%at( n )%p%a, ext(j, hlo)     &
+          call bcx%fill_halos(                         &
+            psi%at( n )%p%a, ext(j, hlo)               &
           )
-          call bcy%fill_halos(                    &
-            psi%at( n )%p%a, ext(i, hlo)     &
+          call bcy%fill_halos(                         &
+            psi%at( n )%p%a, ext(i, hlo)               &
           )
 
           block
@@ -548,18 +548,18 @@ module solver_mpdata_m
 
             ! calculating the antidiffusive velo
             ptr => pi(0, C_corr%at( 0 )%p%a, im+h, j)
-            ptr = antidiff(                            &
+            ptr = C_adf(                               &
               0, psi%at( n )%p%a, im, j, C_unco        &
             )      
-            call bcy%fill_halos(                  &
+            call bcy%fill_halos(                       &
               C_corr%at(0)%p%a, ext(i, h)              &
             )
 
             ptr => pi(0, C_corr%at( 1 )%p%a, i, jm+h)
-            ptr = antidiff(                            &
+            ptr = C_adf(                               &
               1, psi%at( n )%p%a, jm, i, C_unco        &
             )
-            call bcx%fill_halos(                  &
+            call bcx%fill_halos(                       &
               C_corr%at(1)%p%a, ext(j, h)              &
             )
 

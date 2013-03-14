@@ -79,8 +79,8 @@
 \newcommand{\prog}[1]{{\rm\bf#1}}
 \newcommand{\url}[1]{{#1}}
 
-%\journal{Computer Physics Communications}
-\journal{arXiv. Paper presented at the American Meteorological Society 2013 Annual Meeting in Austin, Texas, USA}
+\journal{Computer Physics Communications}
+%\journal{arXiv. Paper presented at the American Meteorological Society 2013 Annual Meeting in Austin, Texas, USA}
 
 \begin{document}
   \begin{frontmatter}
@@ -105,7 +105,7 @@
         The introduced codes exemplify how the application of 
           object-oriented programming (OOP) techniques allows to reproduce the mathematical notation 
           used in the literature within the program code.
-        The introduced codes serve as a basis for discussion on the tradeoffs of the programming language choice.
+        The codes serve also as a basis for discussion on the tradeoffs of the programming language choice.
         The main angles of comparison are code brevity and syntax clarity
           (and hence maintainability and auditability) as well as performance.
         In case of Python, a significant performance gain is observed when switching from the standard 
@@ -159,8 +159,10 @@
     and MPDATA is an example of the state-of-the art in this field.
   MPDATA is designed to accurately solve equation (\ref{eq:adv}) in arbitrary
     number of dimensions assuring positive-definiteness of scalar field $\psi$ 
-    and incurring small numerical diffusion
-    \citep[see][for a recent review of MPDATA-based techniques]{Smolarkiewicz_2006}.
+    and incurring small numerical diffusion.
+  All relevant MPDATA formul\ae are given in the text but are presented without
+    derivation or detailed discussion.
+  For a recent review of MPDATA-based techniques see \citet[][and references therein]{Smolarkiewicz_2006}.
 
   In this paper we introduce and discuss object-oriented implementations of an MPDATA-based 
     two-dimensional (2D) advection equation solver written in C++11 (\citeauthor{ISO_14882} 14882:2011), 
@@ -211,36 +213,33 @@
 
   \subsection{Array containers}\label{sec:array}
 
-  Solution of equation (\ref{eq:adv}) using MPDATA implies discretisation of the $\psi$ and 
-    the $\vec{C}=\vec{v}\cdot\frac{\Delta t}{\Delta x}$ (Courant number) fields onto a grid - an array of points.
+  Solution of equation (\ref{eq:adv}) using MPDATA implies discretisation onto a grid of the $\psi$ and 
+    the Courant number $\vec{C}=\vec{v}\cdot\frac{\Delta t}{\Delta x}$ fields, where $\Delta t$ is the 
+    solver timestep and $\Delta x$ is the grid spacing.
   Among the three considered languages only Fortran is equipped with built-in
     array handling facilities of practical use in high-performance computing. 
 
-  Presented C++ implementation of MPDATA is built upon the Blitz++ library. %TODO: cite something
+  Presented C++ implementation of MPDATA is built upon the Blitz++ 
+    library\footnote{Blitz++ is a C++ class library for scientific computing which uses the expression templates technique to achieve high performance, see http://sf.net/projects/blitz/}.
   Blitz offers object-oriented representation of n-dimensional arrays,
     and array-valued mathematical expressions.
   In particular, it offers loop-free notation for array arithmetics
-    that does not incur creation of intermediate temporary objects, 
-    a crucial feature for achieving high-performance in array manipulation
-    \citep[][]{Veldhuizen_et_al_1997}.
-  Blitz++ is a header-only library\footnote{unless debugging mode is used} -- to use it, it is enough to include the appropriate header file,
+    that does not incur creation of intermediate temporary objects.
+  Blitz++ is a header-only library\footnote{Blitz++ requires linking with \prog{libblitz} if debugging mode is used} -- to use it, it is enough to include the appropriate header file,
     and optionally expose the required classes to the present namespace:
   \codecpp{code/cpp/listings.hpp}{listing02}{listing03}{1}
-  Here, \prog{arr\_t}, \prog{rng\_t} and \prog{idx\_t} will serve as alias identifiers for the
-    2D double precision version of the Blitz++ \prog{Array} 
-    container, for the \prog{Range} class representing a sequence of integers numbering 
-    array elements, and for the 2D version of the \prog{RectDomain} class representing 
-    a vector of \prog{Range} objects defining a 2D slab of an array, respectively.
+  Here \prog{arr\_t}, \prog{rng\_t} and \prog{idx\_t} serve as alias identifiers 
+    and are introduced in order to shorten the code.
 
-  Arguably, the power of Blitz++ comes from the possibility to express array expressions as objects.
+  Arguably, the power of Blitz++ comes from the ability to express array expressions as objects.
   In particular, it is possible to define a function that returns an array expression;
     i.e. not the resultant array, but an object representing a ,,recipe'' defining the operations
     to be performed on the arguments.
-  As a consequence, the return types of such functions become unintelligible, and the \prog{auto} 
-    return type declaration from the C++11 standard allows to simplify the code significantly,
+  As a consequence, the return types of such functions become unintelligible.
+  Luckily, the \prog{auto} return type declaration from the C++11 standard allows to simplify the code significantly,
     even more if used through the following preprocessor macro:
   \codecpp{code/cpp/listings.hpp}{listing03}{listing04}{1}
-    in which a call to \prog{blitz::safeToReturn()} function is also included ensuring
+  The call to \prog{blitz::safeToReturn()} function is included in order to ensure that
     all arrays involved in the expression being returned continue to exist in the
     caller scope.
   For example, definition of a function returning its array-valued argument doubled reads:
@@ -254,27 +253,27 @@
   \codepyt{code/pyt/listings.py}{listing02}{listing03}{1}
   First, the PyPy's built-in NumPy implementation named \prog{numpypy} is imported if applicable (i.e. if running PyPy), 
     and the lazy evaluation mode is turned on through the \prog{set\_invalidation(False)} call.
-  PyPy's lazy evaluation obtained with the help of a just-in-time compiler enables it to achieve
+  PyPy's lazy evaluation obtained with the help of a just-in-time compiler enables to achieve
     an analogous to Blitz++ temporary-array-free handling of array-valued expressions 
     (see discussion in section~\ref{sec:perf}).
-  Second, the NumPy package is instructed to ignore any floating-point errors, if such an option
-    is available in the interpreter (it is not supported in PyPy as of version 1.9).
+  Second, to match the settings of C++ and Fortran compilers used herein, the NumPy package is instructed 
+    to ignore any floating-point errors (only if such an option
+    is available in the interpreter\footnote{\prog{numpy.seterr()} is not supported in PyPy as of version 1.9}).
   The above lines conclude all code modifications that needed to be added in order to run
     the code with PyPy.
 
   Fortran features built-in multidimensional array handling mechanisms,
     hence there is no need for using an external package as with C++ and Python.
-  Fortran array-handling features are not object-oriented, however.
-  In particular, it is not possible to alter the default behaviour through
-    inheritance.
+  Fortran array-handling features are not object-oriented, though.
 
-  \subsection{Array container sequences}\label{sec:sequence}
+  \subsection{Array sequence containers}\label{sec:sequence}
 
   While discretisation in space of the scalar field $\psi(x,y)$ into its $\psi_{[i,j]}$ 
-    grid representation requires floating-point array containers (cf. section \ref{sec:array}), 
-    discretisation in time requires a container class for storing
-    sequences of such arrays, i.e. \{$\psi_{[i,j]}^{[n]}$, $\psi_{[i,j]}^{[n+1]}$\}.
-  Similarly the vector field $\vec{C}$ is in fact a \{$C^{[x]}$, $C^{[y]}$\} sequence.
+    grid representation requires floating-point array containers (cf. section \ref{sec:array}).
+  Discretisation in time requires a container class for storing
+    sequences of such arrays, i.e. \{$\psi^{[n]}$, $\psi^{[n+1]}$\}.
+  Similarly the components of the vector field $\vec{C}$ are in fact a \{$C^{[x]}$, $C^{[y]}$\} 
+    array sequence.
  
   Using an additional array dimension to represent the sequence elements is not considered for two reasons.
   First, the $C^{[x]}$ and $C^{[y]}$ arrays constituting the sequence have different sizes
@@ -301,23 +300,20 @@
   Fortran does not feature any built-in sequence container capable of storing arrays, 
     hence a custom \prog{arrvec\_t} type is introduced:
   \codefor{code/for/listings.f}{listing02}{listing03}{1}
-  The \prog{arr\_t} and \prog{arrptr\_t} helper types are defined solely for the purpose 
+  The \prog{arr\_t} type is defined solely for the purpose 
     of overcoming the Fortran's limitation of not allowing to declare arrays of arrays.
+  The \prog{arrptr\_t} type is defined as creating an allocatable of its instances instead
+    of multi-element pointer of \prog{arr\_t} ensures automatic memory deallocation.
   The \prog{ctor()} method initialises the container for a given number of elements \prog{n}.
   The \prog{init()} method initialises the \prog{n}-th element of the container with 
     an newly allocated 2D array spanning indices \prog{i(1)}:\prog{i(2)}, 
-    and \prog{j(1)}:\prog{j(2)} in the first, and last dimensions respectively\footnote{When an array
-    is passed as function argument in Fortran its base is locally set to unity, regardless of the setting
-    at the caller scope, hence the first elements of \prog{i} and \prog{j} are always \prog{i(1)} and \prog{j(1)}.}.
-  The \prog{dtor()} method serves as a destructor\footnote{as of time of writing there is no
-    open-source Fortran compiler supporting destructor-like FINAL methods defined in the Fortran 2003 standard} 
-    and deallocates all the memory allocated
-    through previous calls to \prog{init}.
+    and \prog{j(1)}:\prog{j(2)} in the first, and last dimensions respectively\footnote{In Fortran, when an array
+    is passed as a function argument its base is locally set to unity, regardless of the setting
+    at the caller scope.}.
   Access to the arrays stored in the container is provided through the \prog{at} member field.
   Assuming \prog{psi} is an instance of \prog{arrptr\_t}, the \prog{(i,j)} element of the \prog{n}-th array in \prog{psi}
     may be accessed with \prog{psi\%at( n )\%p\%a( i, j )}.
 
-%  TODO: mention why module procedures have to be prefixed with module name in Fortran
   \subsection{Staggered grid}\label{sec:grid}
 
   \begin{figure}[h!]
@@ -386,8 +382,6 @@
   OOP offers a convenient way to implement such notation
     by overloading the \prog{+} and \prog{-} operators for objects representing array indices. 
 
-%TODO: explain why h=(-1,0) is needed with Blitz and Python (in order not to lose memory)
-
   In the C++ implementation first a global instance \prog{h} of an empty structure 
     \prog{hlf\_t} is defined, and then the plus and minus operators for \prog{hlf\_t} and \prog{rng\_t} are overloaded:
   \codecpp{code/cpp/listings.hpp}{listing05}{listing06}{1}
@@ -406,7 +400,7 @@
   \codepyt{code/pyt/listings.py}{listing03}{listing04}{1}
     and two instances of it to represent unity and half
     in expressions like \prog{i+one}, \prog{i+hlf}, where \prog{i} is an instance of \prog{slice}
-    \footnote{\label{fnt:slice}one could argue that not using an own implementation of a slice-representing class
+    \footnote{\label{fnt:slice}One could argue that not using an own implementation of a slice-representing class
     in NumPy is a design flaw -- being able to modify behaviour of a hypothetical numpy.slice class 
     through inheritance would allow to implement the same behaviour as obtained in listing P.3 without the need to represent 
     the unity as a separate class}:
@@ -429,13 +423,12 @@
 
   An \prog{ext()} function is defined in all three implementation, in order to simplify 
     coding of array range extensions:
-% TODO: works for int 1 and slice
   \codecpp{code/cpp/listings.hpp}{listing06}{listing07}{1}
   \codepyt{code/pyt/listings.py}{listing05}{listing06}{1}
   \codefor{code/for/listings.f}{listing04}{listing05}{1}
   Consequently, a range depicted by $i\pm1/2$ may be expressed in the code as \prog{ext(i, h)}.
-
-%TODO: {discuss how halo region relates to parallel programming}
+  In all three implementations the \prog{ext()} function accept the second
+    argument to be an integer or a ''half'' (cf. section \ref{sec:grid}).
 
   \subsection{Array index permutations}\label{sec:pi}
   Hereinafter, the $\pi_{a,b}^{d}$ symbol is used to denote a  
@@ -451,12 +444,13 @@
   The $\pi$ permutation is implemented in C++ as a function \prog{pi()}
     returning an instance of \prog{idx\_t}.
   In order to ensure compile-time evaluation, the permutation order is passed 
-    via the template parameter \prog{d}:
+    via the template parameter \prog{d}
+    (note the different order of \prog{i} and \prog{j} arguments in the two template specialisations):
   \codecpp{code/cpp/listings.hpp}{listing07}{listing08}{1}
-  (note the different order of \prog{i} and \prog{j} arguments in the two template specialisations).
 
-  NumPy uses tuples of slices for addressing multi-dimensional arrays with a
-    single object, hence the following definition of function \prog{pi()} suffices to represent $\pi$:
+  NumPy uses tuples of slices for addressing multi-dimensional array with a
+    single object.
+  Therefore, the following definition of function \prog{pi()} suffices to represent $\pi$:
   \codepyt{code/pyt/listings.py}{listing06}{listing07}{1}
   
   In the Fortran implementation \prog{pi()} returns a pointer to the array elements specified
@@ -465,8 +459,14 @@
   In addition to \prog{pi()}, a helper \prog{span()} function returning the 
     length of one of the vectors passed as argument is defined:
   \codefor{code/for/listings.f}{listing05}{listing06}{1}
+  \prog{span()} is used to shorten the declarations of arrays to be returned 
+    from functions in the Fortran implementation (see listings F.11 and F.17--F.20).
 
-%  TODO: templates -> branchless code by design, while F relies on opti
+  It is worth noting here that the C++ implementation of \prog{pi()} is
+    branchless thanks to employment of template specialisation.
+  With Fortran one needs to rely on compiler optimisations to eliminate the conditional expression
+    within the \prog{pi()} that depends on value of \prog{d} which is always known 
+    at compile time.
 
   \subsection{A prototype solver}\label{sec:solver}
 
@@ -484,62 +484,53 @@
   \codecpp{code/cpp/listings.hpp}{listing08}{listing09}{1}
   The \prog{solver} structure is an abstract definition (containing a pure virtual method) 
      requiring its descendants to implement at least
-     the \prog{advop()} method which is expected to fill \prog{psi[n+1]} with the values of \prog{psi[n]} advected
-     within one timestep.
+     the \prog{advop()} method which is expected to fill \prog{psi[n+1]} with an updated (advected)
+     values of \prog{psi[n]}.
   The two template parameters \prog{bcx\_t} and \prog{bcy\_t} allow the solver to operate with 
     any kind of boundary condition structures that fulfil the requirements implied by the calls to the 
     methods of \prog{bcx} and \prog{bcy}, respectively.
 
-  The sizes of the arrays representing the two time-levels $\psi^{[n]}$ and $\psi^{[n+1]}$ of $\psi$ 
+  The donor-cell and MPDATA schemes both require only the previous state of an advected field
+    in order to advance the solution.
+  Consequently, memory for two time levels ($\psi^{[n]}$ and $\psi^{[n+1]}$) is allocated in the
+    constructor.
+  The sizes of the arrays representing the two time-levels of $\psi$ 
     are defined by the domain size ({\em nx}$~\times$~{\em ny}) plus the halo region.
   The size of the halo region is an argument of the constructor.
+  The \prog{cycle()} method is used to swap the time levels without copying any data.
 
   The arrays representing the $C^{[x]}$ and $C^{[y]}$ components of $\vec{C}$,
     require {\em nx+1}~$\times$~{\em ny} 
     and {\em nx}$~\times$~{\em ny+1} elements, respectively
     (being laid out on the Arakawa-C staggered grid).
-
-%  TODO: clarify what cycle() does
-
+  
   Python definition of the \prog{Solver} class follows closely the C++ structure definition:
   \codepyt{code/pyt/listings.py}{listing07}{listing08}{1}
   The key difference stems from the fact that unlike Blitz++, NumPy does not allow an array
     to have arbitrary index base -- in NumPy the first element is always addressed with 0.
   Consequently, while in C++ (and Fortran) the computational domain is chosen to start at (i=0, j=0)
-    and hence a part of the halo region to have negative indices, in Python the halo region starts %TODO: footnote o roznych zakresach dla MPI
-    at (0,0).
+    and hence a part of the halo region to have negative indices, in Python the halo region starts 
+    at (0,0)\footnote{The reason to allow the domain to begin at arbitrary index
+    is mainly to ease debugging in case the code would be used in parallel computations
+    using domain decomposition where each subdomain could have its own index base corresponding to
+    the location within the computational domain}.
   However, since the whole halo logic is hidden within the solver, such details are not exposed to the
     user.
   The \prog{bcx} and \prog{bcy} boundary-condition specifications are passed to the solver through
     constructor-like \prog{\_\_init\_\_()} method as opposed to template parameters in C++.
 
-  The C++ and Python prototype solver implementations introduced above
-    allowed the solvers to operate with any boundary condition
-    objects provided the requirements imposed by calls to these objects' methods were fulfilled 
+  The above C++ and Python prototype solvers allow to operate with any boundary condition
+    objects provided the requirements imposed by calls to these objects' methods are fulfilled 
     (at compile-time in case of C++, and at run-time in the case of Python).
   In order to obtain an analogous behaviour with Fortran, it is required to
     define, prior to definition of a solver type, 
     an abstract type with deferred procedures having abstract interfaces 
-    \citep[see Table 2.1 in][for a summary of approximate correspondence of OOP 
+    \citep[sic!, see Table 2.1 in][for a summary of approximate correspondence of OOP 
       nomenclature between Fortran and C++]{Rouson_et_al_2012}:
   \codefor{code/for/listings.f}{listing06}{listing07}{1}
   Having defined the abstract type for boundary-condition objects, 
     a definition of a solver class following closely the C++ and Python counterparts may be provided:
   \codefor{code/for/listings.f}{listing07}{listing08}{1}
-
-  As a side note, it is worth mentioning that the proposed design is readily extendable 
-    to handle concurrent computations using domain decomposition.
-  The proposed prototype solver is basically ready to be applied 
-    in a distributed memory set-up (e.g. using MPI)
-    since all necessary communication logic could be placed in the boundary-condition objects
-    not requiring any changes to the solver itself.
-  Shared-memory parallelisation (e.g. OpenMP) would require minimal changes to the solver structure
-    (the \prog{advop()} method would need to be called in a concurrently executed loop),
-    leaving the boundary condition- and advection operator-representing logic basically untouched.
-
-  Finally, it has to be underlined that the proposed prototype solver is designed
-    just as a minimal example to present the concepts described in the paper.
-%  It is by no means an optimal or versatile solution.
 
   \subsection{Periodic boundaries (C++)}\label{sec:cyclic}
   
@@ -557,7 +548,7 @@
 
   \subsection{Donor-cell formul\ae~(C++)}\label{sec:donor}
   MPDATA is an iterative algorithm in which each iteration takes the form of the 
-    so-called donor-cell formula which itself is a first-order advection scheme.
+    so-called donor-cell formula (which itself is a first-order advection scheme).
   The set of functions related to the donor-cell scheme is encapsulated within
     the \prog{donorcell} namespace in C++:
   \codecpp{code/cpp/listings.hpp}{listing10}{listing11}{1}
@@ -593,27 +584,27 @@
   
   As mentioned in the previous section, the donor-cell formula
     constitutes an advection scheme, hence we may use it to create
-    a \prog{solver\_donorcell} implementation of the abstract \prog{solver} class:
+    a \prog{solver\_donorcell} implementation of the abstract \prog{solver} class: 
   \codecpp{code/cpp/listings.hpp}{listing15}{listing16}{1}
+  The above definition is not used in the following MPDATA implementation -- 
+    it is given as an example only.
 
   Listings P.12 and F.14 contain the Python and Fortran counterparts to listing C.16.
 
   \subsection{MPDATA formul\ae~(C++)}\label{sec:mpdata}
 
   MPDATA introduces corrective steps to the algorithm defined by equation~\ref{eq:donor} and \ref{eq:donor:F}.
-  Each corrective step has the form of equation~\ref{eq:donor} with the Courant numbers replaced
-    with those defined by the so-called antidiffusive velocities, and with $\psi$ fields from 
-    the previous iterations.
-  The Courant number field corresponding to the basic MPDATA antidiffusive velocity takes the following 
+  Each corrective step is a donor-cell step (eq.~\ref{eq:donor}) with the Courant number
+    fields corresponding to the MPDATA antidiffusive velocities of the following 
     form \citep[eqs~13,~14~in][]{Smolarkiewicz_1984}:
   \begin{equation}\label{eq:antidiff1}
     \input{formulae/antidiff1}
   \end{equation}
-  where
+  where $\psi$ and $C$ represent values from the previous iteration and where
   \begin{equation}\label{eq:antidiff2}
     \input{formulae/antidiff2}
   \end{equation}
-  and where for positive-definite $\psi$, the $A$ and $B$ terms take the 
+  For positive-definite $\psi$, the $A$ and $B$ terms take the 
   following form\footnote{
     Since $\psi\ge0$, $|A|\le1$ and $|B|\le1$. 
     See \citet[Sec. 4.2]{Smolarkiewicz_2006} for description of adaptation of the 
@@ -650,12 +641,32 @@
   Finally, the C++ namespace is ended with:
   \codecpp{code/cpp/listings.hpp}{listing22}{listing23}{1}
 
-  Listings P.13-PP.17 and F.15-F.21 contain the Python and Fortran counterparts to listing C.16-C.22.
+  Listings P.13-P.17 and F.15-F.21 contain the Python and Fortran counterparts to listing C.16-C.22.
 
   \subsection{An MPDATA solver (C++)}\label{sec:mpdatasolver}
 
-  An MPDATA solver may be now constructed with the following definition in C++:
+  An MPDATA solver may be now constructed by inheriting from \prog{solver} class
+    with the following definition in C++:
   \codecpp{code/cpp/listings.hpp}{listing23}{listing24}{1}
+  The sequence of temporary arrays \prog{tmp} allocated in the constructor
+    is used to store the antidiffusive velocities from the present and optionally 
+    previous timestep (if using more than two iterations). 
+
+  The \prog{advop()} method controlls the MPDATA iterations within one timestep.
+  The first (step = 0) iteration of MPDATA is an unmodified donor-cell step (see listing C.15).
+  Subsequent iterations begin with calculation of the antidiffusive Courant fields using 
+    formula \ref{eq:antidiff1}.
+  In order to calculate values spanning an (i\mhlf~... i+\phlf) range using a formula
+    for $C_{[i+\phlf,\ldots]}$ only, the formula is evaluated using extended
+    index ranges \prog{im} and \prog{jm}.
+  In the second (step=1) iteration the uncorrected Courant field (\prog{C\_unco}) points
+    to the original \prog{C} field, and the antidiffusive Courant field is written into
+    \prog{C\_corr} which points to \prog{tmp[1]}.
+  In the third (step=2) iteration \prog{C\_unco} points to \prog{tmp[1]} while \prog{C\_corr}
+    points to \prog{tmp[0]}.
+  In subsequent iterations \prog{tmp[0]} and \prog{tmp[1]} are alternately swapped.
+
+  Listings P.18 and F.22 contain the Python and Fortran counterparts to listing C.23.
  
   \subsection{Usage example (C++)}\label{sec:example}
 
@@ -667,18 +678,27 @@
   The program first plots the initial condition, then performs
     the integration for 75 timesteps with three different 
     settings of the number of iterations used in MPDATA.
+  The velocity field is constant in time and space (although it is
+    not assumed in the presented implementations).
   The signal shape at the end of each simulation is plotted as well.
   Plotting is done with the help of the gnuplot-iostream library.
-  The resultant plot is presented herein as Figure~\ref{fig:mpdata}
+
+  The resultant plot is presented herein as Figure~\ref{fig:mpdata}.
+  The top panel depicts the initial condition. 
+  The three other panels show a snapshot of the field after 75 timesteps.
+  The donor-cell solution is characterised by strongest numerical diffusion
+    resulting in significant drop in the signal amplitude.
+  The signals advected using MPDATA show smaller numerical diffusion.
 
   \codecpp{code/cpp/plot.cpp}{listing24}{listing25}{1}
+  Listings P.19 and F.23-F.24 contain the Python and Fortran 
+    counterparts to listing C.24 (with the set-up and plotting logic omitted).
 
   \begin{figure}
     \pgfimage[height=.95\textheight]{code/cpp/figure}
     \caption{\label{fig:mpdata}
       Plot generated by the program given in listing~C.24.
       See section~\ref{sec:example} for details.
-      %TODO: describe the test, point out adv., numerical diffusion, periodic boundaries, not much diff between 2 and 7
     }
   \end{figure}
 
@@ -725,7 +745,7 @@
   \begin{description}
     \item[C++:]{~
       \begin{itemize}
-        \item{GCC g++ 4.8.0\footnote{\label{fnt:gcc-snapshot}GNU Compiler Collection packaged in the Debian's gcc-snapshot\_20130222-1}
+        \item{GCC g++ 4.8.0\footnote{\label{fnt:gcc-snapshot}GNU Compiler Collection packaged in the Debian's gcc-snapshot\_20130222-1} 
           and Blitz++ 0.10}
         \item{LLVM Clang 3.2 and Blitz 0.10}
       \end{itemize}
@@ -753,6 +773,7 @@
     \prog{-march=native} options.
   The Clang compiler was invoked with the \prog{-O3}, the \prog{-mllvm -vectorize}, the \prog{-ffast-math} 
     and the \prog{-march=native} options.
+  The CPython interpreter was invoked with the \prog{-OO} option.
 
   The Python code was tested with the standard Python implementation CPython and with PyPy.
   PyPy is an alternative implementation of Python featuring a just-in-time compiler. 
@@ -782,7 +803,7 @@
   The tests were run multiple times; program startup, data loading, and output verification times were
     subtracted from the reported values (see caption of Figure~\ref{fig:cpu-eyrie} for details).
 
-  Figure \ref{fig:mem} presents a plot of the peak memory use\footnote{the resident set size (rss)
+  Figure \ref{fig:mem} presents a plot of the peak memory use\footnote{The resident set size (rss)
     as reported by GNU time (version 1.7-24)} as a function of grid size.
   The plotted values are normalised by the nominal size of all data arrays used in the program
     (i.e. two (nx+2)$\times$(ny+2) arrays representing the two time levels of $\psi$, 
@@ -834,17 +855,17 @@
  
   \section{Discussion on the tradeoffs of language choice}
 
-  One of the aim of this paper is to exemplify OOP features of the three
-    programming languages (or language-library pairs)  trying to represent
-    what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012} within the
-     scientific software.
+  One of the aims of this paper is to show the applicability of OOP features of the three
+    programming languages (or language-library pairs) for scientific programming.
+  The main focus is to represent
+    what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012} within the code.
   Presented benchmark tests, although quite simplistic, together with the experience gained 
-    from the development of equally structured codes in three different
-    languages provide a basis for discussion of the tradeoffs of the programming language.
+    from the development of codes in three different
+    languages provide a basis for discussion on the tradeoffs of programming language choice.
   The discussion concerns in principle the development of finite-difference solvers for 
     partial differential equations, but is likely applicable the scientific software in general.
-  A partly objective and partly subjective summary of pros and cons of C++, Python and Fortran,
-    as observed during the development of the presented codes, is presented in the four following subsections.
+  A partly objective and partly subjective summary of pros and cons of C++, Python and Fortran
+    is presented in the four following subsections.
 
   \subsection{OOP for blackboard abstractions}
 
@@ -858,11 +879,9 @@
   \begin{itemize}
     \item{loop-free array arithmetics;}
     \item{definitions of functions returning array-valued expressions;}
-    \item{permutations of array indices allowing dimension-independent definitions
-      of functions (see e.g. listings C.12 and C.13, P.10 and P.11, F11 and F.12);}
-    \item{fractional indexing of arrays corresponding to employment of a staggered grid;}
-    \item{associating identifiers with slabs of arrays (e.g. for representing 
-      a psi[left\_halo]=psi[rght\_edge] assignment).} (DOROTA: w zasadzie tylko przyklad rozumiem)
+    \item{permutations of array indices allowing dimension-independant definitions
+      of functions (see e.g. listings C.12 and C.13, P.10 and P.11, F.11 and F.12);}
+    \item{fractional indexing of arrays corresponding to employment of a staggered grid.}
   \end{itemize}
   Three issues specific to Fortran that 
     resulted in employment of a more repetitive or cumbersome syntax than in C++ or Python
@@ -872,13 +891,9 @@
       with different data types (compare e.g. listings C.6, P.5 and F.4) such as
       templates in C++ and the so-called duck typing in Python;}
     \item{Fortran does not allow function calls to appear on the left hand side
-      of assignment (see e.g. how the \prog{tmp} pointers were used as a workaround in the \prog{cyclic\_fill\_halos}
-      method in listing F.8)}
-    \item{Fortran's built-in array-handling features are not object-oriented,
-      and hence not easily extendable via inheritance, but also subject to
-      some inherent limitations such as lack of support for arrays of arrays
-      (DOROTA: nie podoba mi sie to 'but also', moze wystarczy tylko pierwsza czesc punktu?)
-      (cf. Sect. \ref{sec:sequence})}
+      of assignment (see e.g. how the \prog{ptr} pointers were used as a workaround in the \prog{cyclic\_fill\_halos}
+      method in listing F.8);}
+    \item{Fortran lacks support for arrays of arrays (cf. Sect. \ref{sec:sequence}).}
   \end{itemize}
   Interestingly, the limitation in extendability via inheritance was found to
     exist partially in NumPy as well (see footnote \ref{fnt:slice}).
@@ -897,7 +912,7 @@
   One may consider performance measures addressing not only the program efficiency but also 
     the factors influencing the development and maintenance time/cost.
   Taking into account such measures as code length or coding time,
-    the Python environment clearly gains significantly.
+    the Python environment gains significantly.
   Presented Python code is shorter than the C++ and Fortran counterparts,
     and is simpler in terms of syntax and usage (see discussion below).
 
@@ -908,7 +923,7 @@
     or ease of use as the first requirement \citep[see e.g.][]{Barnes_and_Jones_2011}.
   PyPy's capability to improve performance of unmodified Python code may 
     make Python a favourable choice even if high performance is important, especially
-    if a performance-to-development cost measure is to be considered. 
+    if a cobbined measure of performance and development cost is to be considered. 
 
   \subsection{Ease of use and abuse}
 
@@ -924,27 +939,27 @@
     (for instance with \prog{goto} statements, employment of the preprocessor,
     or the implicit typing in Fortran).
 
-(DOROTA: zastanawiam sie, czy tego nie wyrzucic)
-  Python simplifies also building and shearing of software,
-    especially if multiple architectures and operating systems are targeted.
+  Python implementations do not expose to the user the compilation or linking processes. 
+  As a result, Python-written software is easier to deploy and share, especially 
+    if multiple architectures and operating systems are targeted.
   However, CMake\footnote{CMake is a family of open-source, cross-platform
     tools automating building, testing and packaging of C/C++/Fortran software,
-    see http://cmake.org/ for details}
+    see http://cmake.org/}
     is a tool (or arguably the tool) that allows to efficiently automate 
     builds, tests and packaging of C++ and Fortran programs.
 
-  Python is also definitely easiest to debug among the three languages.
-  There exist great debugging tools for C++, but the debugging and development is 
-    often hindered by indecipherable compiler messages.
-  OOP with Fortran is a relatively new concept, and the support for the Fortran OOP
-    features among free and open source compilers, debuggers and other programming
-    aids are still not mature.
+  Python is definitely easiest to debug among the three languages.
+  Great debugging tools for C++ do exist, however the debugging and development is 
+    often hindered by indecipherable compiler messages
+    flooded with lengthy type names stemming from employment of templates.
+  Support for the OOP features of Fortran among free and open source compilers, 
+    debuggers and other programming aids remains immature.
     
-  A factor contributing to the ease of use of the array-handling 
-    facilities is the clarity of rules determining their performance.
   With both Fortran and Python, the memory footprint caused by employment
-    of temporary objects in array arithmetics is dependent on compiler optimisations.
-  In contrast, Blitz++ ensures temporary-array-free computations by design.
+    of temporary objects in array arithmetics is dependant on compiler choice or
+    the level of optimisations.
+  In contrast, Blitz++ ensures temporary-array-free computations by design
+    \citep{Veldhuizen_et_al_1997}.
   Similarly, the C++ template mechanism and such features as the C++11
     \prog{constexpr} construct allow the programmer to enforce evaluation
     at compile time\footnote{Useful in context of scientific computing for example to perform
@@ -954,23 +969,20 @@
   \subsection{Added values}
 
   The size of the programmers' community of a given language 
-    influence the availability of trained personnel, 
-   reusable software components and information resources.
-    It also affect the maturity and quality of compilers and tools. 
+    influences the availability of trained personnel, 
+    reusable software components and information resources.
+  It also affects the maturity and quality of compilers and tools. 
   Fortran is a domain-specific language while Python and C++ are general-purpose languages
     with disproportionately larger users' communities.
-  The OOP features were introduced to Fortran only recently, and have not gained
-    wide popularity among users \citep{Worth_2008}\footnote{an anecdotal yet significant
+  The OOP features of Fortran have not gained
+    wide popularity among users \citep{Worth_2008}\footnote{An anecdotal yet significant
     example being the incomplete support for syntax-highlighting of modern Fortran in Vim and Emacs editors}.
-  Fortran is almost no longer taught at the universities \citep{Kendall_et_al_2008},
+  Fortran is no longer routinely taught at the universities \citep{Kendall_et_al_2008},
     in contrast to C++ and Python.
-  An example ofdecreasing popularity of Fortran in academia 
+  An example of decreasing popularity of Fortran in academia 
     is the discontinuation of Fortran printed editions of the ''Numerical Recipes'' 
     series of Press et al.
  
-
-  In the case of C++ and Python it is also the size of the particular
-    numerical-library users' community that is of importance.
   Blitz++ is one of several packages that offer high-performance object-oriented
     array manipulation functionality with C++ (and is not necessarily optimal for every
     purpose \citep{Iglberger_et_al_2012}).
@@ -978,78 +990,63 @@
   Consequently, numerous Python libraries adopted NumPy but
     there are apparently very few C++ libraries offering Blitz++ support out of the box
     (the gnuplot-iostream used in listing C.24 being a much-appreciated counterexample).
- ( DOROTA: nie rozumiem nastepnego zdania)
-  However, Blitz++ allows to instantiate its arrays using preexisting data what
-    allows to interface with virtually any library, although requiring additional
-    coding.
-  
-(DOROTA: a moze skrocic to i przeniesc do 4.1?)
+  However, Blitz++ allows to interface with virtually any library (including Fortran libraries), 
+    by resorting to referencing the underlying memory with raw pointers.
+ 
   The availability and quality of object-oriented 
     libraries differs among the three considered languages.
   The built-in standard libraries of Python and C++ are richer than
     those of Fortran and offer versatile data types, collections of
     algorithms and facilities for interaction with host operating system.
-%  External Fortran libraries are mostly limited to scientific applications, 
-%    while there exist collections of general-purpose C++ and Python libraries.
-%  Interfacing any of the three considered languages from
-%    another one does not pose a problem, though.
   In the authors' experience, the small popularity of OOP techniques among
-    Fortran users is reflected in the library designs.
+    Fortran users is reflected in the library designs (including the Fortran's
+    built-in library routines).
   What makes correct use of external libraries more difficult with Fortran
     is the lack of standard exception handling mechanisms in Fortran,
     long and {\em much requested by the numerical community} \citep[][Foreword]{Press_et_al_1996}.
 
-(DOROTA: nastepny akapit zaznaczylabym Fijalowi do uwaznego przejrzenia, 
-Ja nie rozumime tej czesci o numexpr itp)
   Finally, the three languages differ as well with regard to availability of 
     mechanisms for leveraging shared-memory parallelisation (e.g. with multi-core processors).
-  GCC supports OpenMP with Fortran and C++, as well as the C++11 built-in support for threads.
+  GCC supports OpenMP with Fortran and C++.
   The CPython and PyPy implementations of Python do not offer any
     built-in solution for multithreading. 
-  However, there are third-party party libraries such as numexpr which can employ multiple cores from
-    a single program.
-  There exist object-oriented libraries for both C++ and Python to 
-    transparently use graphics processing units (GPU) such as Thrust \citep{Thrust}
-    and Theano \citep{Bergstra_et_al_2010}. 
   
   \section{Summary and outlook}
 
-  Three object-oriented implementations of a prototype solver 
+  Three implementations of a prototype solver 
     for the advection equation were introduced.
-  The solvers are based on the MPDATA algorithm \citep{Smolarkiewicz_2006}.
-  All implementations follow the same structure but are implemented
-    in three different language and library pairs:
+  The solvers are based on MPDATA - an algorithm of particular applicability
+    in geophysical fluid dynamics \citep{Smolarkiewicz_2006}.
+  All implementations follow the same object-oriented structure but are implemented
+    in three different languages:
   \begin{itemize}
     \item{C++ with Blitz++;}
     \item{Python with NumPy;}
     \item{Fortran.}
   \end{itemize}
-(DOROTA: przelozylam to i delikatnie zmienilam, ale nadal nie rozuemi czesci 'employed tools...')
-  The fact that all considered standards are open and the employed
-    tools implementing them are free and open-source
-    is certainly a great advantage \citep{Anel_2011}.
-
-  Finite-difference partial differential equation solvers were example used to study 
-    the capabilities of these languages
-    for object-oriented scientific programming.
-  The emphasis was on the capabilities for reproduction 
-    of the mathematical abstractions used for explaining the algorithms
-    in journal papers within the program code.
 
   Presented programs were developed making use of such recent
     developments as support for C++11 and Fortran 2008 in GCC, and
     the NumPy support in the PyPy implementation of Python.
+  The fact that all considered standards are open and the employed
+    tools implementing them are free and open-source
+    is certainly an advantage \citep{Anel_2011}.
+
   The key conclusion is that all considered language/library/compiler
     set-ups offer possibilities for using OOP to compactly 
-     represent the mathematical abstractions within the program  code. 
-(OROTA: dwa nastepne zdania bym przeformulowala, ale chce sie upewnic, co wlasciwie chcemy tu powiedziec)
-  The readability and brevity of such code may contribute to its 
-    auditability, indispensable for credible and reproducible research in computational science 
-    \citep{Post_et_al_2005, Merali_et_al_2010, Stodden_et_al_2012}.
-  Employment of OOP helps as well to keep complex programs maintainable, avoiding accumulation of the technical/code 
-    debt \citep{Buschmann_2011} that besets scientific software in such domains as climate modelling
-    \citep{Freeman_et_al_2010}.
-
+    represent the mathematical abstractions within the program code. 
+  The readability and brevity of such code:
+  \begin{itemize}
+    \item{contribute to its 
+      auditability, indispensable for credible and reproducible research in computational science 
+      \citep{Post_et_al_2005, Merali_et_al_2010, Stodden_et_al_2012};
+    }
+    \item{help to keep the programs maintainable, avoiding accumulation of the code 
+      debt\footnote{See \citet{Buschmann_2011} for discussion of technical/code debt.} 
+      that besets scientific software in such domains as climate modelling
+      \citep{Freeman_et_al_2010}.
+    }
+  \end{itemize}
     
   The performance evaluation revealed that:
     \begin{itemize}
@@ -1065,10 +1062,11 @@ Ja nie rozumime tej czesci o numexpr itp)
   In addition to the source code presented within the text,
     a set of tests and build-/test-automation scripts
     allowing to reproduce the analysis and plots presented in section~\ref{sec:perf} are all 
-    available for download from the project repository\footnote{git repository at \url{http://github.com/slayoo/mpdata/}},
+    available in the CPC Program Library and at
+    the project repository\footnote{git repository at \url{http://github.com/slayoo/mpdata/}},
     and are released under the GNU GPL license \citep{GPLv3}.
+  The authors encourage to use the presented codes for teaching and benchmarking purposes.
 
-(DOROTA: to trzeba zmienic, nie wiem co dokladnie chciales powiedziec.)
   The OOP design enhances the possibilities to reuse and extend the presented code.
   Development is underway of an object-oriented C++ library featuring concepts presented herein,
     supporting integration in one to three dimensions, handling systems of equations with source terms, 
@@ -1077,11 +1075,14 @@ Ja nie rozumime tej czesci o numexpr itp)
   \section*{Acknowledgements}
   {\small
     \noindent 
-    Thanks are due Piotr Smolarkiewicz and Hanna Pawłowska.
+    We thank Piotr Smolarkiewicz and Hanna Pawłowska for their help throughout the project.
+    This study was partly inspired by the lectures of Lech Łobocki.
+
     \noindent
-    Authors would like to thank Tobias Burnus, Julian Cummings, Patrik Jonsson,
-      Arjen Markus and Janus Weil for their feedback on questions posted to Blitz++ and gfortran
-      mailing lists.
+    Tobias Burnus, Ond\v{r}ej \v{C}ert\'ik, Julian Cummings, Patrik Jonsson,
+      Arjen Markus, Zbigniew Piotrowski, Davide del Vento, Janus Weil and Andrzej Wyszogrodzki 
+      provided valuable feedback to the initial version of the
+      manuscript and/or responces to questions posted to Blitz++ and gfortran mailing lists.
     
     \noindent
     SA, AJ and DJ acknowledge funding from the Polish National Science Centre
