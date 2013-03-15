@@ -1,3 +1,10 @@
+execute_process(COMMAND perf stat -o /dev/stdout w OUTPUT_QUIET ERROR_QUIET RESULT_VARIABLE PERF-FOUND)
+if (${PERF-FOUND} EQUAL 0)
+  message(STATUS "perf was found and accepted the -o option")
+else()
+  message(STATUS "perf was not found or did not accept the -o option")
+endif()
+
 function(add_tests dir)
   # getting a list of tests
   execute_process(
@@ -44,8 +51,11 @@ function(add_tests dir)
     # cycles and instructions
     set(PERFTIME "${PERFTIME},cycles,instructions")
     # GNU time
-#    set(PERFTIME "time")
-    set(PERFTIME "${PERFTIME};time")
+    if (${PERF-FOUND} EQUAL 0)
+      set(PERFTIME "${PERFTIME};time")
+    else()
+      set(PERFTIME "time")
+    endif()
 
     set(REPEAT "0;1;2;") # repeat three times
     set(VERS "gcc;cxx;pyt;pyp;for") # repeat for each version
