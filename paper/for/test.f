@@ -9,10 +9,15 @@ program test
   end if
 
   block
+!listing23
     type(mpdata_t) :: slv
     type(cyclic_t), target :: bcx, bcy
-    integer :: nx, ny, nt, it, dec
+    integer :: nx, ny, nt, it
     real(real_t) :: Cx, Cy
+    real(real_t), pointer :: ptr(:,:)
+!listing24
+    character (len=666) :: fname
+    integer :: dec
 
     nx = arg2int(1)
     ny = arg2int(2)
@@ -21,29 +26,22 @@ program test
     nt = arg2int(5)
     it = arg2int(6)
     dec = arg2int(9)
+    call get_command_argument(7, fname)
 
-    block
-      class(bcd_t), pointer :: bcx_p, bcy_p
-      bcx_p => bcx
-      bcy_p => bcy
-      call slv%ctor(it, bcx_p, bcy_p, nx, ny)
-    end block
+!listing25
+    call slv%ctor(it, bcx, bcy, nx, ny)
 
-    block
-      real(real_t), pointer :: tmp(:,:)
-      character (len=666) :: fname
-      tmp => slv%state() 
-      call get_command_argument(7, fname)
-      call read_file(fname, tmp)
+    ptr => slv%state() 
+    call read_file(fname, ptr)
 
-      tmp => slv%courant(0) 
-      tmp = Cx
+    ptr => slv%courant(0) 
+    ptr = Cx
 
-      tmp => slv%courant(1) 
-      tmp = Cy
-    end block
+    ptr => slv%courant(1) 
+    ptr = Cy
 
     call slv%solve(nt)
+!listing26
 
     block
       logical :: error = .FALSE.

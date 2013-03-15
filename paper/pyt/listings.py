@@ -180,7 +180,7 @@ def C_bar(d, C, i, j):
     C[pi(d, i+one, j-hlf)] + C[pi(d, i,  j-hlf)] 
   ) / 4
 #listing17
-def antidiff(d, psi, i, j, C):
+def C_adf(d, psi, i, j, C):
   return (
     abs(C[d][pi(d, i+hlf, j)]) 
     * (1 - abs(C[d][pi(d, i+hlf, j)])) 
@@ -229,16 +229,14 @@ class Mpdata(Solver):
         else:
           C_unco, C_corr = self.tmp[0], self.tmp[1]
 
-        C_corr[0][self.im+hlf, self.j] = (
-          antidiff(0, self.psi[self.n], 
-            self.im, self.j, C_unco)
-          ) 
+        C_corr[0][self.im+hlf, self.j] = C_adf(
+          0, self.psi[self.n], self.im, self.j, C_unco
+        )
         self.bcy.fill_halos(C_corr[0], ext(self.i, hlf))
         
-        C_corr[1][self.i, self.jm+hlf] = (
-          antidiff(1, self.psi[self.n], 
-            self.jm, self.i, C_unco)
-          ) 
+        C_corr[1][self.i, self.jm+hlf] = C_adf(
+          1, self.psi[self.n], self.jm, self.i, C_unco
+        )
         self.bcx.fill_halos(C_corr[1], ext(self.j, hlf))
 
         donorcell_op(

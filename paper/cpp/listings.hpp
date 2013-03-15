@@ -241,7 +241,7 @@ namespace mpdata
   )
 //listing21
   template<int d>
-  inline auto antidiff(
+  inline auto C_adf(
     const arr_t &psi, 
     const rng_t &i, const rng_t &j,
     const arrvec_t &C
@@ -287,8 +287,9 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
     for (int step = 0; step < n_iters; ++step) 
     {
       if (step == 0) 
-        donorcell::op(this->psi, 
-          this->n, this->C, this->i, this->j);
+        donorcell::op(
+          this->psi, this->n, this->C, this->i, this->j
+        );
       else
       {
         this->cycle();
@@ -311,23 +312,20 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
             : tmp[1];   // even steps
 
         // calculating the antidiffusive C 
-        C_corr[0](this->im+h, this->j) = 
-          mpdata::antidiff<0>(
-            this->psi[this->n], 
-            this->im, this->j, C_unco
-          );
-        this->bcy.fill_halos(C_corr[0], ext(this->i, h));
-
-        C_corr[1](this->i, this->jm+h) = 
-          mpdata::antidiff<1>(
-            this->psi[this->n], 
-            this->jm, this->i, C_unco
+        C_corr[0](im+h, this->j) = mpdata::C_adf<0>(
+          this->psi[this->n], im, this->j, C_unco
         );
-        this->bcx.fill_halos(C_corr[1], ext(this->j, h));
+        this->bcy.fill_halos(C_corr[0], ext(this->i,h));
+
+        C_corr[1](this->i, jm+h) = mpdata::C_adf<1>(
+          this->psi[this->n], jm, this->i, C_unco
+        );
+        this->bcx.fill_halos(C_corr[1], ext(this->j,h));
 
         // donor-cell step 
-        donorcell::op(this->psi, 
-          this->n, C_corr, this->i, this->j);
+        donorcell::op(
+          this->psi, this->n, C_corr, this->i, this->j
+        );
       }
     }
   }

@@ -21,15 +21,17 @@ def main():
   Cy = float(sys.argv[4])
   nt = int(sys.argv[5])
   it = int(sys.argv[6])
-  fin = sys.argv[7]
+  fname = sys.argv[7]
   fout = sys.argv[8]
   dec = int(sys.argv[9])
 
+#listing19
   slv = Mpdata(it, Cyclic, Cyclic, nx, ny)
-  slv.state()[:] = read_file(fin, nx, ny)
+  slv.state()[:] = read_file(fname, nx, ny)
   slv.courant(0)[:] = Cx
   slv.courant(1)[:] = Cy
   slv.solve(nt)
+#listing20
 
   diff = numpy.amax(abs(slv.state() - read_file(fout, nx, ny)))
   print "diff=", diff

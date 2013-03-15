@@ -2,7 +2,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors")
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native") # -ftree-vectorizer-verbose=1")
 else()
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native") # e.g. clang++
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -mllvm -vectorize -ffast-math -march=native") # e.g. clang++
 endif()
 set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++11 -DBZ_DEBUG")
 
