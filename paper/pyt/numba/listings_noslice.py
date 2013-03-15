@@ -55,17 +55,44 @@ def pi(d, idx_0, idx_1):
   idx = [idx_0, idx_1]
   return (idx[d], idx[d-1]) 
 
+#listing08                                                                                           
+@jit
+class Cyclic(object):
+  @void(int_, int_, int_, int_)
+  def __init__(self, d, i_start, i_stop, hlo):
+    i  = slice(i_start, i_stop)
+    self.d = d
+    self.left_halo = slice(i.start-hlo, i.start    )
+    self.rght_edge = slice(i.stop -hlo, i.stop     )
+    self.rght_halo = slice(i.stop,      i.stop +hlo)
+    self.left_edge = slice(i.start,     i.start+hlo)
+
+  # method invoked by the solver                                                                     
+  @void(float64_2d, int_, int_)
+  def fill_halos(self, psi, j_start, j_stop):
+    j = slice(j_start, j_stop)
+    psi[pi(self.d, self.left_halo, j)] = (
+      psi[pi(self.d, self.rght_edge, j)]
+    )
+    psi[pi(self.d, self.rght_halo, j)] = (
+      psi[pi(self.d, self.left_edge, j)]
+    )
+
+
+
 #listing07
+@jit
 class Solver(object):
   # ctor-like method
-  def __init__(self, bcx, bcy, nx, ny, hlo):
+  @void(int_, int_, int_)
+  def __init__(self, nx, ny, hlo):
     self.n = 0
     self.hlo = hlo
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
 
-    self.bcx = bcx(0, self.i.start, self.i.stop, hlo)
-    self.bcy = bcy(1, self.j.start, self.j.stop, hlo)
+    self.bcx = Cyclic(0, self.i.start, self.i.stop, hlo)
+    self.bcy = Cyclic(1, self.j.start, self.j.stop, hlo)
 
     self.psi = (
       numpy.empty((
@@ -90,17 +117,21 @@ class Solver(object):
     )
 
   # accessor methods
+  @float64_2d()
   def state(self):
     return self.psi[self.n][self.i, self.j]
 
   # helper methods invoked by solve()
+  @float64_2d(int_)
   def courant(self,d):
     return self.C[d][:]
 
+  @void()
   def cycle(self):
     self.n  = (self.n + 1) % 2 - 2
 
    # integration logic
+  @void(int_)
   def solve(self, nt):
     #pdb.set_trace()
     for t in range(nt):
@@ -115,26 +146,6 @@ class Solver(object):
       self.advop() 
       self.cycle()
   
-#listing08
-class Cyclic(object):
-  # ctor
-  def __init__(self, d, i_start, i_stop, hlo):
-    i  = slice(i_start, i_stop)
-    self.d = d
-    self.left_halo = slice(i.start-hlo, i.start    )
-    self.rght_edge = slice(i.stop -hlo, i.stop     )
-    self.rght_halo = slice(i.stop,      i.stop +hlo)
-    self.left_edge = slice(i.start,     i.start+hlo)
-
-  # method invoked by the solver
-  def fill_halos(self, psi, j_start, j_stop):
-    j = slice(j_start, j_stop) 
-    psi[pi(self.d, self.left_halo, j)] = (
-      psi[pi(self.d, self.rght_edge, j)]
-    )
-    psi[pi(self.d, self.rght_halo, j)] = (
-      psi[pi(self.d, self.left_edge, j)]
-    )
 
 #listing09
 @autojit
