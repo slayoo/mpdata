@@ -1,4 +1,4 @@
-from listings import *
+from listings_noslice import *
 import sys
 import time
 
@@ -30,7 +30,7 @@ def read_file(fname, nx, ny):
 # comapring array from output files with results after advection
 # dec is the accuracy of comparison, it might be needed sometimes to use smaller
 def checking_output(fin, fout, nx, ny, Cx, Cy, nt, it, dec=4):
-  slv = Mpdata(it, Cyclic, Cyclic, nx, ny)
+  slv = Mpdata(it, nx, ny)
   slv.state()[:] = read_file(fin, nx, ny)
   slv.courant(0)[:] = Cx
   slv.courant(1)[:] = Cy
