@@ -17,7 +17,7 @@ except AttributeError:
   pass
 
 try:
-    from numba import jit, float64, int_, void, autojit
+    from numba import jit, float64, int_, void, autojit, object_
     float64_1d=float64[:]
     float64_2d=float64[:,:]
     print "Numba or Numbapro imported"
@@ -84,15 +84,15 @@ class Cyclic(object):
 @jit
 class Solver(object):
   # ctor-like method
-  @void(int_, int_, int_)
-  def __init__(self, nx, ny, hlo):
+  @void(object_, object_, int_, int_, int_)
+  def __init__(self, bcx, bcy, nx, ny, hlo):
     self.n = 0
     self.hlo = hlo
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
 
-    self.bcx = Cyclic(0, self.i.start, self.i.stop, hlo)
-    self.bcy = Cyclic(1, self.j.start, self.j.stop, hlo)
+#    self.bcx = bcx(0, self.i.start, self.i.stop, hlo)
+#    self.bcy = bcy(1, self.j.start, self.j.stop, hlo)
 
     self.psi = (
       numpy.empty((
@@ -135,16 +135,17 @@ class Solver(object):
   def solve(self, nt):
     #pdb.set_trace()
     for t in range(nt):
-      self.bcx.fill_halos(
-        self.psi[self.n], ext(self.j, self.hlo, self.hlo).start, 
-        ext(self.j, self.hlo, self.hlo).stop 
-      )
-      self.bcy.fill_halos(
-        self.psi[self.n], ext(self.i, self.hlo, self.hlo).start, 
-        ext(self.i, self.hlo, self.hlo).stop 
-      )
-      self.advop() 
-      self.cycle()
+      #self.bcx.fill_halos(
+      #  self.psi[self.n], ext(self.j, self.hlo, self.hlo).start, 
+      #  ext(self.j, self.hlo, self.hlo).stop 
+      #)
+      #self.bcy.fill_halos(
+      #  self.psi[self.n], ext(self.i, self.hlo, self.hlo).start, 
+      #  ext(self.i, self.hlo, self.hlo).stop 
+      #)
+      #self.advop() 
+      #self.cycle()
+      pass
   
 
 #listing09
