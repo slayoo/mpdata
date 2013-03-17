@@ -56,7 +56,7 @@ def pi(d, idx_0, idx_1):
   return (idx[d], idx[d-1])
 
 #listing08                                                                                        
-#changed class to function for testing numba                                                       
+#changed class to function for testing numba 
 @autojit
 def cyclic_fill_halos(d, i_start, i_stop, hlo, psi, j_start, j_stop):
     i = slice(i_start, i_stop)
@@ -79,6 +79,7 @@ def cyclic_fill_halos(d, i_start, i_stop, hlo, psi, j_start, j_stop):
 @jit
 class Solver(object):
   # ctor-like method
+  @void(int_, int_, int_)
   def __init__(self, nx, ny, hlo):
     self.n = 0
     self.hlo = hlo
