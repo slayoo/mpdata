@@ -55,7 +55,28 @@ def pi(d, idx_0, idx_1):
   idx = [idx_0, idx_1]
   return (idx[d], idx[d-1])
 
+#listing08                                                                                        
+#changed class to function for testing numba                                                       
+@autojit
+def cyclic_fill_halos(d, i_start, i_stop, hlo, psi, j_start, j_stop):
+    i = slice(i_start, i_stop)
+    left_halo = slice(i.start-hlo, i.start )
+    rght_edge = slice(i.stop -hlo, i.stop )
+    rght_halo = slice(i.stop, i.stop +hlo)
+    left_edge = slice(i.start, i.start+hlo)
+
+    j = slice(j_start, j_stop)
+    psi[pi(d, left_halo, j)] = (
+      psi[pi(d, rght_edge, j)]
+    )
+    psi[pi(d, rght_halo, j)] = (
+      psi[pi(d, left_edge, j)]
+    )
+
+
+
 #listing07
+@jit
 class Solver(object):
   # ctor-like method
   def __init__(self, nx, ny, hlo):
@@ -69,36 +90,40 @@ class Solver(object):
       numpy.empty((
         ext(self.i, self.hlo, self.hlo).stop,
         ext(self.j, self.hlo, self.hlo).stop
-      ), real_t),
+      )),
       numpy.empty((
         ext(self.i, self.hlo, self.hlo).stop,
         ext(self.j, self.hlo, self.hlo).stop
-      ), real_t)
+      ))
     )
 
     self.C = (
       numpy.empty((
         ext(self.i, 1, 0).stop,
         ext(self.j, self.hlo, self.hlo).stop
-      ), real_t),
+      )),
       numpy.empty((
         ext(self.i, self.hlo, self.hlo).stop,
         ext(self.j, 1, 0).stop
-      ), real_t)
+      ))
     )
 
   # accessor methods
+  @float64_2d()
   def state(self):
     return self.psi[self.n][self.i, self.j]
 
   # helper methods invoked by solve()
+  @float64_2d(int_)
   def courant(self,d):
     return self.C[d][:]
 
+  @void()
   def cycle(self):
     self.n = (self.n + 1) % 2 - 2
 
    # integration logic
+  @void(int_)
   def solve(self, nt):
     #pdb.set_trace()
     for t in range(nt):
@@ -115,23 +140,6 @@ class Solver(object):
       self.advop()
       self.cycle()
   
-#listing08
-#changed class to function for testing numba
-def cyclic_fill_halos(d, i_start, i_stop, hlo, psi, j_start, j_stop):
-    i = slice(i_start, i_stop)
-    left_halo = slice(i.start-hlo, i.start )
-    rght_edge = slice(i.stop -hlo, i.stop )
-    rght_halo = slice(i.stop, i.stop +hlo)
-    left_edge = slice(i.start, i.start+hlo)
-
-    j = slice(j_start, j_stop)
-    psi[pi(d, left_halo, j)] = (
-      psi[pi(d, rght_edge, j)]
-    )
-    psi[pi(d, rght_halo, j)] = (
-      psi[pi(d, left_edge, j)]
-    )
-
 #listing09
 @autojit
 def f(psi_l, psi_r, C):
