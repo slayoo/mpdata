@@ -17,7 +17,7 @@ except AttributeError:
   pass
 
 try:
-    from numba import jit, float64, int_, void, autojit
+    from numba import jit, float64, int_, void, autojit, object_
     float64_1d=float64[:]
     float64_2d=float64[:,:]
     print "Numba or Numbapro imported"
@@ -56,36 +56,40 @@ def pi(d, idx_0, idx_1):
   return (idx[d], idx[d-1])
 
 #listing08                                                                                        
-#changed class to function for testing numba 
-@autojit
-def cyclic_fill_halos(d, i_start, i_stop, hlo, psi, j_start, j_stop):
+@jit
+class Cyclic(object):
+  @void(int_, int_, int_, int_)
+  def __init__(self, d, i_start, i_stop, hlo):
     i = slice(i_start, i_stop)
-    left_halo = slice(i.start-hlo, i.start )
-    rght_edge = slice(i.stop -hlo, i.stop )
-    rght_halo = slice(i.stop, i.stop +hlo)
-    left_edge = slice(i.start, i.start+hlo)
+    self.d = d
+    self.left_halo = slice(i.start-hlo, i.start )
+    self.rght_edge = slice(i.stop -hlo, i.stop )
+    self.rght_halo = slice(i.stop, i.stop +hlo)
+    self.left_edge = slice(i.start, i.start+hlo)
 
+  # method invoked by the solver
+  @void(float64_2d, int_, int_)
+  def fill_halos(self, psi, j_start, j_stop):
     j = slice(j_start, j_stop)
-    psi[pi(d, left_halo, j)] = (
-      psi[pi(d, rght_edge, j)]
+    psi[pi(self.d, self.left_halo, j)] = (
+      psi[pi(self.d, self.rght_edge, j)]
     )
-    psi[pi(d, rght_halo, j)] = (
-      psi[pi(d, left_edge, j)]
+    psi[pi(self.d, self.rght_halo, j)] = (
+      psi[pi(self.d, self.left_edge, j)]
     )
-
-
 
 #listing07
 @jit
 class Solver(object):
   # ctor-like method
-  @void(int_, int_, int_)
-  def __init__(self, nx, ny, hlo):
+  @void(object_, object_, int_, int_, int_)
+  def __init__(self, bcx, bcy, nx, ny, hlo):
     self.n = 0
     self.hlo = hlo
     self.i = slice(hlo, nx + hlo)
     self.j = slice(hlo, ny + hlo)
-
+    self.bcx = bcx(0, self.i.start, self.i.stop, hlo)
+    self.bcy = bcy(1, self.j.start, self.j.stop, hlo)
 
     self.psi = (
       numpy.empty((
@@ -130,15 +134,13 @@ class Solver(object):
    # integration logic
   @void(int_)
   def solve(self, nt):
-    pdb.set_trace()
+    #pdb.set_trace()
     for t in range(nt):
-      cyclic_fill_halos(
-        0, self.i.start, self.i.stop, self.hlo,
+      self.bcx.fill_halos(
         self.psi[self.n], ext(self.j, self.hlo, self.hlo).start,
         ext(self.j, self.hlo, self.hlo).stop
       )
-      cyclic_fill_halos(
-        1, self.j.start, self.j.stop, self.hlo,
+      self.bcy.fill_halos(
         self.psi[self.n], ext(self.i, self.hlo, self.hlo).start,
         ext(self.i, self.hlo, self.hlo).stop
       )
@@ -182,8 +184,8 @@ def donorcell_op(psi, n, C, i, j):
 
 #listing12
 class Donorcell(Solver):
-  def __init__(self, nx, ny):
-    Solver.__init__(self, nx, ny, 1)
+  def __init__(self, bcx, bcy, nx, ny):
+    Solver.__init__(self, bcx, bcy, nx, ny, 1)
 
   def advop(self):
     donorcell_op(
@@ -236,8 +238,8 @@ def antidiff(d, psi, i, j, C):
   )
 #listing18
 class Mpdata(Solver):
-  def __init__(self, n_iters, nx, ny):
-    Solver.__init__(self, nx, ny, 1)
+  def __init__(self, n_iters, bcx, bcy, nx, ny):
+    Solver.__init__(self, bcx, bcy, nx, ny, 1)
     self.im = slice(self.i.start-1, self.i.stop)
     self.jm = slice(self.j.start-1, self.j.stop)
 
@@ -262,13 +264,11 @@ class Mpdata(Solver):
         )
       else:
         self.cycle()
-        cyclic_fill_halos(
-          0, self.i.start, self.i.stop, hlo,
+        self.bcx.fill_halos(
           self.psi[self.n], ext(self.j, self.hlo, self.hlo).start,
           ext(self.j, self.hlo, self.hlo).stop
         )
-        cyclic_fill_halos(
-          1, self.j.start, self.j.stop, hlo,
+        self.bcy.fill_halos(
           self.psi[self.n], ext(self.i, self.hlo, self.hlo).start,
           ext(self.i, self.hlo, self.hlo).stop
         )
@@ -284,12 +284,13 @@ class Mpdata(Solver):
             self.im, self.j, C_unco)
           )
         self.bcy.fill_halos(C_corr[0], ext(self.i, 1, 0).start, ext(self.i, 1, 0).stop)
-        
+
         C_corr[1][self.i, sl_add(self.jm,0)] = (
           antidiff(1, self.psi[self.n],
             self.jm, self.i, C_unco)
           )
         self.bcx.fill_halos(C_corr[1], ext(self.j, 1, 0).start, ext(self.j, 1, 0).stop)
+
 
         donorcell_op(
           self.psi, self.n, C_corr, self.i, self.j
