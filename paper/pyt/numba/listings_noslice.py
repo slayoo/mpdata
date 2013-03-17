@@ -122,10 +122,14 @@ class Solver(object):
   def cycle(self):
     self.n = (self.n + 1) % 2 - 2
 
+#  @void()
+#  def advop(self):
+#    pass
+
    # integration logic
   @void(int_)
   def solve(self, nt):
-    #pdb.set_trace()
+    pdb.set_trace()
     for t in range(nt):
       cyclic_fill_halos(
         0, self.i.start, self.i.stop, self.hlo,
