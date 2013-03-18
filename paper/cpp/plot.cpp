@@ -1,4 +1,4 @@
-//listing24
+//listing20
 #include "listings.hpp"
 #define GNUPLOT_ENABLE_BLITZ
 #include <gnuplot-iostream/gnuplot-iostream.h>
@@ -52,7 +52,8 @@ int main()
        << "splot '-' binary" << binfmt
        << "with lines notitle\n";
     gp.sendBinary(slv.state().copy());
-  } {
+  } 
+  {
     const int it = 2;
     solver_mpdata<it, cyclic<x>, cyclic<y>> 
       slv(n[x], n[y]); 
@@ -63,7 +64,8 @@ int main()
        << "splot '-' binary" << binfmt
        << "with lines notitle\n";
     gp.sendBinary(slv.state().copy());
-  } {
+  } 
+  {
     const int it = 44;
     solver_mpdata<it, cyclic<x>, cyclic<y>> 
       slv(n[x], n[y]); 
@@ -76,4 +78,4 @@ int main()
     gp.sendBinary(slv.state().copy());
   }
 }
-//listing25
+//listing21

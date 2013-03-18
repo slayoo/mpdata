@@ -26,7 +26,7 @@ def main():
   dec = int(sys.argv[9])
 
 #listing19
-  slv = Mpdata(it, Cyclic, Cyclic, nx, ny)
+  slv = solver_mpdata(it, cyclic, cyclic, nx, ny)
   slv.state()[:] = read_file(fname, nx, ny)
   slv.courant(0)[:] = Cx
   slv.courant(1)[:] = Cy

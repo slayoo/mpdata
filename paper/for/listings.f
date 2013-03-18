@@ -389,7 +389,7 @@ module solver_donorcell_m
     class(arrvec_t), pointer :: C
     C => this%C
     call donorcell_op(                                 &
-      this%psi, this%n, C, this%i, this%j         &
+      this%psi, this%n, C, this%i, this%j              &
     )
   end subroutine
 end module
@@ -401,7 +401,7 @@ module mpdata_m
   implicit none
   contains 
 !listing16
-  function frac(nom, den) result (return)
+  function mpdata_frac(nom, den) result (return)
     real(real_t), intent(in) :: nom(:,:), den(:,:)
     real(real_t) :: return(size(nom, 1), size(nom, 2))
     where (den > 0)
@@ -411,23 +411,23 @@ module mpdata_m
     end where
   end function
 !listing17
-  function A(d, psi, i, j) result (return)
+  function mpdata_A(d, psi, i, j) result (return)
     integer :: d
     real(real_t), allocatable, intent(in) :: psi(:,:)
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
-    return = frac(                                     &
+    return = mpdata_frac(                              &
       pi(d, psi, i+1, j) - pi(d, psi, i, j),           &
       pi(d, psi, i+1, j) + pi(d, psi, i, j)            &
     )  
   end function
 !listing18
-  function B(d, psi, i, j) result (return)
+  function mpdata_B(d, psi, i, j) result (return)
     integer :: d
     real(real_t), allocatable, intent(in) :: psi(:,:) 
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
-    return = frac(                                     &
+    return = mpdata_frac(                              &
       pi(d, psi, i+1, j+1) + pi(d, psi, i,   j+1)      &
     - pi(d, psi, i+1, j-1) - pi(d, psi, i,   j-1),     &
       pi(d, psi, i+1, j+1) + pi(d, psi, i,   j+1)      &
@@ -435,7 +435,7 @@ module mpdata_m
     ) / 2
   end function
 !listing19
-  function C_bar(d, C, i, j) result (return)
+  function mpdata_C_bar(d, C, i, j) result (return)
     integer :: d
     real(real_t), allocatable, intent(in) :: C(:,:) 
     integer, intent(in) :: i(2), j(2)
@@ -447,7 +447,7 @@ module mpdata_m
     ) / 4               
   end function
 !listing20
-  function C_adf(d, psi, i, j, C) result (return)
+  function mpdata_C_adf(d, psi, i, j, C) result (return)
     integer :: d
     integer, intent(in) :: i(2), j(2)
     real(real_t) :: return(span(d, i, j), span(d, j, i))
@@ -456,10 +456,10 @@ module mpdata_m
     return =                                           &
       abs(pi(d, C%at(d)%p%a, i+h, j))                  &
       * (1 - abs(pi(d, C%at(d)%p%a, i+h, j)))          &
-      * A(d, psi, i, j)                                &
+      * mpdata_A(d, psi, i, j)                         &
       - pi(d, C%at(d)%p%a, i+h, j)                     &
-      * C_bar(d, C%at(d-1)%p%a, i, j)                  &
-      * B(d, psi, i, j)
+      * mpdata_C_bar(d, C%at(d-1)%p%a, i, j)           &
+      * mpdata_B(d, psi, i, j)
   end function
 !listing21
 end module
@@ -548,7 +548,7 @@ module solver_mpdata_m
 
             ! calculating the antidiffusive velo
             ptr => pi(0, C_corr%at( 0 )%p%a, im+h, j)
-            ptr = C_adf(                               &
+            ptr = mpdata_C_adf(                        &
               0, psi%at( n )%p%a, im, j, C_unco        &
             )      
             call bcy%fill_halos(                       &
@@ -556,7 +556,7 @@ module solver_mpdata_m
             )
 
             ptr => pi(0, C_corr%at( 1 )%p%a, i, jm+h)
-            ptr = C_adf(                               &
+            ptr = mpdata_C_adf(                        &
               1, psi%at( n )%p%a, jm, i, C_unco        &
             )
             call bcx%fill_halos(                       &

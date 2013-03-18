@@ -138,9 +138,6 @@ struct cyclic
   }
 };
 //listing10
-namespace donorcell
-{
-//listing11
   template<class T1, class T2, class T3> 
   inline auto F(
     const T1 &psi_l, const T2 &psi_r, const T3 &C
@@ -150,7 +147,7 @@ namespace donorcell
       (C - abs(C)) * psi_r
     ) / 2
   )
-//listing12
+//listing11
   template<int d>  
   inline auto donorcell( 
     const arr_t &psi, const arr_t &C, 
@@ -167,8 +164,8 @@ namespace donorcell
         C(pi<d>(i-h, j))
     )
   )
-//listing13
-  void op(
+//listing12
+  void donorcell_op(
     const arrvec_t &psi, const int n,
     const arrvec_t &C, 
     const rng_t &i, const rng_t &j
@@ -177,9 +174,7 @@ namespace donorcell
       - donorcell<0>(psi[n], C[0], i, j)
       - donorcell<1>(psi[n], C[1], j, i); 
   }
-//listing14
-}; 
-//listing15
+//listing13
 template<class bcx_t, class bcy_t>
 struct solver_donorcell : solver<bcx_t, bcy_t> 
 {
@@ -189,73 +184,68 @@ struct solver_donorcell : solver<bcx_t, bcy_t>
 
   void advop()
   {
-    donorcell::op(
+    donorcell_op(
       this->psi, this->n, this->C, 
       this->i, this->j
     );
   }
 };
-//listing16
-namespace mpdata
-{
-//listing17
+//listing14
   template<class nom_t, class den_t>
-  inline auto frac(
+  inline auto mpdata_frac(
     const nom_t &nom, const den_t &den
   ) return_macro(
     where(den > 0, nom / den, 0)
   ) 
-//listing18
+//listing15
   template<int d>
-  inline auto A(const arr_t &psi, 
+  inline auto mpdata_A(const arr_t &psi, 
     const rng_t &i, const rng_t &j
   ) return_macro(
-    frac(
+    mpdata_frac(
       psi(pi<d>(i+1, j)) - psi(pi<d>(i,j)),
       psi(pi<d>(i+1, j)) + psi(pi<d>(i,j))
     ) 
   ) 
-//listing19
+//listing16
   template<int d>
-  inline auto B(const arr_t &psi, 
+  inline auto mpdata_B(const arr_t &psi, 
     const rng_t &i, const rng_t &j
   ) return_macro(
-   frac(
+   mpdata_frac(
       psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) -
       psi(pi<d>(i+1, j-1)) - psi(pi<d>(i, j-1)),
       psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) +
       psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
     ) / 2
   )
-//listing20
+//listing17
   template<int d>
-  inline auto C_bar(
+  inline auto mpdata_C_bar(
     const arr_t &C, 
     const rng_t &i, 
     const rng_t &j
   ) return_macro(
     (
-      C(pi<d>(i+1, j+h)) + C(pi<d>(i,   j+h)) +
-      C(pi<d>(i+1, j-h)) + C(pi<d>(i,   j-h)) 
+      C(pi<d>(i+1, j+h)) + C(pi<d>(i, j+h)) +
+      C(pi<d>(i+1, j-h)) + C(pi<d>(i, j-h)) 
     ) / 4
   )
-//listing21
+//listing18
   template<int d>
-  inline auto C_adf(
+  inline auto mpdata_C_adf(
     const arr_t &psi, 
     const rng_t &i, const rng_t &j,
     const arrvec_t &C
   ) return_macro(
     abs(C[d](pi<d>(i+h, j))) 
     * (1 - abs(C[d](pi<d>(i+h, j)))) 
-    * A<d>(psi, i, j) 
+    * mpdata_A<d>(psi, i, j) 
     - C[d](pi<d>(i+h, j)) 
-    * C_bar<d>(C[d-1], i, j)
-    * B<d>(psi, i, j)
+    * mpdata_C_bar<d>(C[d-1], i, j)
+    * mpdata_B<d>(psi, i, j)
   ) 
-//listing22
-};
-//listing23
+//listing19
 template<int n_iters, class bcx_t, class bcy_t>
 struct solver_mpdata : solver<bcx_t, bcy_t>
 {
@@ -287,7 +277,7 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
     for (int step = 0; step < n_iters; ++step) 
     {
       if (step == 0) 
-        donorcell::op(
+        donorcell_op(
           this->psi, this->n, this->C, this->i, this->j
         );
       else
@@ -312,22 +302,22 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
             : tmp[1];   // even steps
 
         // calculating the antidiffusive C 
-        C_corr[0](im+h, this->j) = mpdata::C_adf<0>(
+        C_corr[0](im+h, this->j) = mpdata_C_adf<0>(
           this->psi[this->n], im, this->j, C_unco
         );
         this->bcy.fill_halos(C_corr[0], ext(this->i,h));
 
-        C_corr[1](this->i, jm+h) = mpdata::C_adf<1>(
+        C_corr[1](this->i, jm+h) = mpdata_C_adf<1>(
           this->psi[this->n], jm, this->i, C_unco
         );
         this->bcx.fill_halos(C_corr[1], ext(this->j,h));
 
         // donor-cell step 
-        donorcell::op(
+        donorcell_op(
           this->psi, this->n, C_corr, this->i, this->j
         );
       }
     }
   }
 };
-//listing24
+//listing20
