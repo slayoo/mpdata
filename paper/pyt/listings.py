@@ -174,7 +174,7 @@ def mpdata_B(d, psi, i, j):
     psi[pi(d, i+one, j-one)] + psi[pi(d, i, j-one)]
   ) / 2
 #listing16
-def C_bar(d, C, i, j):
+def mpdata_C_bar(d, C, i, j):
   return (
     C[pi(d, i+one, j+hlf)] + C[pi(d, i,  j+hlf)] +
     C[pi(d, i+one, j-hlf)] + C[pi(d, i,  j-hlf)] 
