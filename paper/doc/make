@@ -1,12 +1,11 @@
 echo "import pygments.formatters as f; print f.LatexFormatter().get_style_defs()" | python > pygments.tex
 
-mkdir -p code
 mkdir -p code/cpp
-for i in ../cpp/*.*pp; do pygmentize -o code/cpp/$i.tex $i; done; 
+for i in ../cpp/*.*pp; do pygmentize -o code-cpp-$i.tex $i; done; 
 mkdir -p code/for
-for i in ../for/*.f; do pygmentize -o code/for/$i.tex $i; done; 
+for i in ../for/*.f; do pygmentize -o code-for-$i.tex $i; done; 
 mkdir -p code/pyt
-for i in ../pyt/*.py; do pygmentize -o code/pyt/$i.tex $i; done; 
+for i in ../pyt/*.py; do pygmentize -o code-pyt-$i.tex $i; done; 
 
 pdflatex paper.tex && \
 bibtex paper && \

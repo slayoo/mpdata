@@ -1,0 +1,576 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{c}{!listing00}
+\PY{c}{! code licensed under the terms of GNU GPL v3}
+\PY{c}{! copyright holder: University of Warsaw}
+\PY{c}{!listing01}
+\PY{k}{module }\PY{n+nv}{real\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+\PY{k}{  }\PY{k+kt}{integer}\PY{p}{,} \PY{k}{parameter} \PY{k+kd}{::} \PY{n+nv}{real\PYZus{}t} \PY{o}{=} \PY{n+nb}{kind}\PY{p}{(}\PY{l+m+mf}{0.}\PY{n+nv}{d0}\PY{p}{)} 
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing02}
+\PY{k}{module }\PY{n+nv}{arrvec\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{real\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+
+\PY{k}{  }\PY{k}{type} \PY{k+kd}{::} \PY{n+nv}{arr\PYZus{}t}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable} \PY{k+kd}{::} \PY{n+nv}{a}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+  \PY{k}{end }\PY{k}{type}
+
+\PY{k}{  }\PY{k}{type} \PY{k+kd}{::} \PY{n+nv}{arrptr\PYZus{}t}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arr\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{p}
+  \PY{k}{end }\PY{k}{type}
+
+\PY{k}{  }\PY{k}{type} \PY{k+kd}{::} \PY{n+nv}{arrvec\PYZus{}t}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arr\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable} \PY{k+kd}{::} \PY{n+nv}{arrs}\PY{p}{(}\PY{p}{:}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrptr\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable} \PY{k+kd}{::} \PY{n+nv}{at}\PY{p}{(}\PY{p}{:}\PY{p}{)}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{length}
+    \PY{k}{contains}
+\PY{k}{    }\PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{ctor} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{arrvec\PYZus{}ctor}
+    \PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{init} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{arrvec\PYZus{}init}
+  \PY{k}{end }\PY{k}{type}
+
+\PY{k}{  }\PY{k}{contains}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{arrvec\PYZus{}ctor}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{n}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{n}
+
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{length} \PY{o}{=} \PY{n+nv}{n}
+    \PY{k}{allocate}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(} \PY{o}{-}\PY{n+nv}{n} \PY{p}{:} \PY{n+nv}{n}\PY{o}{-}\PY{l+m+mi}{1} \PY{p}{)}\PY{p}{)}
+    \PY{k}{allocate}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{arrs}\PY{p}{(} \PY{l+m+mi}{0} \PY{p}{:} \PY{n+nv}{n}\PY{o}{-}\PY{l+m+mi}{1} \PY{p}{)}\PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{arrvec\PYZus{}init}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{n}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+
+    \PY{k}{allocate}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{arrs}\PY{p}{(}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{(} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{p}{)}\PY{p}{)}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{arrs}\PY{p}{(}\PY{n+nv}{n}\PY{p}{)}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{n} \PY{o}{-} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{length}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{arrs}\PY{p}{(}\PY{n+nv}{n}\PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing03}
+\PY{k}{module }\PY{n+nv}{arakawa\PYZus{}c\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+
+\PY{k}{  }\PY{k}{type} \PY{k+kd}{::} \PY{n+nv}{half\PYZus{}t}
+  \PY{k}{end }\PY{k}{type}
+
+\PY{k}{  }\PY{k}{type}\PY{p}{(}\PY{n+nv}{half\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{h}
+
+  \PY{k}{interface }\PY{n+nv}{operator} \PY{p}{(}\PY{o}{+}\PY{p}{)}
+    \PY{k}{module }\PY{n+nv}{procedure} \PY{n+nv}{ph}
+  \PY{k}{end }\PY{k}{interface}
+
+\PY{k}{  }\PY{k}{interface }\PY{n+nv}{operator} \PY{p}{(}\PY{o}{-}\PY{p}{)}
+    \PY{k}{module }\PY{n+nv}{procedure} \PY{n+nv}{mh}
+  \PY{k}{end }\PY{k}{interface}
+
+\PY{k}{  }\PY{k}{contains}
+
+\PY{k}{  }\PY{k}{elemental }\PY{k}{function }\PY{n+nv}{ph}\PY{p}{(}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}
+    \PY{k}{type}\PY{p}{(}\PY{n+nv}{half\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{h}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{k}{return}
+\PY{k}{    }\PY{k}{return} \PY{o}{=} \PY{n+nv}{i} 
+  \PY{k}{end }\PY{k}{function}
+
+\PY{k}{  }\PY{k}{elemental }\PY{k}{function }\PY{n+nv}{mh}\PY{p}{(}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i} 
+    \PY{k}{type}\PY{p}{(}\PY{n+nv}{half\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{h}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{k}{return}
+\PY{k}{    }\PY{k}{return} \PY{o}{=} \PY{n+nv}{i} \PY{o}{-} \PY{l+m+mi}{1}
+  \PY{k}{end }\PY{k}{function}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing04}
+\PY{k}{module }\PY{n+nv}{halo\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arakawa\PYZus{}c\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+
+\PY{k}{  }\PY{k}{interface }\PY{n+nv}{ext}
+    \PY{k}{module }\PY{n+nv}{procedure} \PY{n+nv}{ext\PYZus{}n}
+    \PY{k}{module }\PY{n+nv}{procedure} \PY{n+nv}{ext\PYZus{}h}
+  \PY{k}{end }\PY{k}{interface }
+
+\PY{k}{  }\PY{k}{contains}
+
+\PY{k}{  }\PY{k}{function }\PY{n+nv}{ext\PYZus{}n}\PY{p}{(}\PY{n+nv}{r}\PY{p}{,} \PY{n+nv}{n}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{r}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{n}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    
+    \PY{k}{return} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{n+nv}{r}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{-} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{r}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{o}{+} \PY{n+nv}{n} \PY{o}{/}\PY{p}{)}
+  \PY{k}{end }\PY{k}{function}
+
+\PY{k}{  }\PY{k}{function }\PY{n+nv}{ext\PYZus{}h}\PY{p}{(}\PY{n+nv}{r}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{r}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k}{type}\PY{p}{(}\PY{n+nv}{half\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{h}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    
+    \PY{k}{return} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{n+nv}{r}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{-} \PY{n+nv}{h}\PY{p}{,} \PY{n+nv}{r}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{o}{+} \PY{n+nv}{h} \PY{o}{/}\PY{p}{)}
+  \PY{k}{end }\PY{k}{function}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing05}
+\PY{k}{module }\PY{n+nv}{pi\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{real\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+\PY{k}{  }\PY{k}{contains}
+\PY{k}{  }\PY{k}{function }\PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{arr}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{k}{result}\PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{arr}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k}{select }\PY{k}{case} \PY{p}{(}\PY{n+nv}{d}\PY{p}{)} 
+      \PY{k}{case} \PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)} 
+        \PY{k}{return} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{arr}\PY{p}{(} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{p}{)}   
+      \PY{k}{case} \PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} 
+        \PY{k}{return} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{arr}\PY{p}{(} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{p}{)}   
+    \PY{k}{end }\PY{k}{select}
+\PY{k}{  }\PY{k}{end }\PY{k}{function}
+
+\PY{k}{  }\PY{k}{pure }\PY{k}{function }\PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{k}{result}\PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{k}{return}
+\PY{k}{    }\PY{k}{select }\PY{k}{case} \PY{p}{(}\PY{n+nv}{d}\PY{p}{)}
+      \PY{k}{case} \PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}
+        \PY{k}{return} \PY{o}{=} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{o}{-} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{+} \PY{l+m+mi}{1}
+      \PY{k}{case} \PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}
+        \PY{k}{return} \PY{o}{=} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{o}{-} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{+} \PY{l+m+mi}{1}
+    \PY{k}{end }\PY{k}{select}
+\PY{k}{  }\PY{k}{end }\PY{k}{function}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing06}
+\PY{k}{module }\PY{n+nv}{bcd\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arrvec\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+
+\PY{k}{  }\PY{k}{type}\PY{p}{,} \PY{k}{abstract} \PY{k+kd}{::} \PY{n+nv}{bcd\PYZus{}t}
+    \PY{k}{contains}
+\PY{k}{    }\PY{n+nv}{procedure}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}fill\PYZus{}halos}\PY{p}{)}\PY{p}{,} \PY{k}{deferred} \PY{k+kd}{::} \PY{n+nv}{fill\PYZus{}halos}
+    \PY{n+nv}{procedure}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}init}\PY{p}{)}\PY{p}{,} \PY{k}{deferred} \PY{k+kd}{::} \PY{n+nv}{init}
+  \PY{k}{end }\PY{k}{type}
+\PY{k}{ }
+\PY{k}{  }\PY{k}{abstract }\PY{k}{interface }
+\PY{k}{    }\PY{k}{subroutine }\PY{n+nv}{bcd\PYZus{}fill\PYZus{}halos}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+      \PY{k}{import} \PY{k+kd}{::} \PY{n+nv}{bcd\PYZus{}t}\PY{p}{,} \PY{n+nv}{real\PYZus{}t}
+      \PY{k}{class}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}t} \PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+      \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable} \PY{k+kd}{::} \PY{n+nv}{a}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)} 
+      \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k}{end }\PY{k}{subroutine}
+
+\PY{k}{    }\PY{k}{subroutine }\PY{n+nv}{bcd\PYZus{}init}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}
+      \PY{k}{import} \PY{k+kd}{::} \PY{n+nv}{bcd\PYZus{}t}
+      \PY{k}{class}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+      \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{hlo}
+    \PY{k}{end }\PY{k}{subroutine}
+\PY{k}{  }\PY{k}{end }\PY{k}{interface}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing07}
+\PY{k}{module }\PY{n+nv}{solver\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arrvec\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{bcd\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arakawa\PYZus{}c\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{halo\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+
+\PY{k}{  }\PY{k}{type}\PY{p}{,} \PY{k}{abstract} \PY{k+kd}{::} \PY{n+nv}{solver\PYZus{}t}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable} \PY{k+kd}{::} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{C}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{hlo}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} 
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}
+    \PY{k}{contains}
+\PY{k}{    }\PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{solve}   \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{solver\PYZus{}solve}
+    \PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{state}   \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{solver\PYZus{}state}
+    \PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{courant} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{solver\PYZus{}courant}
+    \PY{n+nv}{procedure} \PY{k+kd}{::} \PY{k}{cycle}   \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{solver\PYZus{}cycle}
+    \PY{n+nv}{procedure}\PY{p}{(}\PY{n+nv}{solver\PYZus{}advop}\PY{p}{)}\PY{p}{,} \PY{k}{deferred} \PY{k+kd}{::} \PY{n+nv}{advop}
+  \PY{k}{end }\PY{k}{type }
+
+\PY{k}{  }\PY{k}{abstract }\PY{k}{interface}
+\PY{k}{    }\PY{k}{subroutine }\PY{n+nv}{solver\PYZus{}advop}\PY{p}{(}\PY{n+nv}{this}\PY{p}{)}
+      \PY{k}{import }\PY{n+nv}{solver\PYZus{}t}
+      \PY{k}{class}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k}{end }\PY{k}{subroutine}
+\PY{k}{  }\PY{k}{end }\PY{k}{interface}
+
+\PY{k}{  }\PY{k}{contains}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{solver\PYZus{}ctor}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}\PY{p}{,} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{ny}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}
+    \PY{k}{use }\PY{n+nv}{arakawa\PYZus{}c\PYZus{}m}
+    \PY{k}{use }\PY{n+nv}{halo\PYZus{}m}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{ny}\PY{p}{,} \PY{n+nv}{hlo}
+
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n} \PY{o}{=} \PY{l+m+mi}{0}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{hlo} \PY{o}{=} \PY{n+nv}{hlo}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{bcx} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{bcx}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{bcy} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{bcy}
+
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{nx} \PY{o}{-} \PY{l+m+mi}{1} \PY{o}{/}\PY{p}{)}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{ny} \PY{o}{-} \PY{l+m+mi}{1} \PY{o}{/}\PY{p}{)}
+
+    \PY{k}{call }\PY{n+nv}{bcx}\PY{p}{\PYZpc{}}\PY{n+nv}{init}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}
+    \PY{k}{call }\PY{n+nv}{bcy}\PY{p}{\PYZpc{}}\PY{n+nv}{init}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{ny}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}
+
+    \PY{k}{allocate}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{)}
+    \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{ctor}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k}{block}
+\PY{k}{      }\PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{n}
+      \PY{k}{do }\PY{n+nv}{n}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{1}
+        \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{init}\PY{p}{(}                            \PY{p}{\PYZam{}}
+          \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}        \PY{p}{\PYZam{}}
+        \PY{p}{)}
+      \PY{k}{end }\PY{k}{do}
+\PY{k}{    }\PY{k}{end }\PY{k}{block}
+
+\PY{k}{    }\PY{k}{allocate}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}\PY{p}{)}
+    \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{ctor}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{init}\PY{p}{(}                                  \PY{p}{\PYZam{}}
+      \PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}              \PY{p}{\PYZam{}}
+    \PY{p}{)}
+    \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{init}\PY{p}{(}                                  \PY{p}{\PYZam{}}
+      \PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)}              \PY{p}{\PYZam{}}
+    \PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+
+\PY{k}{  }\PY{k}{function }\PY{n+nv}{solver\PYZus{}state}\PY{p}{(}\PY{n+nv}{this}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k}{return} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{(}                 \PY{p}{\PYZam{}}
+      \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}                           \PY{p}{\PYZam{}}
+      \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{p}{:} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}                            \PY{p}{\PYZam{}}
+    \PY{p}{)}
+  \PY{k}{end }\PY{k}{function}
+
+\PY{k}{  }\PY{k}{function }\PY{n+nv}{solver\PYZus{}courant}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{d}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k}{return} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{d}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}
+  \PY{k}{end }\PY{k}{function}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{solver\PYZus{}cycle}\PY{p}{(}\PY{n+nv}{this}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n} \PY{o}{=} \PY{n+nb}{mod}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n} \PY{o}{+} \PY{l+m+mi}{1} \PY{o}{+} \PY{l+m+mi}{2}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)} \PY{o}{-} \PY{l+m+mi}{2}
+  \PY{k}{end }\PY{k}{subroutine}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{solver\PYZus{}solve}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{nt}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{nt}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{t}
+
+    \PY{k}{do }\PY{n+nv}{t} \PY{o}{=} \PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{nt}\PY{o}{-}\PY{l+m+mi}{1} 
+      \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{bcx}\PY{p}{\PYZpc{}}\PY{n+nv}{fill\PYZus{}halos}\PY{p}{(}                        \PY{p}{\PYZam{}}
+        \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{hlo}\PY{p}{)} \PY{p}{\PYZam{}}
+      \PY{p}{)}
+      \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{bcy}\PY{p}{\PYZpc{}}\PY{n+nv}{fill\PYZus{}halos}\PY{p}{(}                        \PY{p}{\PYZam{}}
+        \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{hlo}\PY{p}{)} \PY{p}{\PYZam{}}
+      \PY{p}{)}
+      \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{advop}\PY{p}{(}\PY{p}{)}
+      \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{k}{cycle}\PY{p}{(}\PY{p}{)}
+    \PY{k}{end }\PY{k}{do}
+\PY{k}{  }\PY{k}{end }\PY{k}{subroutine}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing08}
+\PY{k}{module }\PY{n+nv}{cyclic\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{bcd\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{pi\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+\PY{k}{  }
+\PY{k}{  }\PY{k}{type}\PY{p}{,} \PY{n+nv}{extends}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{cyclic\PYZus{}t}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{left\PYZus{}halo}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{rght\PYZus{}halo}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} 
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{left\PYZus{}edge}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{rght\PYZus{}edge}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} 
+    \PY{k}{contains}
+\PY{k}{    }\PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{init} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{cyclic\PYZus{}init}
+    \PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{fill\PYZus{}halos} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{cyclic\PYZus{}fill\PYZus{}halos}
+  \PY{k}{end }\PY{k}{type}
+
+\PY{k}{  }\PY{k}{contains}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{cyclic\PYZus{}init}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{cyclic\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{hlo}
+
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{d} \PY{o}{=} \PY{n+nv}{d}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{left\PYZus{}halo} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{o}{-}\PY{n+nv}{hlo}\PY{p}{,} \PY{o}{-}\PY{l+m+mi}{1} \PY{o}{/}\PY{p}{)} 
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{rght\PYZus{}halo} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{n}\PY{o}{-}\PY{l+m+mi}{1}\PY{o}{+}\PY{n+nv}{hlo} \PY{o}{/}\PY{p}{)} 
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{left\PYZus{}edge} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{hlo}\PY{o}{-}\PY{l+m+mi}{1} \PY{o}{/}\PY{p}{)}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{rght\PYZus{}edge} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{n+nv}{n}\PY{o}{-}\PY{n+nv}{hlo}\PY{p}{,} \PY{n+nv}{n}\PY{o}{-}\PY{l+m+mi}{1} \PY{o}{/}\PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{cyclic\PYZus{}fill\PYZus{}halos}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{cyclic\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{ptr}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable} \PY{k+kd}{::} \PY{n+nv}{a}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{n+nv}{ptr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{left\PYZus{}halo}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} 
+    \PY{n+nv}{ptr} \PY{o}{=}  \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{rght\PYZus{}edge}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+    \PY{n+nv}{ptr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{rght\PYZus{}halo}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} 
+    \PY{n+nv}{ptr} \PY{o}{=}  \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{left\PYZus{}edge}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing09}
+\PY{k}{module }\PY{n+nv}{donorcell\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{real\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arakawa\PYZus{}c\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{pi\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arrvec\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+\PY{k}{  }\PY{k}{contains} 
+\PY{c}{!listing10}
+  \PY{k}{elemental }\PY{k}{function }\PY{n+nv}{F}\PY{p}{(}\PY{n+nv}{psi\PYZus{}l}\PY{p}{,} \PY{n+nv}{psi\PYZus{}r}\PY{p}{,} \PY{n+nv}{C}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{k}{return}
+\PY{k}{    }\PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{psi\PYZus{}l}\PY{p}{,} \PY{n+nv}{psi\PYZus{}r}\PY{p}{,} \PY{n+nv}{C}
+    \PY{k}{return} \PY{o}{=} \PY{p}{(}                                         \PY{p}{\PYZam{}}
+      \PY{p}{(}\PY{n+nv}{C} \PY{o}{+} \PY{n+nb}{abs}\PY{p}{(}\PY{n+nv}{C}\PY{p}{)}\PY{p}{)} \PY{o}{*} \PY{n+nv}{psi\PYZus{}l} \PY{o}{+}                           \PY{p}{\PYZam{}}
+      \PY{p}{(}\PY{n+nv}{C} \PY{o}{-} \PY{n+nb}{abs}\PY{p}{(}\PY{n+nv}{C}\PY{p}{)}\PY{p}{)} \PY{o}{*} \PY{n+nv}{psi\PYZus{}r}                             \PY{p}{\PYZam{}}
+    \PY{p}{)} \PY{o}{/} \PY{l+m+mi}{2}
+  \PY{k}{end }\PY{k}{function}
+\PY{c}{!listing11}
+  \PY{k}{function }\PY{n+nv}{donorcell}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} 
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,} \PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{i}\PY{p}{)}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{psi}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}\PY{p}{,} \PY{n+nv}{C}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}           
+    \PY{k}{return} \PY{o}{=} \PY{p}{(}                                         \PY{p}{\PYZam{}}
+      \PY{n+nv}{F}\PY{p}{(}                                               \PY{p}{\PYZam{}}
+        \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{p}{)}\PY{p}{,}                            \PY{p}{\PYZam{}}
+        \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,}                            \PY{p}{\PYZam{}}
+        \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,}   \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{n+nv}{h}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}                             \PY{p}{\PYZam{}}
+      \PY{p}{)} \PY{o}{-}                                              \PY{p}{\PYZam{}}
+      \PY{n+nv}{F}\PY{p}{(}                                               \PY{p}{\PYZam{}}
+        \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,}                            \PY{p}{\PYZam{}}
+        \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{p}{)}\PY{p}{,}                            \PY{p}{\PYZam{}}
+        \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,}   \PY{n+nv}{i}\PY{o}{-}\PY{n+nv}{h}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}                             \PY{p}{\PYZam{}}
+      \PY{p}{)}                                                \PY{p}{\PYZam{}}
+    \PY{p}{)}
+  \PY{k}{end }\PY{k}{function}
+\PY{c}{!listing12}
+  \PY{k}{subroutine }\PY{n+nv}{donorcell\PYZus{}op}\PY{p}{(}\PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}  
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable} \PY{k+kd}{::} \PY{n+nv}{psi}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{C}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{n}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} 
+    
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{ptr}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{n+nv}{ptr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{pi}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{n}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+    \PY{n+nv}{ptr} \PY{o}{=} \PY{n+nv}{pi}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}                   \PY{p}{\PYZam{}}
+      \PY{o}{-} \PY{n+nv}{donorcell}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{p}{\PYZam{}}
+      \PY{o}{-} \PY{n+nv}{donorcell}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{n}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{i}\PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+\PY{c}{!listing13}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing14}
+\PY{k}{module }\PY{n+nv}{solver\PYZus{}donorcell\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{donorcell\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{solver\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+\PY{k}{  }
+\PY{k}{  }\PY{k}{type}\PY{p}{,} \PY{n+nv}{extends}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{donorcell\PYZus{}t}
+    \PY{k}{contains}
+\PY{k}{    }\PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{ctor} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{donorcell\PYZus{}ctor}
+    \PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{advop} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{donorcell\PYZus{}advop}
+  \PY{k}{end }\PY{k}{type}
+
+\PY{k}{  }\PY{k}{contains}
+\PY{k}{  }
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{donorcell\PYZus{}ctor}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}\PY{p}{,} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{ny}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{donorcell\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{ny}
+    \PY{k}{call }\PY{n+nv}{solver\PYZus{}ctor}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{bcx}\PY{p}{,}\PY{n+nv}{bcy}\PY{p}{,} \PY{n+nv}{nx}\PY{p}{,}\PY{n+nv}{ny}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{donorcell\PYZus{}advop}\PY{p}{(}\PY{n+nv}{this}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{donorcell\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{C}
+    \PY{n+nv}{C} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}
+    \PY{k}{call }\PY{n+nv}{donorcell\PYZus{}op}\PY{p}{(}                                 \PY{p}{\PYZam{}}
+      \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}              \PY{p}{\PYZam{}}
+    \PY{p}{)}
+  \PY{k}{end }\PY{k}{subroutine}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing15}
+\PY{k}{module }\PY{n+nv}{mpdata\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arrvec\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{arakawa\PYZus{}c\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{pi\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+\PY{k}{  }\PY{k}{contains} 
+\PY{c}{!listing16}
+  \PY{k}{function }\PY{n+nv}{mpdata\PYZus{}frac}\PY{p}{(}\PY{n+nv}{nom}\PY{p}{,} \PY{n+nv}{den}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{nom}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}\PY{p}{,} \PY{n+nv}{den}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{n+nv}{size}\PY{p}{(}\PY{n+nv}{nom}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,} \PY{n+nv}{size}\PY{p}{(}\PY{n+nv}{nom}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+    \PY{k}{where} \PY{p}{(}\PY{n+nv}{den} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}\PY{p}{)}
+      \PY{k}{return} \PY{o}{=} \PY{n+nv}{nom} \PY{o}{/} \PY{n+nv}{den}
+    \PY{n+nv}{elsewhere}
+      \PY{k}{return} \PY{o}{=} \PY{l+m+mi}{0}
+    \PY{k}{end }\PY{k}{where}
+\PY{k}{  }\PY{k}{end }\PY{k}{function}
+\PY{c}{!listing17}
+  \PY{k}{function }\PY{n+nv}{mpdata\PYZus{}A}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{psi}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,} \PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{i}\PY{p}{)}\PY{p}{)}
+    \PY{k}{return} \PY{o}{=} \PY{n+nv}{mpdata\PYZus{}frac}\PY{p}{(}                              \PY{p}{\PYZam{}}
+      \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{o}{-} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,}           \PY{p}{\PYZam{}}
+      \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{o}{+} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}            \PY{p}{\PYZam{}}
+    \PY{p}{)}  
+  \PY{k}{end }\PY{k}{function}
+\PY{c}{!listing18}
+  \PY{k}{function }\PY{n+nv}{mpdata\PYZus{}B}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{psi}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)} 
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,} \PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{i}\PY{p}{)}\PY{p}{)}
+    \PY{k}{return} \PY{o}{=} \PY{n+nv}{mpdata\PYZus{}frac}\PY{p}{(}                              \PY{p}{\PYZam{}}
+      \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{+} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{)}      \PY{p}{\PYZam{}}
+    \PY{o}{-} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{-} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,}     \PY{p}{\PYZam{}}
+      \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{+} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{)}      \PY{p}{\PYZam{}}
+    \PY{o}{+} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{+} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{)}      \PY{p}{\PYZam{}}
+    \PY{p}{)} \PY{o}{/} \PY{l+m+mi}{2}
+  \PY{k}{end }\PY{k}{function}
+\PY{c}{!listing19}
+  \PY{k}{function }\PY{n+nv}{mpdata\PYZus{}C\PYZus{}bar}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{C}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)} 
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,} \PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{i}\PY{p}{)}\PY{p}{)}
+
+    \PY{k}{return} \PY{o}{=} \PY{p}{(}                                         \PY{p}{\PYZam{}}
+      \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{o}{+}\PY{n+nv}{h}\PY{p}{)} \PY{o}{+} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{o}{+}\PY{n+nv}{h}\PY{p}{)} \PY{o}{+}        \PY{p}{\PYZam{}}
+      \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{o}{-}\PY{n+nv}{h}\PY{p}{)} \PY{o}{+} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,}   \PY{n+nv}{j}\PY{o}{-}\PY{n+nv}{h}\PY{p}{)}          \PY{p}{\PYZam{}}
+    \PY{p}{)} \PY{o}{/} \PY{l+m+mi}{4}               
+  \PY{k}{end }\PY{k}{function}
+\PY{c}{!listing20}
+  \PY{k}{function }\PY{n+nv}{mpdata\PYZus{}C\PYZus{}adf}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{C}\PY{p}{)} \PY{k}{result} \PY{p}{(}\PY{k}{return}\PY{p}{)}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{d}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{k}{return}\PY{p}{(}\PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{,} \PY{n+nv}{span}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{i}\PY{p}{)}\PY{p}{)}
+    \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{allocatable}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{psi}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)} 
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{C}
+    \PY{k}{return} \PY{o}{=}                                           \PY{p}{\PYZam{}}
+      \PY{n+nb}{abs}\PY{p}{(}\PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{d}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{n+nv}{h}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{)}                  \PY{p}{\PYZam{}}
+      \PY{o}{*} \PY{p}{(}\PY{l+m+mi}{1} \PY{o}{-} \PY{n+nb}{abs}\PY{p}{(}\PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{d}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{n+nv}{h}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}\PY{p}{)}\PY{p}{)}          \PY{p}{\PYZam{}}
+      \PY{o}{*} \PY{n+nv}{mpdata\PYZus{}A}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}                         \PY{p}{\PYZam{}}
+      \PY{o}{-} \PY{n+nv}{pi}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{d}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{o}{+}\PY{n+nv}{h}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}                     \PY{p}{\PYZam{}}
+      \PY{o}{*} \PY{n+nv}{mpdata\PYZus{}C\PYZus{}bar}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{C}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{n+nv}{d}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}           \PY{p}{\PYZam{}}
+      \PY{o}{*} \PY{n+nv}{mpdata\PYZus{}B}\PY{p}{(}\PY{n+nv}{d}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+  \PY{k}{end }\PY{k}{function}
+\PY{c}{!listing21}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing22}
+\PY{k}{module }\PY{n+nv}{solver\PYZus{}mpdata\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{solver\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{mpdata\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{donorcell\PYZus{}m}
+  \PY{k}{use }\PY{n+nv}{halo\PYZus{}m}
+  \PY{k}{implicit }\PY{k}{none}
+\PY{k}{  }
+\PY{k}{  }\PY{k}{type}\PY{p}{,} \PY{n+nv}{extends}\PY{p}{(}\PY{n+nv}{solver\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{mpdata\PYZus{}t}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{n\PYZus{}iters}\PY{p}{,} \PY{n+nv}{n\PYZus{}tmp}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{im}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{n+nv}{jm}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{tmp}\PY{p}{(}\PY{p}{:}\PY{p}{)} 
+    \PY{k}{contains}
+\PY{k}{    }\PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{ctor} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{mpdata\PYZus{}ctor}
+    \PY{n+nv}{procedure} \PY{k+kd}{::} \PY{n+nv}{advop} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{mpdata\PYZus{}advop}
+  \PY{k}{end }\PY{k}{type}
+
+\PY{k}{  }\PY{k}{contains}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{mpdata\PYZus{}ctor}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{n\PYZus{}iters}\PY{p}{,} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}\PY{p}{,} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{ny}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{mpdata\PYZus{}t}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{bcd\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}
+    \PY{k+kt}{integer}\PY{p}{,} \PY{k}{intent}\PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{n\PYZus{}iters}\PY{p}{,} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{ny}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{c}
+
+    \PY{k}{call }\PY{n+nv}{solver\PYZus{}ctor}\PY{p}{(}\PY{n+nv}{this}\PY{p}{,} \PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy}\PY{p}{,} \PY{n+nv}{nx}\PY{p}{,} \PY{n+nv}{ny}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}
+
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n\PYZus{}iters} \PY{o}{=} \PY{n+nv}{n\PYZus{}iters}
+    \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n\PYZus{}tmp} \PY{o}{=} \PY{n+nb}{min}\PY{p}{(}\PY{n+nv}{n\PYZus{}iters} \PY{o}{-} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}
+    \PY{k}{if} \PY{p}{(}\PY{n+nv}{n\PYZus{}iters} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}\PY{p}{)} \PY{k}{allocate}\PY{p}{(}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{:}\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n\PYZus{}tmp}\PY{p}{)}\PY{p}{)} 
+
+    \PY{n+nv}{associate} \PY{p}{(}\PY{n+nv}{i} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{hlo} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{hlo}\PY{p}{)}
+      \PY{k}{do }\PY{n+nv}{c}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n\PYZus{}tmp} \PY{o}{-} \PY{l+m+mi}{1}
+        \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{n+nv}{c}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{ctor}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)}
+        \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{n+nv}{c}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{init}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}\PY{p}{)}
+        \PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{n+nv}{c}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{init}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)}\PY{p}{)}
+      \PY{k}{end }\PY{k}{do}
+
+\PY{k}{      }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{im} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{-} \PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{i}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{o}{/}\PY{p}{)}
+      \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{jm} \PY{o}{=} \PY{p}{(}\PY{o}{/} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{-} \PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{j}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{)} \PY{o}{/}\PY{p}{)}
+    \PY{k}{end }\PY{n+nv}{associate}
+  \PY{k}{end }\PY{k}{subroutine}
+
+\PY{k}{  }\PY{k}{subroutine }\PY{n+nv}{mpdata\PYZus{}advop}\PY{p}{(}\PY{n+nv}{this}\PY{p}{)}
+    \PY{k}{class}\PY{p}{(}\PY{n+nv}{mpdata\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{target} \PY{k+kd}{::} \PY{n+nv}{this}
+    \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{step}
+
+    \PY{n+nv}{associate} \PY{p}{(}\PY{n+nv}{i} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{im} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{im}\PY{p}{,}\PY{p}{\PYZam{}}
+      \PY{n+nv}{jm} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{jm}\PY{p}{,} \PY{n+nv}{psi} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{n} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n}\PY{p}{,}     \PY{p}{\PYZam{}}
+      \PY{n+nv}{hlo} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{hlo}\PY{p}{,} \PY{n+nv}{bcx} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{bcx}\PY{p}{,} \PY{n+nv}{bcy} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{bcy}\PY{p}{\PYZam{}}
+    \PY{p}{)}
+      \PY{k}{do }\PY{n+nv}{step}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{n\PYZus{}iters}\PY{o}{-}\PY{l+m+mi}{1}
+        \PY{k}{if} \PY{p}{(}\PY{n+nv}{step} \PY{o}{==} \PY{l+m+mi}{0}\PY{p}{)} \PY{k}{then}
+\PY{k}{          }\PY{k}{block}
+\PY{k}{            }\PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{C}
+            \PY{n+nv}{C} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}
+            \PY{k}{call }\PY{n+nv}{donorcell\PYZus{}op}\PY{p}{(}\PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{C}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+          \PY{k}{end }\PY{k}{block}
+\PY{k}{        }\PY{k}{else}
+\PY{k}{          }\PY{k}{call }\PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{k}{cycle}\PY{p}{(}\PY{p}{)}
+          \PY{k}{call }\PY{n+nv}{bcx}\PY{p}{\PYZpc{}}\PY{n+nv}{fill\PYZus{}halos}\PY{p}{(}                         \PY{p}{\PYZam{}}
+            \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(} \PY{n+nv}{n} \PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}               \PY{p}{\PYZam{}}
+          \PY{p}{)}
+          \PY{k}{call }\PY{n+nv}{bcy}\PY{p}{\PYZpc{}}\PY{n+nv}{fill\PYZus{}halos}\PY{p}{(}                         \PY{p}{\PYZam{}}
+            \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(} \PY{n+nv}{n} \PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{hlo}\PY{p}{)}               \PY{p}{\PYZam{}}
+          \PY{p}{)}
+
+          \PY{k}{block}
+\PY{k}{            }\PY{k}{class}\PY{p}{(}\PY{n+nv}{arrvec\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{C\PYZus{}corr}\PY{p}{,} \PY{n+nv}{C\PYZus{}unco}
+            \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{n+nv}{ptr}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
+
+            \PY{c}{! chosing input/output for antidiff. C}
+            \PY{k}{if} \PY{p}{(}\PY{n+nv}{step} \PY{o}{==} \PY{l+m+mi}{1}\PY{p}{)} \PY{k}{then}
+\PY{k}{              }\PY{n+nv}{C\PYZus{}unco} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{C}
+              \PY{n+nv}{C\PYZus{}corr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}
+            \PY{k}{else }\PY{k}{if} \PY{p}{(}\PY{n+nb}{mod}\PY{p}{(}\PY{n+nv}{step}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)} \PY{o}{==} \PY{l+m+mi}{1}\PY{p}{)} \PY{k}{then}
+\PY{k}{              }\PY{n+nv}{C\PYZus{}unco} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{c}{! odd step}
+              \PY{n+nv}{C\PYZus{}corr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)} \PY{c}{! even step}
+            \PY{k}{else}
+\PY{k}{              }\PY{n+nv}{C\PYZus{}unco} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)} \PY{c}{! odd step}
+              \PY{n+nv}{C\PYZus{}corr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{this}\PY{p}{\PYZpc{}}\PY{n+nv}{tmp}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)} \PY{c}{! even step}
+            \PY{k}{end }\PY{k}{if}
+
+            \PY{c}{! calculating the antidiffusive velo}
+            \PY{n+nv}{ptr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{pi}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{C\PYZus{}corr}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(} \PY{l+m+mi}{0} \PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{im}\PY{o}{+}\PY{n+nv}{h}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)}
+            \PY{n+nv}{ptr} \PY{o}{=} \PY{n+nv}{mpdata\PYZus{}C\PYZus{}adf}\PY{p}{(}                        \PY{p}{\PYZam{}}
+              \PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(} \PY{n+nv}{n} \PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{im}\PY{p}{,} \PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{C\PYZus{}unco}        \PY{p}{\PYZam{}}
+            \PY{p}{)}      
+            \PY{k}{call }\PY{n+nv}{bcy}\PY{p}{\PYZpc{}}\PY{n+nv}{fill\PYZus{}halos}\PY{p}{(}                       \PY{p}{\PYZam{}}
+              \PY{n+nv}{C\PYZus{}corr}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)}              \PY{p}{\PYZam{}}
+            \PY{p}{)}
+
+            \PY{n+nv}{ptr} \PY{o}{=}\PY{o}{\PYZgt{}} \PY{n+nv}{pi}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n+nv}{C\PYZus{}corr}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(} \PY{l+m+mi}{1} \PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{jm}\PY{o}{+}\PY{n+nv}{h}\PY{p}{)}
+            \PY{n+nv}{ptr} \PY{o}{=} \PY{n+nv}{mpdata\PYZus{}C\PYZus{}adf}\PY{p}{(}                        \PY{p}{\PYZam{}}
+              \PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{psi}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(} \PY{n+nv}{n} \PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{jm}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{C\PYZus{}unco}        \PY{p}{\PYZam{}}
+            \PY{p}{)}
+            \PY{k}{call }\PY{n+nv}{bcx}\PY{p}{\PYZpc{}}\PY{n+nv}{fill\PYZus{}halos}\PY{p}{(}                       \PY{p}{\PYZam{}}
+              \PY{n+nv}{C\PYZus{}corr}\PY{p}{\PYZpc{}}\PY{n+nv}{at}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{\PYZpc{}}\PY{n+nv}{p}\PY{p}{\PYZpc{}}\PY{n+nv}{a}\PY{p}{,} \PY{n+nv}{ext}\PY{p}{(}\PY{n+nv}{j}\PY{p}{,} \PY{n+nv}{h}\PY{p}{)}              \PY{p}{\PYZam{}}
+            \PY{p}{)}
+
+            \PY{c}{! donor-cell step}
+            \PY{k}{call }\PY{n+nv}{donorcell\PYZus{}op}\PY{p}{(}\PY{n+nv}{psi}\PY{p}{,} \PY{n+nv}{n}\PY{p}{,} \PY{n+nv}{C\PYZus{}corr}\PY{p}{,} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}\PY{p}{)} 
+          \PY{k}{end }\PY{k}{block}
+\PY{k}{        }\PY{k}{end }\PY{k}{if}
+\PY{k}{      }\PY{k}{end }\PY{k}{do}
+\PY{k}{    }\PY{k}{end }\PY{n+nv}{associate}
+  \PY{k}{end }\PY{k}{subroutine}
+\PY{k}{end }\PY{k}{module}
+\PY{c}{!listing23}
+\end{Verbatim}

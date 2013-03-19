@@ -1,10 +1,14 @@
+%%%%%\documentclass[review,peprint,10pt,5p,times]{elsarticle}
+%%%%%\usepackage[switch]{lineno}
+%%%%%\addtolength{\hoffset}{.5cm}
+
 \documentclass[final,5p,times,twocolumn]{elsarticle}
 
 % input encoding assuring proper handling of Polish characters (surnames!)
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
-\input{formulae/preamble}
+\input{formulae_preamble}
 
 % for Arakawa-C figure
 \usepackage{tikz}
@@ -122,6 +126,19 @@
 
   \tableofcontents
 
+%%%%%  \linenumbers % for the review
+
+%%%%%  \section*{Program summary}
+
+%%%%%  \noindent
+%%%%%  Program title: mpdata-oop\\
+%%%%%  Licensing provisions: GNU GPL version 3 \citep{GPLv3}\\
+%%%%%  Programming language: C++11, Python and Fortran 2008\\
+%%%%%  External routines/libraries used: Blitz++, NumPy\\
+%%%%%  Nature of problem: advective transport\\
+%%%%%  Solution method: MPDATA\\
+%%%%%  References: Smolarkiewicz 1984: A fully multidimensional positive definite advection transport algorithm with small implicit diffusion. J. Comp. Phys. 54, 325--362 \citep{Smolarkiewicz_1984}
+
   \section{Introduction}
 
   Object oriented programming (OOP) {\em ''has become recognised as the almost unique successful 
@@ -153,7 +170,7 @@
     \citep[e.g.][respectively]{Ziemianski_et_al_2011,Abiodun_et_al_2011,Ezer_et_al_2002}.
   MPDATA is a solver for systems of advection equations of the following form:
   \begin{equation}\label{eq:adv}
-    \input{formulae/adv}
+    \input{formulae_adv}
   \end{equation}
   that describe evolution of a scalar field $\psi$ transported by the fluid flow with velocity $\vec{v}$.
   Quoting Numerical Recipes once more, development of methods to numerically solve such problems 
@@ -192,11 +209,11 @@
 
   All listings include line numbers printed to the left of the source code, with separate numbering for
     C++ (listings prefixed with C, black frame),
-  \codecpp{code/cpp/listings.hpp}{listing00}{listing01}{1}
+  \codecpp{code-cpp-listings.hpp}{listing00}{listing01}{1}
     Python (listings prefixed with P, blue frame) and
-  \codepyt{code/pyt/listings.py}{listing00}{listing01}{1}
+  \codepyt{code-pyt-listings.py}{listing00}{listing01}{1}
     Fortran (listings prefixed with F, red frame).
-  \codefor{code/for/listings.f}{listing00}{listing01}{1}
+  \codefor{code-for-listings.f}{listing00}{listing01}{1}
   Programming language constructs when inlined in the text are 
     typeset in bold, e.g. \prog{GOTO 2}.
 
@@ -204,9 +221,9 @@
 
   Double precision floating-point format is used in all three implementations.
   The codes begin with the following definitions:
-  \codecpp{code/cpp/listings.hpp}{listing01}{listing02}{1}
-  \codepyt{code/pyt/listings.py}{listing01}{listing02}{1}
-  \codefor{code/for/listings.f}{listing01}{listing02}{1}
+  \codecpp{code-cpp-listings.hpp}{listing01}{listing02}{1}
+  \codepyt{code-pyt-listings.py}{listing01}{listing02}{1}
+  \codefor{code-for-listings.f}{listing01}{listing02}{1}
   which provide a convenient way of switching to different precision.
 
   All codes are structured in a way allowing compilation of the code 
@@ -227,7 +244,7 @@
     that does not incur creation of intermediate temporary objects.
   Blitz++ is a header-only library\footnote{Blitz++ requires linking with \prog{libblitz} if debugging mode is used} -- to use it, it is enough to include the appropriate header file,
     and optionally expose the required classes to the present namespace:
-  \codecpp{code/cpp/listings.hpp}{listing02}{listing03}{1}
+  \codecpp{code-cpp-listings.hpp}{listing02}{listing03}{1}
   Here \prog{arr\_t}, \prog{rng\_t} and \prog{idx\_t} serve as alias identifiers 
     and are introduced in order to shorten the code.
 
@@ -238,7 +255,7 @@
   As a consequence, the return types of such functions become unintelligible.
   Luckily, the \prog{auto} return type declaration from the C++11 standard allows to simplify the code significantly,
     even more if used through the following preprocessor macro:
-  \codecpp{code/cpp/listings.hpp}{listing03}{listing04}{1}
+  \codecpp{code-cpp-listings.hpp}{listing03}{listing04}{1}
   The call to \prog{blitz::safeToReturn()} function is included in order to ensure that
     all arrays involved in the expression being returned continue to exist in the
     caller scope.
@@ -252,7 +269,7 @@
   In order to make the code compatible with both the standard CPython
     as well as the alternative PyPy implementation of Python \citep[][]{Bolz_et_al_2011},
     the Python code includes the following sequence of \prog{import} statements:
-  \codepyt{code/pyt/listings.py}{listing02}{listing03}{1}
+  \codepyt{code-pyt-listings.py}{listing02}{listing03}{1}
   First, the PyPy's built-in NumPy implementation named \prog{numpypy} is imported if applicable (i.e. if running PyPy), 
     and the lazy evaluation mode is turned on through the \prog{set\_invalidation(False)} call.
   PyPy's lazy evaluation obtained with the help of a just-in-time compiler enables to achieve
@@ -291,7 +308,7 @@
     and at the same time to handle automatic freeing of dynamically allocated memory.
   The \prog{ptr\_vector} class is further customised by defining a derived structure which element-access \prog{[~]} 
     operator is overloaded with a modulo variant:
-  \codecpp{code/cpp/listings.hpp}{listing04}{listing05}{1}
+  \codecpp{code-cpp-listings.hpp}{listing04}{listing05}{1}
   Consequently the last element of any such sequence may be accessed at index \prog{-1}, the last but one at \prog{-2}, 
     and so on.
 
@@ -301,7 +318,7 @@
 
   Fortran does not feature any built-in sequence container capable of storing arrays, 
     hence a custom \prog{arrvec\_t} type is introduced:
-  \codefor{code/for/listings.f}{listing02}{listing03}{1}
+  \codefor{code-for-listings.f}{listing02}{listing03}{1}
   The \prog{arr\_t} type is defined solely for the purpose of overcoming the limitation 
     of lack of an array-of-arrays construct, and its only member field is a two-dimensional array.
   An array of \prog{arr\_t} is used hereinafter as a container for sequences of arrays.
@@ -390,7 +407,7 @@
 
   In the C++ implementation first a global instance \prog{h} of an empty structure 
     \prog{hlf\_t} is defined, and then the plus and minus operators for \prog{hlf\_t} and \prog{rng\_t} are overloaded:
-  \codecpp{code/cpp/listings.hpp}{listing05}{listing06}{1}
+  \codecpp{code-cpp-listings.hpp}{listing05}{listing06}{1}
   This way, the arrays representing vector field components can be indexed using
     \prog{(i+h,j)}, \prog{(i-h,j)} etc. where \prog{h}~represents the half.
 
@@ -403,19 +420,19 @@
   Consequently, a custom logic has to be defined not only for fractional indexing,
     but also for shifting the slices by integer intervals ($i\pm1$).
   It is implemented here by declaring a \prog{shift} class with the adequate operator overloads:
-  \codepyt{code/pyt/listings.py}{listing03}{listing04}{1}
+  \codepyt{code-pyt-listings.py}{listing03}{listing04}{1}
     and two instances of it to represent unity and half
     in expressions like \prog{i+one}, \prog{i+hlf}, where \prog{i} is an instance of \prog{slice}
     \footnote{\label{fnt:slice}One could argue that not using an own implementation of a slice-representing class
     in NumPy is a design flaw -- being able to modify behaviour of a hypothetical numpy.slice class 
     through inheritance would allow to implement the same behaviour as obtained in listing P.3 without the need to represent 
     the unity as a separate object}:
-  \codepyt{code/pyt/listings.py}{listing04}{listing05}{1}
+  \codepyt{code-pyt-listings.py}{listing04}{listing05}{1}
 
   In Fortran fractional array indexing is obtained through
     definition and instantiation of an object representing the half, and having appropriate
     operator overloads:
-  \codefor{code/for/listings.f}{listing03}{listing04}{1}
+  \codefor{code-for-listings.f}{listing03}{listing04}{1}
 
   \subsection{Halo regions}
 
@@ -429,9 +446,9 @@
 
   An \prog{ext()} function is defined in all three implementation, in order to simplify 
     coding of array range extensions:
-  \codecpp{code/cpp/listings.hpp}{listing06}{listing07}{1}
-  \codepyt{code/pyt/listings.py}{listing05}{listing06}{1}
-  \codefor{code/for/listings.f}{listing04}{listing05}{1}
+  \codecpp{code-cpp-listings.hpp}{listing06}{listing07}{1}
+  \codepyt{code-pyt-listings.py}{listing05}{listing06}{1}
+  \codefor{code-for-listings.f}{listing04}{listing05}{1}
   Consequently, a range depicted by $i\pm1/2$ may be expressed in the code as \prog{ext(i, h)}.
   In all three implementations the \prog{ext()} function accept the second
     argument to be an integer or a ''half'' (cf. section \ref{sec:grid}).
@@ -442,7 +459,7 @@
   It is used to generalise the MPDATA formul\ae~into multiple dimensions
     using the following notation:
   \begin{equation*}\label{eq:pi}
-    \input{formulae/pi}
+    \input{formulae_pi}
   \end{equation*}
 
   Blitz++ ships with the \prog{RectDomain} class (aliased here as \prog{idx\_t}) 
@@ -452,19 +469,19 @@
   In order to ensure compile-time evaluation, the permutation order is passed 
     via the template parameter \prog{d}
     (note the different order of \prog{i} and \prog{j} arguments in the two template specialisations):
-  \codecpp{code/cpp/listings.hpp}{listing07}{listing08}{1}
+  \codecpp{code-cpp-listings.hpp}{listing07}{listing08}{1}
 
   NumPy uses tuples of slices for addressing multi-dimensional array with a
     single object.
   Therefore, the following definition of function \prog{pi()} suffices to represent $\pi$:
-  \codepyt{code/pyt/listings.py}{listing06}{listing07}{1}
+  \codepyt{code-pyt-listings.py}{listing06}{listing07}{1}
   
   In the Fortran implementation \prog{pi()} returns a pointer to the array elements specified
     by \prog{i} and \prog{j} interpreted as (i,j) or
     (j,i) depending on the value of the argument \prog{d}.
   In addition to \prog{pi()}, a helper \prog{span()} function returning the 
     length of one of the vectors passed as argument is defined:
-  \codefor{code/for/listings.f}{listing05}{listing06}{1}
+  \codefor{code-for-listings.f}{listing05}{listing06}{1}
   The \prog{span()} function is used to shorten the declarations of arrays to be returned 
     from functions in the Fortran implementation (see listings F.11 and F.17--F.20).
 
@@ -487,7 +504,7 @@
   In the following C++ definition of the \prog{solver} structure, task (i) is represented with the definition of the structure
     member fields; task (ii) is split between the \prog{solver}'s constructor and the destructors of \prog{arrvec\_t};
     task (iii) is handled by the accessor methods; task (iv) is handled within the \prog{solve} method:
-  \codecpp{code/cpp/listings.hpp}{listing08}{listing09}{1}
+  \codecpp{code-cpp-listings.hpp}{listing08}{listing09}{1}
   The \prog{solver} structure is an abstract definition (containing a pure virtual method) 
      requiring its descendants to implement at least
      the \prog{advop()} method which is expected to fill \prog{psi[n+1]} with an updated (advected)
@@ -511,7 +528,7 @@
     (being laid out on the Arakawa-C staggered grid).
   
   Python definition of the \prog{solver} class follows closely the C++ structure definition:
-  \codepyt{code/pyt/listings.py}{listing07}{listing08}{1}
+  \codepyt{code-pyt-listings.py}{listing07}{listing08}{1}
   The key difference stems from the fact that, unlike Blitz++, NumPy does not allow an array
     to have arbitrary index base -- in NumPy the first element is always addressed with 0.
   Consequently, while in C++ (and Fortran) the computational domain is chosen to start at (i=0, j=0)
@@ -533,10 +550,10 @@
     an abstract type with deferred procedures having abstract interfaces 
     \citep[sic!, see Table 2.1 in][for a summary of approximate correspondence of OOP 
       nomenclature between Fortran and C++]{Rouson_et_al_2012}:
-  \codefor{code/for/listings.f}{listing06}{listing07}{1}
+  \codefor{code-for-listings.f}{listing06}{listing07}{1}
   Having defined the abstract type for boundary-condition objects, 
     a definition of a solver class following closely the C++ and Python counterparts may be provided:
-  \codefor{code/for/listings.f}{listing07}{listing08}{1}
+  \codefor{code-for-listings.f}{listing07}{listing08}{1}
 
   \subsection{Periodic boundaries (C++)}\label{sec:cyclic}
 
@@ -546,7 +563,7 @@
   The solver definition described in section~\ref{sec:solver} requires a given
     boundary condition object to implement a \prog{fill\_halos()} method.
   An implementation of periodic boundary conditions in C++ is provided in the following listing:
-  \codecpp{code/cpp/listings.hpp}{listing09}{listing10}{1}
+  \codecpp{code-cpp-listings.hpp}{listing09}{listing10}{1}
 
   As hinted by the member field names, the \prog{fill\_halos()} methods
     fill the left/right halo regions with data from the right/left edges of the domain.
@@ -563,25 +580,25 @@
     function of $\psi^{[n]}$ where $n$ and $n+1$ denote two adjacent time levels.
   The donor-cell scheme may be written as \citep[eq. 2 in][]{Smolarkiewicz_1984}:
   \begin{equation}\label{eq:donor}
-    \input{formulae/donor}
+    \input{formulae_donor}
   \end{equation}
   where $N$ is the number of dimensions, 
     and F is the so-called flux function \citep[][eq.~3]{Smolarkiewicz_1984}:
   \begin{equation}\label{eq:donor:F}
-    \input{formulae/donor-F}
+    \input{formulae_donor-F}
   \end{equation}
 
   \noindent The flux function takes the following form in C++:
-  \codecpp{code/cpp/listings.hpp}{listing10}{listing11}{1}
+  \codecpp{code-cpp-listings.hpp}{listing10}{listing11}{1}
 
   \noindent 
   Equation~\ref{eq:donor} is split into the terms under the summation 
     (effectively the 1-dimensional donor-cell formula):
-  \codecpp{code/cpp/listings.hpp}{listing11}{listing12}{1}
+  \codecpp{code-cpp-listings.hpp}{listing11}{listing12}{1}
 
   \noindent and the actual two-dimensional donor-cell formula:
 
-  \codecpp{code/cpp/listings.hpp}{listing12}{listing13}{1}
+  \codecpp{code-cpp-listings.hpp}{listing12}{listing13}{1}
 
   Listings P.9-P11 and F.9-F.13 contain the Python and Fortran counterparts to listings C.12-C.15.
 
@@ -590,7 +607,7 @@
   As mentioned in the previous section, the donor-cell formula
     constitutes an advection scheme, hence we may use it to create
     a \prog{solver\_donorcell} implementation of the abstract \prog{solver} class: 
-  \codecpp{code/cpp/listings.hpp}{listing13}{listing14}{1}
+  \codecpp{code-cpp-listings.hpp}{listing13}{listing14}{1}
   The above definition is given as an example only.
   In the following sections an MPDATA solver of the same structure is defined.
 
@@ -603,11 +620,11 @@
     fields corresponding to the MPDATA antidiffusive velocities of the following 
     form \citep[eqs~13,~14~in][]{Smolarkiewicz_1984}:
   \begin{equation}\label{eq:antidiff1}
-    \input{formulae/antidiff1}
+    \input{formulae_antidiff1}
   \end{equation}
   where $\psi$ and $C$ represent values from the previous iteration and where:
   \begin{equation}\label{eq:antidiff2}
-    \input{formulae/antidiff2}
+    \input{formulae_antidiff2}
   \end{equation}
   For positive-definite $\psi$, the $A$ and $B$ terms take the 
   following form\footnote{
@@ -616,28 +633,28 @@
     formul\ae~for advection of fields of variable sign
   }:
   \begin{equation}\label{eq:A}
-    \input{formulae/A}
+    \input{formulae_A}
   \end{equation}
   \begin{equation}\label{eq:B}
-    \input{formulae/B}
+    \input{formulae_B}
   \end{equation}
 
   If the denominator in equations \ref{eq:A} or \ref{eq:B} equals zero for a given {\em i} and {\em j}, 
     the corresponding $A_{[i,j]}$ and $B_{[i,j]}$ are set to zero what may be conveniently 
     represented with the \prog{where} construct (available in all three considered languages):
-  \codecpp{code/cpp/listings.hpp}{listing14}{listing15}{1}
+  \codecpp{code-cpp-listings.hpp}{listing14}{listing15}{1}
 
   The $A$ term defined in equation \ref{eq:A} takes the following form:
-  \codecpp{code/cpp/listings.hpp}{listing15}{listing16}{1}
+  \codecpp{code-cpp-listings.hpp}{listing15}{listing16}{1}
 
   The $B$ term defined in equation \ref{eq:B} takes the following form:
-  \codecpp{code/cpp/listings.hpp}{listing16}{listing17}{1}
+  \codecpp{code-cpp-listings.hpp}{listing16}{listing17}{1}
 
   Equation \ref{eq:antidiff2} takes the following form:
-  \codecpp{code/cpp/listings.hpp}{listing17}{listing18}{1}
+  \codecpp{code-cpp-listings.hpp}{listing17}{listing18}{1}
 
   Equation \ref{eq:antidiff1} take the following form:
-  \codecpp{code/cpp/listings.hpp}{listing18}{listing19}{1}
+  \codecpp{code-cpp-listings.hpp}{listing18}{listing19}{1}
 
   Listings P.13-P.17 and F.15-F.21 contain the Python and Fortran counterparts to listing C.16-C.22.
 
@@ -645,7 +662,7 @@
 
   An MPDATA solver may be now constructed by inheriting from \prog{solver} class
     with the following definition in C++:
-  \codecpp{code/cpp/listings.hpp}{listing19}{listing20}{1}
+  \codecpp{code-cpp-listings.hpp}{listing19}{listing20}{1}
   The array of sequences of temporary arrays \prog{tmp} allocated in the constructor
     is used to store the antidiffusive velocities from the present and optionally 
     previous timestep (if using more than two iterations). 
@@ -698,10 +715,10 @@
   Listings P.19 and F.23-F.24 contain the Python and Fortran 
     counterparts to listing C.24 (with the set-up and plotting logic omitted).
 
-  \codecpp{code/cpp/plot.cpp}{listing20}{listing21}{1}
+  \codecpp{code-cpp-plot.cpp}{listing20}{listing21}{1}
 
   \begin{figure}
-    \pgfimage[height=.9\textheight]{code/cpp/figure}
+    \includegraphics[height=.9\textheight]{demo}
     \caption{\label{fig:mpdata}
       Plot generated by the program given in listing~C.24.
       The top panel shows initial signal shape (at time t=0).
@@ -783,7 +800,7 @@
 
   \begin{figure}[t]
     \center
-    \includegraphics[height=.45\textwidth,angle=-90]{plot-mem-host=laptok-cpu=GenuineIntel-6-42-bogomips=3190}
+    \includegraphics[height=.45\textwidth,angle=-90]{skua-mem}
     \caption{\label{fig:mem}
       Memory consumption statistics for the test runs described in Section~\ref{sec:perf}
         plotted as a function of grid size.
@@ -813,7 +830,7 @@
 
   \begin{figure}[t]
     \center
-    \includegraphics[height=.45\textwidth,angle=-90]{plot-cpu-host=laptok-cpu=GenuineIntel-6-42-bogomips=3190}
+    \includegraphics[height=.45\textwidth,angle=-90]{laptok-cpu}
     \caption{\label{fig:cpu-eyrie}
       Execution time statistics for the test runs described in Section~\ref{sec:perf}
         plotted as a function of grid size.
@@ -829,13 +846,11 @@
   \end{figure}
   \begin{figure}[t]
     \center
-    \includegraphics[height=.45\textwidth,angle=-90]{plot-cpu-host=skua-cpu=AuthenticAMD-16-10-bogomips=5620}
+    \includegraphics[height=.45\textwidth,angle=-90]{skua-cpu}
     \caption{\label{fig:cpu-skua}
       Same as Fig.~\ref{fig:cpu-eyrie} for an AMD Phenom\textsuperscript{\texttrademark} II 800 MHz processor.
     }
   \end{figure}
-
- 
 
   The CPU time statistics presented in Figures \ref{fig:cpu-eyrie} and \ref{fig:cpu-skua} reveal
     minor differences between results obtained with the two different processors.
@@ -1112,7 +1127,9 @@
     Development of NumPy support in PyPy was led by Alex Gaynor, Matti Picus and MF.
   }
 
+%%%%%%
   \clearpage
+%%%%%%
   \appendix
 
   \setcounter{section}{15} 
@@ -1120,60 +1137,60 @@
 
   \subsection*{{\bf Periodic Boundaries} (cf. Sect. \ref{sec:cyclic})}
   \noindent 
-  \codepyt{code/pyt/listings.py}{listing08}{listing09}{1}
+  \codepyt{code-pyt-listings.py}{listing08}{listing09}{1}
 
   \subsection*{{\bf Donor-cell formul\ae}~(cf. Sect. \ref{sec:donor})}
-  \codepyt{code/pyt/listings.py}{listing09}{listing10}{1}
-  \codepyt{code/pyt/listings.py}{listing10}{listing11}{1}
-  \codepyt{code/pyt/listings.py}{listing11}{listing12}{1}
+  \codepyt{code-pyt-listings.py}{listing09}{listing10}{1}
+  \codepyt{code-pyt-listings.py}{listing10}{listing11}{1}
+  \codepyt{code-pyt-listings.py}{listing11}{listing12}{1}
 
   \subsection*{{\bf Donor-cell solver} (cf. Sect. \ref{sec:donorcell_solver})}
-  \codepyt{code/pyt/listings.py}{listing12}{listing13}{1}
+  \codepyt{code-pyt-listings.py}{listing12}{listing13}{1}
 
   \subsection*{{\bf MPDATA formul\ae}~(cf. Sect. \ref{sec:mpdata})}
-  \codepyt{code/pyt/listings.py}{listing13}{listing14}{1}
-  \codepyt{code/pyt/listings.py}{listing14}{listing15}{1}
-  \codepyt{code/pyt/listings.py}{listing15}{listing16}{1}
-  \codepyt{code/pyt/listings.py}{listing16}{listing17}{1}
-  \codepyt{code/pyt/listings.py}{listing17}{listing18}{1}
+  \codepyt{code-pyt-listings.py}{listing13}{listing14}{1}
+  \codepyt{code-pyt-listings.py}{listing14}{listing15}{1}
+  \codepyt{code-pyt-listings.py}{listing15}{listing16}{1}
+  \codepyt{code-pyt-listings.py}{listing16}{listing17}{1}
+  \codepyt{code-pyt-listings.py}{listing17}{listing18}{1}
 
   \subsection*{{\bf An MPDATA solver} (cf. Sect. \ref{sec:mpdatasolver})}
-  \codepyt{code/pyt/listings.py}{listing18}{listing19}{1}
+  \codepyt{code-pyt-listings.py}{listing18}{listing19}{1}
 
   \subsection*{{\bf Usage example} (cf. Sect. \ref{sec:example})}
-  \codepyt{code/pyt/test.py}{listing19}{listing20}{1}
+  \codepyt{code-pyt-test.py}{listing19}{listing20}{1}
 
   \setcounter{section}{5} 
   \section{Fortran code for sections \ref{sec:cyclic}--\ref{sec:mpdatasolver}}\label{app:F}
 
   \subsection*{{\bf Periodic boundaries} (cf. Sect. \ref{sec:cyclic})}
-  \codefor{code/for/listings.f}{listing08}{listing09}{1}
+  \codefor{code-for-listings.f}{listing08}{listing09}{1}
 
   \subsection*{{\bf Donor-cell formul\ae}~(cf. Sect. \ref{sec:donor})}
-  \codefor{code/for/listings.f}{listing09}{listing10}{1}
-  \codefor{code/for/listings.f}{listing10}{listing11}{1}
-  \codefor{code/for/listings.f}{listing11}{listing12}{1}
-  \codefor{code/for/listings.f}{listing12}{listing13}{1}
-  \codefor{code/for/listings.f}{listing13}{listing14}{1}
+  \codefor{code-for-listings.f}{listing09}{listing10}{1}
+  \codefor{code-for-listings.f}{listing10}{listing11}{1}
+  \codefor{code-for-listings.f}{listing11}{listing12}{1}
+  \codefor{code-for-listings.f}{listing12}{listing13}{1}
+  \codefor{code-for-listings.f}{listing13}{listing14}{1}
 
   \subsection*{{\bf Donor-cell solver} (cf. Sect. \ref{sec:donorcell_solver})}
-  \codefor{code/for/listings.f}{listing14}{listing15}{1}
+  \codefor{code-for-listings.f}{listing14}{listing15}{1}
 
   \subsection*{{\bf MPDATA formul\ae}~(cf. Sect. \ref{sec:mpdata})}
-  \codefor{code/for/listings.f}{listing15}{listing16}{1}
-  \codefor{code/for/listings.f}{listing16}{listing17}{1}
-  \codefor{code/for/listings.f}{listing17}{listing18}{1}
-  \codefor{code/for/listings.f}{listing18}{listing19}{1}
-  \codefor{code/for/listings.f}{listing19}{listing20}{1}
-  \codefor{code/for/listings.f}{listing20}{listing21}{1}
-  \codefor{code/for/listings.f}{listing21}{listing22}{1}
+  \codefor{code-for-listings.f}{listing15}{listing16}{1}
+  \codefor{code-for-listings.f}{listing16}{listing17}{1}
+  \codefor{code-for-listings.f}{listing17}{listing18}{1}
+  \codefor{code-for-listings.f}{listing18}{listing19}{1}
+  \codefor{code-for-listings.f}{listing19}{listing20}{1}
+  \codefor{code-for-listings.f}{listing20}{listing21}{1}
+  \codefor{code-for-listings.f}{listing21}{listing22}{1}
 
   \subsection*{{\bf An MPDATA solver} (cf. Sect. \ref{sec:mpdatasolver})}
-  \codefor{code/for/listings.f}{listing22}{listing23}{1}
+  \codefor{code-for-listings.f}{listing22}{listing23}{1}
 
   \subsection*{{\bf Usage example} (cf. Sect. \ref{sec:example})}
-  \codefor{code/for/test.f}{listing23}{listing24}{1}
-  \codefor{code/for/test.f}{listing25}{listing26}{1}
+  \codefor{code-for-test.f}{listing23}{listing24}{1}
+  \codefor{code-for-test.f}{listing25}{listing26}{1}
 
   \bibliographystyle{model1-num-names}
   \bibliography{paper}
