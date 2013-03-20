@@ -1,8 +1,12 @@
-%%%%%\documentclass[review,peprint,10pt,5p,times]{elsarticle}
-%%%%%\usepackage[switch]{lineno}
-%%%%%\addtolength{\hoffset}{.5cm}
+%%%%% <cpc>
+\documentclass[review,peprint,10pt,5p,times]{elsarticle}
+\usepackage[switch]{lineno}
+\addtolength{\hoffset}{.5cm}
+%%%%% </cpc>
 
-\documentclass[final,5p,times,twocolumn]{elsarticle}
+%%%%% <arXiv>
+%\documentclass[final,5p,times,twocolumn]{elsarticle}
+%%%%% </arXiv>
 
 % input encoding assuring proper handling of Polish characters (surnames!)
 \usepackage[utf8]{inputenc}
@@ -124,20 +128,28 @@
 
   \end{frontmatter}
 
+%%%%% <cpc>
+\linenumbers % for the review
+\section*{Program summary}
+\noindent
+{\it Program title:} mpdata-oop\\
+{\it Licensing provisions:} GNU GPL version 3\\
+{\it Programming languages:} C++, Python and Fortran\\
+{\it Computer:} hardware-independent (tested on x86\_64)\\
+{\it Operating system:} OS-independent (developed on GNU/Linux)\\
+{\it RAM/CPU time requirements:} problem-dependent\\
+{\it Has the code been vectorised or parallelised?:}\\ 
+  GCC 4.8 auto-vectorises parts of the Fortran and the C++ code.\\
+  The code is readily adaptable for concurrent computation using
+  domain decomposition.\\
+{\it External libraries used:} Blitz++, NumPy\\
+{\it Classification:} 70 (Mathematical and Numerical Methods)\\
+{\it Nature of problem:} advective transport\\
+{\it Solution method:} Multidimensional Positive Definite Advective Transport Algorithm (MPDATA)\\
+{\it Reference:} Smolarkiewicz 1984, J. Comp. Phys. 54, 325--362
+%%%%% </cpc>
+
   \tableofcontents
-
-%%%%%  \linenumbers % for the review
-
-%%%%%  \section*{Program summary}
-
-%%%%%  \noindent
-%%%%%  Program title: mpdata-oop\\
-%%%%%  Licensing provisions: GNU GPL version 3 \citep{GPLv3}\\
-%%%%%  Programming language: C++11, Python and Fortran 2008\\
-%%%%%  External routines/libraries used: Blitz++, NumPy\\
-%%%%%  Nature of problem: advective transport\\
-%%%%%  Solution method: MPDATA\\
-%%%%%  References: Smolarkiewicz 1984: A fully multidimensional positive definite advection transport algorithm with small implicit diffusion. J. Comp. Phys. 54, 325--362 \citep{Smolarkiewicz_1984}
 
   \section{Introduction}
 
@@ -1127,9 +1139,9 @@
     Development of NumPy support in PyPy was led by Alex Gaynor, Matti Picus and MF.
   }
 
-%%%%%%
-  \clearpage
-%%%%%%
+%%%%%% <arXiv>
+%  \clearpage
+%%%%%% </arXiv>
   \appendix
 
   \setcounter{section}{15} 
