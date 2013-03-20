@@ -2,7 +2,7 @@
 // code licensed under the terms of GNU GPL v3
 // copyright holder: University of Warsaw
 //listing01
-typedef double real_t;
+using real_t = double;
 //listing02
 #include <blitz/array.h>
 using arr_t = blitz::Array<real_t, 2>;
