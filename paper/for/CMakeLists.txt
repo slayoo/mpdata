@@ -1,4 +1,8 @@
-set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -fwhole-file -Ofast -march=native ") #-ftree-vectorizer-verbose=1")
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU") 
+  set(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-form -fwhole-file -Ofast -march=native ")
+elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "Intel") 
+  set(CMAKE_Fortran_FLAGS_RELEASE "-stand=f08 -free -fast -axAVX")
+endif()
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS_RELEASE}")
 set(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -fcheck=all -ffree-form -g -Warray-bounds")
 

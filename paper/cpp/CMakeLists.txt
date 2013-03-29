@@ -1,8 +1,9 @@
-set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors")
-if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native") # -ftree-vectorizer-verbose=1")
-else()
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -mllvm -vectorize -ffast-math -march=native") # e.g. clang++
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors -Ofast -march=native")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors -O3 -mllvm -vectorize -ffast-math -march=native") 
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors -fast -axAVX")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
 
