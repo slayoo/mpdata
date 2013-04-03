@@ -1,0 +1,18 @@
+To run basic tests:
+
+*CPython
+ - in testdonorcell_pythononly.py should be: "import listings_loops as lis"
+ - python testdonorcell_pythononly.py or 
+   python testdonorcell_pythononly.py timing (for longer run)
+
+*PyPy
+ - in testdonorcell_pythononly.py should be: "import listings_loops as lis"
+ - pypy testdonorcell_pythononly.py or 
+   pypy testdonorcell_pythononly.py timing (for longer run)
+
+*Cython
+ - in testdonorcell_pythononly.py should be: "import listings_loops_cython as lis"
+ - python setup.py build_ext --inplace  (should create listings_loops_cython.so)
+ - python testdonorcell_pythononly.py or 
+   python testdonorcell_pythononly.py timing (for longer run)
+
