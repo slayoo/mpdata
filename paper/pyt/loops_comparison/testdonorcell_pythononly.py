@@ -38,7 +38,7 @@ def donorcell_test(fin, nx, ny, Cx, Cy, nt, it, dec=4):
   slv.courant(0)[:] = Cx
   slv.courant(1)[:] = Cy
   t0 = time.time()
-  slv.solve(300)
+  slv.solve(nt)
   print "time", time.time() - t0
   print "sum, max: ", slv.state()[:].sum(), slv.state()[:].max()
 
