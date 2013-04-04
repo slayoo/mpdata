@@ -144,7 +144,7 @@ class cyclic(object):
 
 #listing09
 #@autojit
-@jit(int_(int_, int_, int_))
+@jit(float64(float64, float64, float64))
 def f(psi_l, psi_r, C):
   return (
     (C + abs(C)) * psi_l + 
