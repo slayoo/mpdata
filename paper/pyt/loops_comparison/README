@@ -3,23 +3,23 @@ To run basic tests of code with loop:
 *CPython
  - in testdonorcell_pythononly.py should be: "import listings_loops as lis"
  - python testdonorcell_pythononly.py or 
-   python testdonorcell_pythononly.py timing (for longer run)
+   python testdonorcell_pythononly.py timing (for longer run, the file with input has to be recreated or copied first)
 
 *PyPy
  - in testdonorcell_pythononly.py should be: "import listings_loops as lis"
  - pypy testdonorcell_pythononly.py or 
-   pypy testdonorcell_pythononly.py timing (for longer run)
+   pypy testdonorcell_pythononly.py timing (for longer run, the file with input has to be recreated or copied first)
 
 *Cython
  - in testdonorcell_pythononly.py should be: "import listings_loops_cython as lis"
  - python setup.py build_ext --inplace  (should create listings_loops_cython.so)
  - python testdonorcell_pythononly.py or 
-   python testdonorcell_pythononly.py timing (for longer run)
+   python testdonorcell_pythononly.py timing (for longer run, the file with input has to be recreated or copied first)
 
 *Numba
 - in testdonorcell_pythononly.py should be: "import listings_loops_numba as lis"
 - python (from anaconda) testdonorcell_pythononly.py or
-  python (from anaconda) testdonorcell_pythononly.py timing (for longer run)
+  python (from anaconda) testdonorcell_pythononly.py timing (for longer run, the file with input has to be recreated or copied first)
   (it also works for normal python ignoring numba decorators)
 
 To compare with original code without loop using CPython/PyPy first point is different: 
