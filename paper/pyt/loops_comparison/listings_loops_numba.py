@@ -181,10 +181,8 @@ def donorcell_y(psi, C, i, j):
 #listing11
 @autojit
 def donorcell_op(psi, n, C, i_sl, j_sl):
-  i_range = range(i_sl.start, i_sl.stop)
-  j_range = range(j_sl.start, j_sl.stop)
-  for i in i_range:
-    for j in j_range:
+  for i in range(i_sl.start, i_sl.stop):
+    for j in range(j_sl.start, j_sl.stop):
       psi[n+1][i,j] = (psi[n][i,j] 
     - donorcell_x(psi[n], C[0], i, j)
     - donorcell_y(psi[n], C[1], i, j)

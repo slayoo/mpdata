@@ -16,6 +16,11 @@ To run basic tests of code with loop:
  - python testdonorcell_pythononly.py or 
    python testdonorcell_pythononly.py timing (for longer run)
 
+*Numba
+- in testdonorcell_pythononly.py should be: "import listings_loops_numba as lis"
+- python (from anaconda) testdonorcell_pythononly.py or
+  python (from anaconda) testdonorcell_pythononly.py timing (for longer run)
+  (it also works for normal python ignoring numba decorators)
 
 To compare with original code without loop using CPython/PyPy first point is different: 
  - in testdonorcell_pythononly.py should be: "import listings as lis"

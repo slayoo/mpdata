@@ -1,4 +1,4 @@
-import listings_loops as lis
+import listings_loops_numba as lis
 import sys
 import time
 import numpy
@@ -75,6 +75,7 @@ def main(ex = Examples_san, kat="/glade/u/home/jarecka/mpdata/paper/tests/sanity
       filename = filename + str(arg) + "=" + arg_val + "_"
       arg_func.append(ex[arg][i])
     fin = filename[:-1] + ":in"
+    print fin
     print "arg fun", arg_func
 
     donorcell_test(fin, *arg_func)
