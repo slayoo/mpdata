@@ -143,14 +143,16 @@ class cyclic(object):
     )
 
 #listing09
-@autojit
+#@autojit
+@jit(int_(int_, int_, int_))
 def f(psi_l, psi_r, C):
   return (
     (C + abs(C)) * psi_l + 
     (C - abs(C)) * psi_r
   ) / 2
 #listing10
-@autojit
+#@autojit
+@jit(float64(float64_2d, float64_2d, int_, int_))
 def donorcell_x(psi, C, i, j):
   return (
     f(psi[i,   j],
@@ -163,7 +165,8 @@ def donorcell_x(psi, C, i, j):
         C[i-1, j]
       ) 
     )
-@autojit
+#@autojit
+@jit(float64(float64_2d, float64_2d, int_, int_))
 def donorcell_y(psi, C, i, j):
   return (
     f(
@@ -179,7 +182,8 @@ def donorcell_y(psi, C, i, j):
   )
 
 #listing11
-@autojit
+#@autojit
+@jit(void(object_, int_, object_, object_, object_))
 def donorcell_op(psi, n, C, i_sl, j_sl):
   for i in range(i_sl.start, i_sl.stop):
     for j in range(j_sl.start, j_sl.stop):
