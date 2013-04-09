@@ -20,6 +20,10 @@ The commands were tested to work with the following software versions
     * Debian package announced (http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=691272)
       but still not release at the time of writing
 
+Known strict version requirements:
+    - Blitz++ >= 0.10
+    - GCC >= 4.8
+
 To compile the C++ and Fortran programs, please start with running the cmake optionally
 pointing it to any custom compiler or library locations: 
 
