@@ -360,7 +360,44 @@
 
   \begin{figure}[h!]
   \center
-  \input{grid}
+  \begin{tikzpicture}
+    \coordinate (Origin)   at (0,0);
+    \coordinate (XAxisMin) at (-2.5,0);
+    \coordinate (XAxisMax) at (3,0);
+    \coordinate (YAxisMin) at (0,-2.5);
+    \coordinate (YAxisMax) at (0,3);
+    \draw [thin, gray,-latex] (XAxisMin) -- (XAxisMax);% Draw x axis
+    \draw [thin, gray,-latex] (YAxisMin) -- (YAxisMax);% Draw y axis
+
+    \clip (-2.5,-2.5) rectangle (2.5cm,2.5cm); % Clips the picture...
+    \draw[style=help lines,dashed] (-14,-14) grid[step=2cm] (14,14);
+          % Draws a grid in the new coordinates.
+          %\filldraw[fill=gray, fill opacity=0.3, draw=black] (0,0) rectangle (2,2);
+              % Puts the shaded rectangle
+    \foreach \x in {-7,-6,...,7}{% Two indices running over each
+      \foreach \y in {-7,-6,...,7}{% node on the grid we have drawn 
+        \node[draw,circle,inner sep=2pt,fill] at (2*\x,2*\y) {};
+            % Places a dot at those points
+      }
+    }
+    \draw [black] (0,0) -- (0,0) node [below right] {$\!\psi_{[i,j]}$};
+    \draw [black] (-2,0) -- (-2,0) node [below right] {$\!\psi_{[i-1,j]}$};
+    \draw [black] (0,2) -- (0,2) node [below right] {$\!\psi_{[i,j+1]}$};
+
+    \draw [ultra thick,-latex,red] (.8,0) -- (1.2,0) node [above right] {$\!\!\!\!\!\!\!\!\!\!C^{[x]}_{[i+\phlf,j]}$};
+    \draw [ultra thick,-latex,red] (-1.2,0) -- (-.8,0) node [above right] {$\!\!\!\!\!\!\!\!\!\!C^{[x]}_{[i\mhlf,j]}$};
+    \draw [ultra thick,-latex,red] (.8,2) -- (1.2,2) node [above] {};
+    \draw [ultra thick,-latex,red] (-1.2,2) -- (-.8,2) node [above] {};
+    \draw [ultra thick,-latex,red] (.8,-2) -- (1.2,-2) node [above] {};
+    \draw [ultra thick,-latex,red] (-1.2,-2) -- (-.8,-2) node [above] {};
+
+    \draw [ultra thick,-latex,red] (0,.8) -- (0,1.2) node [above] {};
+    \draw [ultra thick,-latex,red] (0,-1.2) -- (0,-.8) node [below right] {$C^{[y]}_{[i,j\mhlf]}$};
+    \draw [ultra thick,-latex,red] (-2,.8) -- (-2,1.2) node [above] {};
+    \draw [ultra thick,-latex,red] (-2,-1.2) -- (-2,-.8) node [above] {};
+    \draw [ultra thick,-latex,red] (2,.8) -- (2,1.2) node [above] {};
+    \draw [ultra thick,-latex,red] (2,-1.2) -- (2,-.8) node [above] {};
+  \end{tikzpicture}
   \caption{\label{fig:grid}
     A schematic of the Arakawa-C grid.
   }

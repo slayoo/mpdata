@@ -33,19 +33,19 @@ void plot(T &solver, Gnuplot &gp)
   gp.sendBinary(solver.state().copy());
 }
 
-int main(int argc, char **argv) 
+int main() 
 {
-  int n[] = {24, 24}, nt = atof(argv[1]);
+  int n[] = {24, 24}, nt = 75;
   Gnuplot gp;
-  gp << "set term pdf size 8cm, 14cm\n" 
+  gp << "set term pdf size 10cm, 30cm\n" 
      << "set output 'figure.pdf'\n"     
-     << "set multiplot layout 2,1\n" 
+     << "set multiplot layout 4,1\n" 
      << "set border 4095\n"
      << "set xtics out\n"
      << "set ytics out\n"
      << "unset ztics\n"    
-     << "set xlabel 'x/dx'\n"
-     << "set ylabel 'y/dy'\n"
+     << "set xlabel 'X'\n"
+     << "set ylabel 'Y'\n"
      << "set xrange [0:" << n[x] << "]\n"   
      << "set yrange [0:" << n[y] << "]\n"   
      << "set zrange [-1:1]\n"   
@@ -55,25 +55,22 @@ int main(int argc, char **argv)
     solver_donorcell<cyclic<x>, cyclic<y>> 
       slv(n[x], n[y]);
     setup(slv, n);
-/*
-    gp << "set title 't/dt=0'\n";
+    gp << "set title 't=0'\n";
     plot(slv, gp);
-*/
     slv.solve(nt);
-    gp << "set title 'donorcell t/dt="<<nt<<"'\n";
+    gp << "set title 'donorcell t="<<nt<<"'\n";
     plot(slv, gp);
   } 
   {
-    const int it = 3;
+    const int it = 2;
     solver_mpdata<it, cyclic<x>, cyclic<y>> 
       slv(n[x], n[y]); 
     setup(slv, n); 
     slv.solve(nt);
     gp << "set title 'mpdata<" << it << "> "
-       << "t/dt=" << nt << "'\n";
+       << "t=" << nt << "'\n";
     plot(slv, gp);
   } 
-/*
   {
     const int it = 44;
     solver_mpdata<it, cyclic<x>, cyclic<y>> 
@@ -81,9 +78,8 @@ int main(int argc, char **argv)
     setup(slv, n); 
     slv.solve(nt); 
     gp << "set title 'mpdata<" << it << "> "
-       << "t/dt=" << nt << "'\n";
+       << "t=" << nt << "'\n";
     plot(slv, gp);
   }
-*/
 }
 //listing21
