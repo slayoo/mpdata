@@ -5,7 +5,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -DNDEBUG -Wfatal-errors -fast -axAVX")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
 
 set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++11 -DBZ_DEBUG")
 
@@ -13,6 +13,7 @@ find_package(Boost COMPONENTS iostreams system REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_path(BLITZ_INCLUDE_DIR NAMES blitz/array.h)
+message(STATUS "blitz path: ${BLITZ_INCLUDE_DIR}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${BLITZ_INCLUDE_DIR}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
