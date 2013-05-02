@@ -250,7 +250,8 @@ template<int n_iters, class bcx_t, class bcy_t>
 struct solver_mpdata : solver<bcx_t, bcy_t>
 {
   // member fields
-  arrvec_t tmp[2];
+  static const int n_tmp = n_iters > 2 ? 2 : 1;
+  arrvec_t tmp[n_tmp];
   rng_t im, jm;
 
   // ctor
@@ -259,7 +260,6 @@ struct solver_mpdata : solver<bcx_t, bcy_t>
     im(this->i.first() - 1, this->i.last()),
     jm(this->j.first() - 1, this->j.last())
   {
-    int n_tmp = n_iters > 2 ? 2 : 1;
     for (int n = 0; n < n_tmp; ++n)
     {
       tmp[n].push_back(new arr_t(
