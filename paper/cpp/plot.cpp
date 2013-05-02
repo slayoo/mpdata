@@ -44,8 +44,8 @@ int main()
      << "set xtics out\n"
      << "set ytics out\n"
      << "unset ztics\n"    
-     << "set xlabel 'X'\n"
-     << "set ylabel 'Y'\n"
+     << "set xlabel 'x/dx'\n"
+     << "set ylabel 'y/dy'\n"
      << "set xrange [0:" << n[x] << "]\n"   
      << "set yrange [0:" << n[y] << "]\n"   
      << "set zrange [-1:1]\n"   
@@ -55,10 +55,10 @@ int main()
     solver_donorcell<cyclic<x>, cyclic<y>> 
       slv(n[x], n[y]);
     setup(slv, n);
-    gp << "set title 't=0'\n";
+    gp << "set title 't/dt=0'\n";
     plot(slv, gp);
     slv.solve(nt);
-    gp << "set title 'donorcell t="<<nt<<"'\n";
+    gp << "set title 'donorcell t/dt="<<nt<<"'\n";
     plot(slv, gp);
   } 
   {
@@ -68,7 +68,7 @@ int main()
     setup(slv, n); 
     slv.solve(nt);
     gp << "set title 'mpdata<" << it << "> "
-       << "t=" << nt << "'\n";
+       << "t/dt=" << nt << "'\n";
     plot(slv, gp);
   } 
   {
@@ -78,7 +78,7 @@ int main()
     setup(slv, n); 
     slv.solve(nt); 
     gp << "set title 'mpdata<" << it << "> "
-       << "t=" << nt << "'\n";
+       << "t/dt=" << nt << "'\n";
     plot(slv, gp);
   }
 }
