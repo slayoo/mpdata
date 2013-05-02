@@ -45,6 +45,9 @@ any additional options, these have to be repeated again):
       -DCMAKE_CXX_COMPILER=clang++ \
       -DCMAKE_Fortran_COMPILER=/usr/lib/gcc-snapshot/bin/gfortran 
 
+(CMake 2.8.10 has a bug causing it to enter an infinite loop here, 
+erasing CMakeFiles directory helps) 
+
 A second make run will invoke compilation with clang of the ./cpp/test-cpp-nongnu
 
     $ make
