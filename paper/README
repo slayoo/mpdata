@@ -23,6 +23,7 @@ The commands were tested to work with the following software versions
 Known strict version requirements:
     - Blitz++ >= 0.10
     - GCC >= 4.8
+    - CMake != 2.8.10 (see note below)
 
 To compile the C++ and Fortran programs, please start with running the cmake optionally
 pointing it to any custom compiler or library locations: 

@@ -1,3 +1,5 @@
+#
+
 length($0) != 0 && ($2 != "started" ) { 
   fc = substr($1,1,1); 
   if (fc == "[" || fc == "#") 
@@ -14,4 +16,3 @@ length($0) != 0 && ($2 != "started" ) {
 END {
   print
 }
-
