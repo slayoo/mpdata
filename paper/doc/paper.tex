@@ -1,12 +1,10 @@
-%%%%% <cpc>
-\documentclass[review,peprint,10pt,5p,times]{elsarticle}
-\usepackage[switch]{lineno}
-\addtolength{\hoffset}{.5cm}
-%%%%% </cpc>
-
 %%%%% <arXiv>
 %\documentclass[final,5p,times,twocolumn]{elsarticle}
 %%%%% </arXiv>
+
+%%%%% <gmd>
+\documentclass[gmd]{copernicus}%_discussions}
+%%%%% </gmd>
 
 % input encoding assuring proper handling of Polish characters (surnames!)
 \usepackage[utf8]{inputenc}
@@ -85,15 +83,14 @@
 }
 
 \newcommand{\prog}[1]{{\rm\bf#1}}
-\newcommand{\url}[1]{{#1}}
 
 \journal{Computer Physics Communications}
 
 \begin{document}
-  \begin{frontmatter}
+    \linenumbers
 
     \title{
-      Object-oriented implementations of the MPDATA advection equation solver in~C++,~Python~and~Fortran
+      Formula translation in C++, Python and modern Fortran: a~case~study~of~the~language~choice tradeoffs
     }
 
     \author[1]{Sylwester Arabas}
@@ -101,57 +98,38 @@
     \author[1]{Anna Jaruga}
     \author[2]{Maciej Fijałkowski}
 
-    \address[1]{Institute of Geophysics, Faculty of Physics, University of Warsaw}
-    \address[2]{PyPy Team}
+    \affil[1]{Institute of Geophysics, Faculty of Physics, University of Warsaw}
+    \affil[2]{PyPy Team}
+
+    \correspondence{Sylwester Arabas (sarabas@igf.fuw.edu.pl)}
+    \runningauthor{Arabas, Jarecka et al.}
+    \runningtitle{Formula translation in C++, Python \& Fortran}
+
+    \maketitle
 
     \begin{abstract}
         Three object-oriented implementations of a prototype solver of the advection equation are introduced.
         The presented programs are based on Blitz++ (C++), NumPy (Python), and Fortran's built-in array containers.
-        The solvers include an implementation of the Multidimensional Positive-Definite 
+        The solvers constitute implementations of the Multidimensional Positive-Definite 
           Advective Transport Algorithm (MPDATA).
-        The introduced codes exemplify how the application of 
+        The introduced codes serve as exemples for how the application of 
           object-oriented programming (OOP) techniques allows to reproduce the mathematical notation 
           used in the literature within the program code.
         A discussion on the tradeoffs of the programming language choice is presented.
         The main angles of comparison are code brevity and syntax clarity
           (and hence maintainability and auditability) as well as performance.
+        All performance tests are performed using free and open-source compilers.
         In the case of Python, a significant performance gain is observed when switching from the standard 
           interpreter (CPython) to the PyPy implementation of Python.
         Entire source code of all three implementations is embedded in the text and is licensed
           under the terms of the GNU GPL license. 
     \end{abstract}
 
-    % up to six in Comp. Phys. Comm.
-    \begin{keyword}
-      object-oriented programming, advection equation, MPDATA, C++, Fortran, Python
-    \end{keyword}
+%    \begin{keyword}
+%      object-oriented programming, advection equation, MPDATA, C++, Fortran, Python
+%    \end{keyword}
 
-  \end{frontmatter}
-
-%%%%% <cpc>
-\linenumbers % for the review
-\section*{Program summary}
-\noindent
-{\it Program title:} mpdata-oop\\
-{\it Licensing provisions:} GNU GPL version 3\\
-{\it Programming languages:} C++, Python and Fortran\\
-{\it Computer:} hardware-independent (tested on x86\_64)\\
-{\it Operating system:} OS-independent (developed on GNU/Linux)\\
-{\it RAM/CPU time requirements:} problem-dependent\\
-{\it Has the code been vectorised or parallelised?:}\\ 
-  GCC 4.8 auto-vectorises parts of the Fortran and the C++ code.\\
-  The code is readily adaptable for concurrent computation using
-  domain decomposition.\\
-{\it External libraries used:} Blitz++, NumPy\\
-{\it Classification:} 70 (Mathematical and Numerical Methods)\\
-{\it Nature of problem:} advective transport\\
-{\it Solution method:} Multidimensional Positive Definite Advective Transport Algorithm (MPDATA)\\
-{\it Reference:} Smolarkiewicz 1984, J. Comp. Phys. 54, 325--362
-%%%%% </cpc>
-
-  \tableofcontents
-
-  \section{Introduction}
+  \introduction
 
   Object oriented programming (OOP) {\em ''has become recognised as the almost unique successful 
     paradigm for creating complex software''} \citep[][Sec.~1.3]{Press_et_al_2007}.
@@ -173,49 +151,34 @@
   \end{enumerate}
   The first application is attainable, yet arguably cumbersome, with procedural programming.
   The latter, virtually impossible to obtain with procedural programming, is the focus of this paper.
-  It also enables the compiler or library authors to relieve the user (i.e. scientific programmer)
-    from hand-coding optimisations, a practice long recognised as having {\em a strong negative impact when debugging
-    and maintenance are considered} \citep{Knuth_1974}.
-
-  MPDATA \citep{Smolarkiewicz_1984} stands for Multidimensional Positive Definite Advective Transport Algorithm and is
-    an example of a numerical procedure used in weather, climate and ocean simulation systems
+  
+  The aim of this paper is to show how OOP techniques can be used to represent mathematical
+    notation within the program code.
+  For discussion purposes, three sample implementations of a numerical scheme for solving
+    the advection equation are introduced.
+  The three programs are written in C++, Python and Fortran. 
+  They implement a two-dimensional version of the 
+    Multidimensional Positive Definite Advective Transport Algorithm \citep[MPDATA][]{Smolarkiewicz_1984}.
+  MPDATA is an example of a numerical procedure used in weather, climate and ocean simulation systems
     \citep[e.g.][respectively]{Ziemianski_et_al_2011,Abiodun_et_al_2011,Ezer_et_al_2002}.
-  MPDATA is a solver for systems of advection equations of the following form:
-  \begin{equation}\label{eq:adv}
-    \input{formulae_adv}
-  \end{equation}
-  that describe evolution of a scalar field $\psi$ transported by the fluid flow with velocity $\vec{v}$.
-  Quoting Numerical Recipes once more, development of methods to numerically solve such problems 
-    {\em ''is an art as much as a science''} \citep[][Sec.~20.1]{Press_et_al_2007},
-    and MPDATA is an example of the state-of-the art in this field.
-  MPDATA is designed to accurately solve equation (\ref{eq:adv}) in an arbitrary
-    number of dimensions assuring positive-definiteness of scalar field $\psi$ 
-    and incurring small numerical diffusion.
-  All relevant MPDATA formul\ae~are given in the text but are presented without
-    derivation or detailed discussion.
-  For a recent review of MPDATA-based techniques see \citet[][and references therein]{Smolarkiewicz_2006}.
+  Even in its most basic form presented herein, MPDATA is complex enough to contain
+    a wide range of mathematical abstractions that can be represented using OOP constructs, 
+    yet it is simple enough to allow inclusion of the entire source code within the paper text.
+  All relevant MPDATA formul\ae~are given in the text alongside corresponding code fragments.
+  In compliance with the article focus, these formul\ae~are presented without derivation or detailed discussion.
+  For a recent review of MPDATA-based techniques including an introductory description of the algorithm
+    and a thorough list of references, see \citet[][]{Smolarkiewicz_2006}.
 
-  In this paper we introduce and discuss object-oriented implementations of an MPDATA-based 
-    two-dimensional (2D) advection equation solver written in C++11 (\citeauthor{ISO_14882} 14882:2011), 
-    Python \citep{Rossum_and_Drake_2011} and Fortran 2008 (\citeauthor{ISO_1539-1} 1539-1:2010). 
   In the following section we introduce the three implementations
     briefly describing the algorithm itself and
     discussing where and how the OOP techniques may be applied in its implementation.
-  The syntax and nomenclature of OOP techniques are used without introduction,
-    for an overview of OOP in context of C++, Python and Fortran, consult for example
-    \citep[][Part~II]{Stroustrup_2000}, \citep[][Chapter~5]{Pilgrim_2004} and
-    \citep[][Chapter~11]{Markus_2012}, respectively.
+  Subsections \ref{sec:array}-\ref{sec:solver} describe all three implementations,
+    while subsequent sections \ref{sec:cyclic}-\ref{sec:example} cover discussion of C++ code only.
+  The relevant parts of Python and Fortran codes do not differ significantly, and for readability reasons 
+    are presented in \ref{app:P} and \ref{app:F}, respectively.
   The third section of this paper covers performance evaluation of the three implementations.
   The fourth section covers discussion of the tradeoffs of the programming language choice.
   The fifth section closes the article with a brief summary.
-
-  Throughout the paper we present the three implementations by discussing 
-    source code listings which cover the entire program code.
-  Subsections \ref{sec:array}-\ref{sec:solver} describe all three implementations,
-    while subsequent sections \ref{sec:cyclic}-\ref{sec:example} cover discussion of C++ code 
-    only.
-  The relevant parts of Python and Fortran codes do not differ significantly, and for readability reasons 
-    are presented in \ref{app:P} and \ref{app:F}, respectively.
 
   The entire code is licensed under the terms of the GNU General Public License license version 3 \citep{GPLv3}.
 
@@ -241,9 +204,18 @@
   All codes are structured in a way allowing compilation of the code 
     in exactly the same order as presented in the text within one source file,
     hence every Fortran listing contains definition of a separate module.
+  The language syntax and OOP nomenclature are used without introduction in the paper,
+    for an overview of OOP in context of C++, Python and Fortran, consult for example
+    \citep[][Part~II]{Stroustrup_2000}, \citep[][Chapter~5]{Pilgrim_2004} and
+    \citep[][Chapter~11]{Markus_2012}, respectively.
 
   \subsection{Array containers}\label{sec:array}
 
+  MPDATA is a solver for systems of advection equations of the following form:
+  \begin{equation}\label{eq:adv}
+    \input{formulae_adv}
+  \end{equation}
+  that describe evolution of a scalar field $\psi$ transported by the fluid flow with velocity $\vec{v}$.
   Solution of equation (\ref{eq:adv}) using MPDATA implies discretisation onto a grid of the $\psi$ and 
     the Courant number $\vec{C}=\vec{v}\cdot\frac{\Delta t}{\Delta x}$ fields, where $\Delta t$ is the 
     solver timestep and $\Delta x$ is the grid spacing.
@@ -891,13 +863,6 @@
     performance\footnote{Both Blitz++ and NumPy support Fortran's column-major ordering as well, 
     however this feature is still missing from PyPy's built-in NumPy implementation as of PyPy 1.9}.
 
-  The authors do expect some performance gain could 
-    be obtained by introducing into the codes some ''manual'' optimisations -- 
-    code rearrangements aimed solely at the purpose of increasing performance.
-  These were avoided intentionally as they degrade code readability,
-    should in principle be handled by the compilers,
-    and are generally advised to be avoided \citep[e.g.][section 3.12]{bib_CERNcpp}.
-
   \section{Discussion on the tradeoffs of language choice}
 
   One of the aims of this paper is to show the applicability of OOP features of the three
@@ -928,6 +893,15 @@
       of functions (see e.g. listings C.12 and C.13, P.10 and P.11, F.11 and F.12);}
     \item{fractional indexing of arrays corresponding to employment of a staggered grid.}
   \end{itemize}
+  
+  Making use of features such as loop-free arithmetics not only shortens the code,
+    but also enables the compiler or library authors to relieve the user (i.e. scientific programmer)
+    from hand-coding optimisations (e.g. loop order choice).
+  Hand-coded optimisations -- code rearrangements aimed solely at the purpose of increasing performance --
+    were long recognised as having {\em a strong negative impact when debugging
+    and maintenance are considered} \citep{Knuth_1974},
+    and are generally advised to be avoided \citep[e.g.][section 3.12]{bib_CERNcpp}.
+
   Three issues specific to Fortran that 
     resulted in employment of a more repetitive or cumbersome syntax than in C++ or Python
     were observed:
@@ -1052,7 +1026,7 @@
   The CPython and PyPy implementations of Python do not offer any
     built-in solution for multi-threading. 
   
-  \section{Summary and outlook}
+  \conclusions[Summary and outlook]
 
   Three implementations of a prototype solver 
     for the advection equation were introduced.
@@ -1113,38 +1087,12 @@
     supporting integration in one to three dimensions, handling systems of equations with source terms, 
     providing miscellaneous options of MPDATA and several parallel processing approaches.
 
-  \section*{Acknowledgements}
-  {\small
-    \noindent 
-    We thank Piotr Smolarkiewicz and Hanna Pawłowska for their help throughout the project.
-    This study was partly inspired by the lectures of Lech Łobocki.
-
-    \noindent
-    Tobias Burnus, Julian Cummings, Ond\v{r}ej \v{C}ert\'ik, Patrik Jonsson,
-      Arjen Markus, Zbigniew Piotrowski, Davide Del Vento and Janus Weil 
-      provided valuable feedback to the initial version of the
-      manuscript and/or responses to questions posted to Blitz++ and gfortran mailing lists.
-    
-    \noindent
-    SA, AJ and DJ acknowledge funding from the Polish National Science Centre
-      (project no. 2011/01/N/ST10/01483).
-
-    \noindent
-    Part of the work was carried out during a visit of SA to the National
-      Center for Atmospheric Research (NCAR) in Boulder, Colorado, USA.
-    NCAR is operated by the University Corporation for Atmospheric Research.
-    The visit was funded by the Foundation for Polish Science (START programme).
- 
-    \noindent
-    Development of NumPy support in PyPy was led by Alex Gaynor, Matti Picus and MF.
-  }
-
 %%%%%% <arXiv>
 %  \clearpage
 %%%%%% </arXiv>
   \appendix
 
-  \setcounter{section}{15} 
+  %\setcounter{section}{15} 
   \section{Python code for sections \ref{sec:cyclic}--\ref{sec:mpdatasolver}}\label{app:P}
 
   \subsection*{{\bf Periodic Boundaries} (cf. Sect. \ref{sec:cyclic})}
@@ -1172,7 +1120,7 @@
   \subsection*{{\bf Usage example} (cf. Sect. \ref{sec:example})}
   \codepyt{code-pyt-test.py}{listing19}{listing20}{1}
 
-  \setcounter{section}{5} 
+  %\setcounter{section}{5} 
   \section{Fortran code for sections \ref{sec:cyclic}--\ref{sec:mpdatasolver}}\label{app:F}
 
   \subsection*{{\bf Periodic boundaries} (cf. Sect. \ref{sec:cyclic})}
@@ -1204,7 +1152,32 @@
   \codefor{code-for-test.f}{listing23}{listing24}{1}
   \codefor{code-for-test.f}{listing25}{listing26}{1}
 
-  \bibliographystyle{model1-num-names}
+  \begin{acknowledgements}
+    \noindent 
+    We thank Piotr Smolarkiewicz and Hanna Pawłowska for their help throughout the project.
+    This study was partly inspired by the lectures of Lech Łobocki.
+
+    \noindent
+    Tobias Burnus, Julian Cummings, Ond\v{r}ej \v{C}ert\'ik, Patrik Jonsson,
+      Arjen Markus, Zbigniew Piotrowski, Davide Del Vento and Janus Weil 
+      provided valuable feedback to the initial version of the
+      manuscript and/or responses to questions posted to Blitz++ and gfortran mailing lists.
+    
+    \noindent
+    SA, AJ and DJ acknowledge funding from the Polish National Science Centre
+      (project no. 2011/01/N/ST10/01483).
+
+    \noindent
+    Part of the work was carried out during a visit of SA to the National
+      Center for Atmospheric Research (NCAR) in Boulder, Colorado, USA.
+    NCAR is operated by the University Corporation for Atmospheric Research.
+    The visit was funded by the Foundation for Polish Science (START programme).
+ 
+    \noindent
+    Development of NumPy support in PyPy was led by Alex Gaynor, Matti Picus and MF.
+  \end{acknowledgements}
+
+  \bibliographystyle{copernicus}
   \bibliography{paper}
   
 \end{document}
