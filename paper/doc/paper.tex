@@ -10,6 +10,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
+\usepackage{type1cm}
+\usepackage{relsize}
+
 \input{formulae_preamble}
 
 % for Arakawa-C figure
@@ -24,7 +27,7 @@
 \usepackage{fancyvrb}
 \fvset{
   frame=single,
-  fontsize=\scriptsize,
+  fontsize=\relscale{.666},
   fontfamily=courier,
   framerule=.2mm,
   framesep=.7mm,
@@ -112,13 +115,13 @@
         The presented programs are based on Blitz++ (C++), NumPy (Python), and Fortran's built-in array containers.
         The solvers constitute implementations of the Multidimensional Positive-Definite 
           Advective Transport Algorithm (MPDATA).
-        The introduced codes serve as exemples for how the application of 
+        The introduced codes serve as examples for how the application of 
           object-oriented programming (OOP) techniques allows to reproduce the mathematical notation 
           used in the literature within the program code.
         A discussion on the tradeoffs of the programming language choice is presented.
         The main angles of comparison are code brevity and syntax clarity
           (and hence maintainability and auditability) as well as performance.
-        All performance tests are performed using free and open-source compilers.
+        All performance tests are carried out using free and open-source compilers.
         In the case of Python, a significant performance gain is observed when switching from the standard 
           interpreter (CPython) to the PyPy implementation of Python.
         Entire source code of all three implementations is embedded in the text and is licensed
@@ -136,10 +139,10 @@
   It is intriguing that, while the quoted statement comes from the very book subtitled 
    {\em The Art of Scientific Computing}, hardly any (if not none) of the currently operational 
     weather and climate prediction systems - flagship examples of complex scientific software - 
-    make extensive use of OOP techniques.
+    make extensive use of OOP techniques\footnote{
   Fortran has been the language of choice in oceanic \citep{Griffies_et_al_2000}, 
     weather-prediction \citep{Sundberg_2009} and Earth system \citep{Legutke_2012} modelling, 
-    and none of its 20-century editions were object-oriented languages \citep[see e.g.][for discussion]{Norton_et_al_2007}.
+    and none of its 20-century editions were object-oriented languages \citep[see e.g.][for discussion]{Norton_et_al_2007}}.
 
   Application of OOP techniques in development of numerical modelling software may help to:
   \begin{enumerate}[label=(\roman*), leftmargin=*, widest=ii]
@@ -151,37 +154,51 @@
   \end{enumerate}
   The first application is attainable, yet arguably cumbersome, with procedural programming.
   The latter, virtually impossible to obtain with procedural programming, is the focus of this paper.
-  
-  The aim of this paper is to show how OOP techniques can be used to represent mathematical
-    notation within the program code.
-  For discussion purposes, three sample implementations of a numerical scheme for solving
-    the advection equation are introduced.
-  The three programs are written in C++, Python and Fortran. 
-  They implement a two-dimensional version of the 
-    Multidimensional Positive Definite Advective Transport Algorithm \citep[MPDATA][]{Smolarkiewicz_1984}.
-  MPDATA is an example of a numerical procedure used in weather, climate and ocean simulation systems
-    \citep[e.g.][respectively]{Ziemianski_et_al_2011,Abiodun_et_al_2011,Ezer_et_al_2002}.
+  The importance of reproducing the mathematical notation in the code lays primarily
+    in the fact that code readability and brevity \citep[and not the language choice itself,][]{Seeley_2004}
+    significantly contribute to code maintainability \citep{Wilson_et_al_2012}.
+  Code maintainability, in turn, plays a vital role in community programming efforts 
+    and hence geoscientific model development in particular.
+
+  The key aim of this paper is to show how OOP techniques can be used to faithfully
+    reproduce within the code what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012}.
+  For this purpose, a sample implementation of a numerical scheme for solving
+    the advection equation is introduced in in C++, Python and modern Fortran --
+    OOP languages commonly used in scientific computing \citep[see e.g.][chapt.~8]{Einarsson_2005}. 
+  Presented benchmark tests, although quite simplistic, together with the experience gained 
+    from the development of codes in three different
+    languages provide a basis for discussion on the tradeoffs of programming language choice.
+  The discussion concerns in principle the development of finite-difference solvers for 
+    partial differential equations, but is likely applicable to some extent to the scientific software in general.
+
+  All three programs include an equally structured implementation of the two-dimensional version of the 
+    Multidimensional Positive Definite Advective Transport Algorithm \citep[MPDATA;][]{Smolarkiewicz_1984}.
+  MPDATA is an example of a numerical procedure used in weather, climate, ocean and solar simulation systems
+    \citep[e.g.][respectively]{Ziemianski_et_al_2011,Abiodun_et_al_2011,Ezer_et_al_2002,Charbonneau_and_Smolarkiewicz_2013}.
   Even in its most basic form presented herein, MPDATA is complex enough to contain
     a wide range of mathematical abstractions that can be represented using OOP constructs, 
     yet it is simple enough to allow inclusion of the entire source code within the paper text.
-  All relevant MPDATA formul\ae~are given in the text alongside corresponding code fragments.
-  In compliance with the article focus, these formul\ae~are presented without derivation or detailed discussion.
-  For a recent review of MPDATA-based techniques including an introductory description of the algorithm
-    and a thorough list of references, see \citet[][]{Smolarkiewicz_2006}.
+  All relevant MPDATA formul\ae~are given in the text alongside corresponding code fragments
+    allowing comparison of the relevant syntax with the mathematical notation.
+  In compliance with the article focus, these formul\ae~are presented without derivation or detailed discussion
+    \citep[see][for a recent review of MPDATA-based techniques including an introductory description 
+    of the algorithm and an exhaustive list of references]{Smolarkiewicz_2006}.
 
-  In the following section we introduce the three implementations
+  The paper is structured as follows.
+  In section~\ref{sec:impl} we introduce the three implementations
     briefly describing the algorithm itself and
     discussing where and how the OOP techniques may be applied in its implementation.
   Subsections \ref{sec:array}-\ref{sec:solver} describe all three implementations,
     while subsequent sections \ref{sec:cyclic}-\ref{sec:example} cover discussion of C++ code only.
   The relevant parts of Python and Fortran codes do not differ significantly, and for readability reasons 
-    are presented in \ref{app:P} and \ref{app:F}, respectively.
-  The third section of this paper covers performance evaluation of the three implementations.
-  The fourth section covers discussion of the tradeoffs of the programming language choice.
-  The fifth section closes the article with a brief summary.
+    are presented in appendices \ref{app:P} and \ref{app:F}, respectively.
+  Section~\ref{sec:perf} of this paper covers performance evaluation of the three implementations.
+  Section~\ref{sec:tradeoffs} covers discussion of the tradeoffs of the programming language choice.
+  Section~\ref{sec:concl} section closes the article with a brief summary.
+  Those readers not interested in technical details may wish to skip to section~\ref{sec:perf} or
+    \ref{sec:tradeoffs}.
 
-  The entire code is licensed under the terms of the GNU General Public License license version 3 \citep{GPLv3}.
-
+  The entire code is licensed under the terms of the GNU General Public License version 3 \citep{GPLv3}.
   All listings include line numbers printed to the left of the source code, with separate numbering for
     C++ (listings prefixed with C, black frame),
   \codecpp{code-cpp-listings.hpp}{listing00}{listing01}{1}
@@ -204,6 +221,7 @@
   All codes are structured in a way allowing compilation of the code 
     in exactly the same order as presented in the text within one source file,
     hence every Fortran listing contains definition of a separate module.
+
   The language syntax and OOP nomenclature are used without introduction in the paper,
     for an overview of OOP in context of C++, Python and Fortran, consult for example
     \citep[][Part~II]{Stroustrup_2000}, \citep[][Chapter~5]{Pilgrim_2004} and
@@ -413,7 +431,7 @@
     the unity as a separate object}:
   \codepyt{code-pyt-listings.py}{listing04}{listing05}{1}
 
-  In Fortran fractional array indexing is obtained through
+  In the Fortran implementation fractional array indexing is obtained through
     definition and instantiation of an object representing the half, and having appropriate
     operator overloads:
   \codefor{code-for-listings.f}{listing03}{listing04}{1}
@@ -472,7 +490,7 @@
   It is worth noting here that the C++ implementation of \prog{pi()} is
     branchless thanks to employment of template specialisation.
   With Fortran one needs to rely on compiler optimisations to eliminate the conditional expression
-    within the \prog{pi()} that depends on value of \prog{d} which is always known 
+    within \prog{pi()} that depends on value of \prog{d} which is always known 
     at compile time.
 
   \subsection{Prototype solver}\label{sec:solver}
@@ -542,7 +560,7 @@
   \subsection{Periodic boundaries (C++)}\label{sec:cyclic}
 
   From this point, only C++ implementation is explained in the main text. 
-  The Python and Fortran implementations are included in appendices P and F.  
+  The Python and Fortran implementations are included in appendices A and B.  
 
   The solver definition described in section~\ref{sec:solver} requires a given
     boundary condition object to implement a \prog{fill\_halos()} method.
@@ -863,19 +881,7 @@
     performance\footnote{Both Blitz++ and NumPy support Fortran's column-major ordering as well, 
     however this feature is still missing from PyPy's built-in NumPy implementation as of PyPy 1.9}.
 
-  \section{Discussion on the tradeoffs of language choice}
-
-  One of the aims of this paper is to show the applicability of OOP features of the three
-    programming languages (or language-library pairs) for scientific computing.
-  The main focus is to represent
-    what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012} within the code.
-  Presented benchmark tests, although quite simplistic, together with the experience gained 
-    from the development of codes in three different
-    languages provide a basis for discussion on the tradeoffs of programming language choice.
-  The discussion concerns in principle the development of finite-difference solvers for 
-    partial differential equations, but is likely applicable to the scientific software in general.
-  A partly objective and partly subjective summary of pros and cons of C++, Python and Fortran
-    is presented in the four following subsections.
+  \section{Discussion on the tradeoffs of language choice}\label{sec:tradeoffs}
 
   \subsection{OOP for blackboard abstractions}
 
@@ -931,7 +937,7 @@
     the factors influencing the development and maintenance time/cost 
     \citep[of particular importance in scientific computing,][]{Wilson_2006}.
   Taking into account such measures as code length or coding time,
-    the Python environment gains significantly.
+    the Python environment gains significantly \citep[see also discussion in][]{Lin_2012}.
   Presented Python code is shorter than the C++ and Fortran counterparts,
     and is simpler in terms of syntax and usage (see discussion below).
 
@@ -958,7 +964,7 @@
     (for instance with \prog{goto} statements, employment of the preprocessor,
     or the implicit typing in Fortran).
 
-  Python implementations do not expose to the user the compilation or linking processes. 
+  Python implementations do not expose users to compilation or linking processes. 
   As a result, Python-written software is easier to deploy and share, especially 
     if multiple architectures and operating systems are targeted.
   However, there exist tools such as CMake\footnote{CMake is a family of open-source, cross-platform
@@ -1026,14 +1032,14 @@
   The CPython and PyPy implementations of Python do not offer any
     built-in solution for multi-threading. 
   
-  \conclusions[Summary and outlook]
+  \conclusions[Summary and outlook]\label{sec:concl}
 
   Three implementations of a prototype solver 
     for the advection equation were introduced.
   The solvers are based on MPDATA - an algorithm of particular applicability
     in geophysical fluid dynamics \citep{Smolarkiewicz_2006}.
   All implementations follow the same object-oriented structure but are implemented
-    in three different languages:
+    in three different languages (or language-library pairs):
   \begin{itemize}
     \item{C++ with Blitz++;}
     \item{Python with NumPy;}
@@ -1045,7 +1051,7 @@
     the NumPy support in the PyPy implementation of Python.
   The fact that all considered standards are open and the employed
     tools implementing them are free and open-source
-    is certainly an advantage \citep{Anel_2011}.
+    is certainly an advantage \citep[][sect.~28.2.5]{Anel_2011,Syvitski_et_al_2013}.
 
   The key conclusion is that all considered language/library/compiler
     set-ups offer possibilities for using OOP to compactly 
@@ -1077,7 +1083,7 @@
   In addition to the source code presented within the text,
     a set of tests and build-/test-automation scripts
     allowing to reproduce the analysis and plots presented in section~\ref{sec:perf} are all 
-    available in the CPC Program Library and at
+    available in the electronic supplement and at
     the project repository\footnote{git repository at \url{http://github.com/slayoo/mpdata/}},
     and are released under the GNU GPL license \citep{GPLv3}.
   The authors encourage to use the presented codes for teaching and benchmarking purposes.
@@ -1153,27 +1159,22 @@
   \codefor{code-for-test.f}{listing25}{listing26}{1}
 
   \begin{acknowledgements}
-    \noindent 
     We thank Piotr Smolarkiewicz and Hanna Pawłowska for their help throughout the project.
     This study was partly inspired by the lectures of Lech Łobocki.
 
-    \noindent
     Tobias Burnus, Julian Cummings, Ond\v{r}ej \v{C}ert\'ik, Patrik Jonsson,
       Arjen Markus, Zbigniew Piotrowski, Davide Del Vento and Janus Weil 
       provided valuable feedback to the initial version of the
       manuscript and/or responses to questions posted to Blitz++ and gfortran mailing lists.
     
-    \noindent
     SA, AJ and DJ acknowledge funding from the Polish National Science Centre
       (project no. 2011/01/N/ST10/01483).
 
-    \noindent
     Part of the work was carried out during a visit of SA to the National
       Center for Atmospheric Research (NCAR) in Boulder, Colorado, USA.
     NCAR is operated by the University Corporation for Atmospheric Research.
     The visit was funded by the Foundation for Polish Science (START programme).
  
-    \noindent
     Development of NumPy support in PyPy was led by Alex Gaynor, Matti Picus and MF.
   \end{acknowledgements}
 
