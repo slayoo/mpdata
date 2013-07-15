@@ -83,34 +83,6 @@ module arakawa_c_m
   end function
 end module
 !listing04
-module halo_m
-  use arakawa_c_m
-  implicit none
-
-  interface ext
-    module procedure ext_n
-    module procedure ext_h
-  end interface 
-
-  contains
-
-  function ext_n(r, n) result (return)
-    integer, intent(in) :: r(2)
-    integer, intent(in) :: n
-    integer :: return(2)
-    
-    return = (/ r(1) - n, r(2) + n /)
-  end function
-
-  function ext_h(r, h) result (return)
-    integer, intent(in) :: r(2)
-    type(half_t), intent(in) :: h
-    integer :: return(2)
-    
-    return = (/ r(1) - h, r(2) + h /)
-  end function
-end module
-!listing05
 module pi_m
   use real_m
   implicit none
@@ -140,7 +112,156 @@ module pi_m
     end select
   end function
 end module
+!listing05
+module donorcell_m
+  use real_m
+  use arakawa_c_m
+  use pi_m
+  use arrvec_m
+  implicit none
+  contains 
 !listing06
+  elemental function F(psi_l, psi_r, C) result (return)
+    real(real_t) :: return
+    real(real_t), intent(in) :: psi_l, psi_r, C
+    return = (                                         &
+      (C + abs(C)) * psi_l +                           &
+      (C - abs(C)) * psi_r                             &
+    ) / 2
+  end function
+!listing07
+  function donorcell(d, psi, C, i, j) result (return)
+    integer :: d
+    integer, intent(in) :: i(2), j(2) 
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
+    real(real_t), allocatable, intent(in) :: psi(:,:), C(:,:)           
+    return = (                                         &
+      F(                                               &
+        pi(d, psi, i,   j),                            &
+        pi(d, psi, i+1, j),                            &
+        pi(d,   C, i+h, j)                             &
+      ) -                                              &
+      F(                                               &
+        pi(d, psi, i-1, j),                            &
+        pi(d, psi, i,   j),                            &
+        pi(d, C,   i-h, j)                             &
+      )                                                &
+    )
+  end function
+!listing08
+  subroutine donorcell_op(psi, n, C, i, j)  
+    class(arrvec_t), allocatable :: psi
+    class(arrvec_t), pointer :: C
+    integer, intent(in) :: n
+    integer, intent(in) :: i(2), j(2) 
+    
+    real(real_t), pointer :: ptr(:,:)
+    ptr => pi(0, psi%at(n+1)%p%a, i, j)
+    ptr = pi(0, psi%at(n)%p%a, i, j)                   &
+      - donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j) &
+      - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)
+  end subroutine
+!listing09
+end module
+!listing10
+module mpdata_m
+  use arrvec_m
+  use arakawa_c_m
+  use pi_m
+  implicit none
+  contains 
+!listing11
+  function mpdata_frac(nom, den) result (return)
+    real(real_t), intent(in) :: nom(:,:), den(:,:)
+    real(real_t) :: return(size(nom, 1), size(nom, 2))
+    where (den > 0)
+      return = nom / den
+    elsewhere
+      return = 0
+    end where
+  end function
+!listing12
+  function mpdata_A(d, psi, i, j) result (return)
+    integer :: d
+    real(real_t), allocatable, intent(in) :: psi(:,:)
+    integer, intent(in) :: i(2), j(2)
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
+    return = mpdata_frac(                              &
+      pi(d, psi, i+1, j) - pi(d, psi, i, j),           &
+      pi(d, psi, i+1, j) + pi(d, psi, i, j)            &
+    )  
+  end function
+!listing13
+  function mpdata_B(d, psi, i, j) result (return)
+    integer :: d
+    real(real_t), allocatable, intent(in) :: psi(:,:) 
+    integer, intent(in) :: i(2), j(2)
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
+    return = mpdata_frac(                              &
+      pi(d, psi, i+1, j+1) + pi(d, psi, i,   j+1)      &
+    - pi(d, psi, i+1, j-1) - pi(d, psi, i,   j-1),     &
+      pi(d, psi, i+1, j+1) + pi(d, psi, i,   j+1)      &
+    + pi(d, psi, i+1, j-1) + pi(d, psi, i,   j-1)      &
+    ) / 2
+  end function
+!listing14
+  function mpdata_C_bar(d, C, i, j) result (return)
+    integer :: d
+    real(real_t), allocatable, intent(in) :: C(:,:) 
+    integer, intent(in) :: i(2), j(2)
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
+
+    return = (                                         &
+      pi(d, C, i+1, j+h) + pi(d, C, i,   j+h) +        &
+      pi(d, C, i+1, j-h) + pi(d, C, i,   j-h)          &
+    ) / 4               
+  end function
+!listing15
+  function mpdata_C_adf(d, psi, i, j, C) result (return)
+    integer :: d
+    integer, intent(in) :: i(2), j(2)
+    real(real_t) :: return(span(d, i, j), span(d, j, i))
+    real(real_t), allocatable, intent(in) :: psi(:,:) 
+    class(arrvec_t), pointer :: C
+    return =                                           &
+      abs(pi(d, C%at(d)%p%a, i+h, j))                  &
+      * (1 - abs(pi(d, C%at(d)%p%a, i+h, j)))          &
+      * mpdata_A(d, psi, i, j)                         &
+      - pi(d, C%at(d)%p%a, i+h, j)                     &
+      * mpdata_C_bar(d, C%at(d-1)%p%a, i, j)           &
+      * mpdata_B(d, psi, i, j)
+  end function
+!listing16
+end module
+!listing17
+module halo_m
+  use arakawa_c_m
+  implicit none
+
+  interface ext
+    module procedure ext_n
+    module procedure ext_h
+  end interface 
+
+  contains
+
+  function ext_n(r, n) result (return)
+    integer, intent(in) :: r(2)
+    integer, intent(in) :: n
+    integer :: return(2)
+    
+    return = (/ r(1) - n, r(2) + n /)
+  end function
+
+  function ext_h(r, h) result (return)
+    integer, intent(in) :: r(2)
+    type(half_t), intent(in) :: h
+    integer :: return(2)
+    
+    return = (/ r(1) - h, r(2) + h /)
+  end function
+end module
+!listing18
 module bcd_m
   use arrvec_m
   implicit none
@@ -166,7 +287,7 @@ module bcd_m
     end subroutine
   end interface
 end module
-!listing07
+!listing19
 module solver_m
   use arrvec_m
   use bcd_m
@@ -273,7 +394,7 @@ module solver_m
     end do
   end subroutine
 end module
-!listing08
+!listing20
 module cyclic_m
   use bcd_m
   use pi_m
@@ -312,58 +433,7 @@ module cyclic_m
     ptr =  pi(this%d, a, this%left_edge, j)
   end subroutine
 end module
-!listing09
-module donorcell_m
-  use real_m
-  use arakawa_c_m
-  use pi_m
-  use arrvec_m
-  implicit none
-  contains 
-!listing10
-  elemental function F(psi_l, psi_r, C) result (return)
-    real(real_t) :: return
-    real(real_t), intent(in) :: psi_l, psi_r, C
-    return = (                                         &
-      (C + abs(C)) * psi_l +                           &
-      (C - abs(C)) * psi_r                             &
-    ) / 2
-  end function
-!listing11
-  function donorcell(d, psi, C, i, j) result (return)
-    integer :: d
-    integer, intent(in) :: i(2), j(2) 
-    real(real_t) :: return(span(d, i, j), span(d, j, i))
-    real(real_t), allocatable, intent(in) :: psi(:,:), C(:,:)           
-    return = (                                         &
-      F(                                               &
-        pi(d, psi, i,   j),                            &
-        pi(d, psi, i+1, j),                            &
-        pi(d,   C, i+h, j)                             &
-      ) -                                              &
-      F(                                               &
-        pi(d, psi, i-1, j),                            &
-        pi(d, psi, i,   j),                            &
-        pi(d, C,   i-h, j)                             &
-      )                                                &
-    )
-  end function
-!listing12
-  subroutine donorcell_op(psi, n, C, i, j)  
-    class(arrvec_t), allocatable :: psi
-    class(arrvec_t), pointer :: C
-    integer, intent(in) :: n
-    integer, intent(in) :: i(2), j(2) 
-    
-    real(real_t), pointer :: ptr(:,:)
-    ptr => pi(0, psi%at(n+1)%p%a, i, j)
-    ptr = pi(0, psi%at(n)%p%a, i, j)                   &
-      - donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j) &
-      - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)
-  end subroutine
-!listing13
-end module
-!listing14
+!listing21
 module solver_donorcell_m
   use donorcell_m
   use solver_m
@@ -392,76 +462,6 @@ module solver_donorcell_m
       this%psi, this%n, C, this%i, this%j              &
     )
   end subroutine
-end module
-!listing15
-module mpdata_m
-  use arrvec_m
-  use arakawa_c_m
-  use pi_m
-  implicit none
-  contains 
-!listing16
-  function mpdata_frac(nom, den) result (return)
-    real(real_t), intent(in) :: nom(:,:), den(:,:)
-    real(real_t) :: return(size(nom, 1), size(nom, 2))
-    where (den > 0)
-      return = nom / den
-    elsewhere
-      return = 0
-    end where
-  end function
-!listing17
-  function mpdata_A(d, psi, i, j) result (return)
-    integer :: d
-    real(real_t), allocatable, intent(in) :: psi(:,:)
-    integer, intent(in) :: i(2), j(2)
-    real(real_t) :: return(span(d, i, j), span(d, j, i))
-    return = mpdata_frac(                              &
-      pi(d, psi, i+1, j) - pi(d, psi, i, j),           &
-      pi(d, psi, i+1, j) + pi(d, psi, i, j)            &
-    )  
-  end function
-!listing18
-  function mpdata_B(d, psi, i, j) result (return)
-    integer :: d
-    real(real_t), allocatable, intent(in) :: psi(:,:) 
-    integer, intent(in) :: i(2), j(2)
-    real(real_t) :: return(span(d, i, j), span(d, j, i))
-    return = mpdata_frac(                              &
-      pi(d, psi, i+1, j+1) + pi(d, psi, i,   j+1)      &
-    - pi(d, psi, i+1, j-1) - pi(d, psi, i,   j-1),     &
-      pi(d, psi, i+1, j+1) + pi(d, psi, i,   j+1)      &
-    + pi(d, psi, i+1, j-1) + pi(d, psi, i,   j-1)      &
-    ) / 2
-  end function
-!listing19
-  function mpdata_C_bar(d, C, i, j) result (return)
-    integer :: d
-    real(real_t), allocatable, intent(in) :: C(:,:) 
-    integer, intent(in) :: i(2), j(2)
-    real(real_t) :: return(span(d, i, j), span(d, j, i))
-
-    return = (                                         &
-      pi(d, C, i+1, j+h) + pi(d, C, i,   j+h) +        &
-      pi(d, C, i+1, j-h) + pi(d, C, i,   j-h)          &
-    ) / 4               
-  end function
-!listing20
-  function mpdata_C_adf(d, psi, i, j, C) result (return)
-    integer :: d
-    integer, intent(in) :: i(2), j(2)
-    real(real_t) :: return(span(d, i, j), span(d, j, i))
-    real(real_t), allocatable, intent(in) :: psi(:,:) 
-    class(arrvec_t), pointer :: C
-    return =                                           &
-      abs(pi(d, C%at(d)%p%a, i+h, j))                  &
-      * (1 - abs(pi(d, C%at(d)%p%a, i+h, j)))          &
-      * mpdata_A(d, psi, i, j)                         &
-      - pi(d, C%at(d)%p%a, i+h, j)                     &
-      * mpdata_C_bar(d, C%at(d-1)%p%a, i, j)           &
-      * mpdata_B(d, psi, i, j)
-  end function
-!listing21
 end module
 !listing22
 module solver_mpdata_m

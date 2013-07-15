@@ -34,14 +34,6 @@ inline rng_t operator-(const rng_t &i, const hlf_t &)
   return i-1; 
 }
 //listing06
-template<class n_t>
-inline rng_t ext(const rng_t &r, const n_t &n) { 
-  return rng_t(
-    (r - n).first(), 
-    (r + n).last()
-  ); 
-} 
-//listing07
 template<int d> 
 inline idx_t pi(const rng_t &i, const rng_t &j);
 
@@ -56,7 +48,107 @@ inline idx_t pi<1>(const rng_t &j, const rng_t &i)
 {
   return idx_t({i,j});
 }; 
+//listing07
+template<class T1, class T2, class T3> 
+inline auto F(
+  const T1 &psi_l, const T2 &psi_r, const T3 &C
+) return_macro(
+  (
+    (C + abs(C)) * psi_l + 
+    (C - abs(C)) * psi_r
+  ) / 2
+)
 //listing08
+template<int d>  
+inline auto donorcell( 
+  const arr_t &psi, const arr_t &C, 
+  const rng_t &i, const rng_t &j
+) return_macro(
+  F(
+    psi(pi<d>(i,   j)), 
+    psi(pi<d>(i+1, j)), 
+      C(pi<d>(i+h, j))
+  ) -
+  F(
+    psi(pi<d>(i-1, j)), 
+    psi(pi<d>(i,   j)), 
+      C(pi<d>(i-h, j))
+  )
+)
+//listing09
+void donorcell_op(
+  const arrvec_t &psi, const int n,
+  const arrvec_t &C, 
+  const rng_t &i, const rng_t &j
+) { 
+  psi[n+1](i,j) = psi[n](i,j)
+    - donorcell<0>(psi[n], C[0], i, j)
+    - donorcell<1>(psi[n], C[1], j, i); 
+}
+//listing10
+template<class nom_t, class den_t>
+inline auto mpdata_frac(
+  const nom_t &nom, const den_t &den
+) return_macro(
+  where(den > 0, nom / den, 0)
+) 
+//listing11
+template<int d>
+inline auto mpdata_A(const arr_t &psi, 
+  const rng_t &i, const rng_t &j
+) return_macro(
+  mpdata_frac(
+    psi(pi<d>(i+1, j)) - psi(pi<d>(i,j)),
+    psi(pi<d>(i+1, j)) + psi(pi<d>(i,j))
+  ) 
+) 
+//listing12
+template<int d>
+inline auto mpdata_B(const arr_t &psi, 
+  const rng_t &i, const rng_t &j
+) return_macro(
+ mpdata_frac(
+    psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) -
+    psi(pi<d>(i+1, j-1)) - psi(pi<d>(i, j-1)),
+    psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) +
+    psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
+  ) / 2
+)
+//listing13
+template<int d>
+inline auto mpdata_C_bar(
+  const arr_t &C, 
+  const rng_t &i, 
+  const rng_t &j
+) return_macro(
+  (
+    C(pi<d>(i+1, j+h)) + C(pi<d>(i, j+h)) +
+    C(pi<d>(i+1, j-h)) + C(pi<d>(i, j-h)) 
+  ) / 4
+)
+//listing14
+template<int d>
+inline auto mpdata_C_adf(
+  const arr_t &psi, 
+  const rng_t &i, const rng_t &j,
+  const arrvec_t &C
+) return_macro(
+  abs(C[d](pi<d>(i+h, j))) 
+  * (1 - abs(C[d](pi<d>(i+h, j)))) 
+  * mpdata_A<d>(psi, i, j) 
+  - C[d](pi<d>(i+h, j)) 
+  * mpdata_C_bar<d>(C[d-1], i, j)
+  * mpdata_B<d>(psi, i, j)
+) 
+//listing15
+template<class n_t>
+inline rng_t ext(const rng_t &r, const n_t &n) { 
+  return rng_t(
+    (r - n).first(), 
+    (r + n).last()
+  ); 
+} 
+//listing16
 template<class bcx_t, class bcy_t>
 struct solver
 {
@@ -112,7 +204,7 @@ struct solver
     }
   }
 };
-//listing09
+//listing17
 template<int d>
 struct cyclic
 {
@@ -137,44 +229,7 @@ struct cyclic
     a(pi<d>(rght_halo, j)) = a(pi<d>(left_edge, j));     
   }
 };
-//listing10
-  template<class T1, class T2, class T3> 
-  inline auto F(
-    const T1 &psi_l, const T2 &psi_r, const T3 &C
-  ) return_macro(
-    (
-      (C + abs(C)) * psi_l + 
-      (C - abs(C)) * psi_r
-    ) / 2
-  )
-//listing11
-  template<int d>  
-  inline auto donorcell( 
-    const arr_t &psi, const arr_t &C, 
-    const rng_t &i, const rng_t &j
-  ) return_macro(
-    F(
-      psi(pi<d>(i,   j)), 
-      psi(pi<d>(i+1, j)), 
-        C(pi<d>(i+h, j))
-    ) -
-    F(
-      psi(pi<d>(i-1, j)), 
-      psi(pi<d>(i,   j)), 
-        C(pi<d>(i-h, j))
-    )
-  )
-//listing12
-  void donorcell_op(
-    const arrvec_t &psi, const int n,
-    const arrvec_t &C, 
-    const rng_t &i, const rng_t &j
-  ) { 
-    psi[n+1](i,j) = psi[n](i,j)
-      - donorcell<0>(psi[n], C[0], i, j)
-      - donorcell<1>(psi[n], C[1], j, i); 
-  }
-//listing13
+//listing18
 template<class bcx_t, class bcy_t>
 struct solver_donorcell : solver<bcx_t, bcy_t> 
 {
@@ -190,61 +245,6 @@ struct solver_donorcell : solver<bcx_t, bcy_t>
     );
   }
 };
-//listing14
-  template<class nom_t, class den_t>
-  inline auto mpdata_frac(
-    const nom_t &nom, const den_t &den
-  ) return_macro(
-    where(den > 0, nom / den, 0)
-  ) 
-//listing15
-  template<int d>
-  inline auto mpdata_A(const arr_t &psi, 
-    const rng_t &i, const rng_t &j
-  ) return_macro(
-    mpdata_frac(
-      psi(pi<d>(i+1, j)) - psi(pi<d>(i,j)),
-      psi(pi<d>(i+1, j)) + psi(pi<d>(i,j))
-    ) 
-  ) 
-//listing16
-  template<int d>
-  inline auto mpdata_B(const arr_t &psi, 
-    const rng_t &i, const rng_t &j
-  ) return_macro(
-   mpdata_frac(
-      psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) -
-      psi(pi<d>(i+1, j-1)) - psi(pi<d>(i, j-1)),
-      psi(pi<d>(i+1, j+1)) + psi(pi<d>(i, j+1)) +
-      psi(pi<d>(i+1, j-1)) + psi(pi<d>(i, j-1))
-    ) / 2
-  )
-//listing17
-  template<int d>
-  inline auto mpdata_C_bar(
-    const arr_t &C, 
-    const rng_t &i, 
-    const rng_t &j
-  ) return_macro(
-    (
-      C(pi<d>(i+1, j+h)) + C(pi<d>(i, j+h)) +
-      C(pi<d>(i+1, j-h)) + C(pi<d>(i, j-h)) 
-    ) / 4
-  )
-//listing18
-  template<int d>
-  inline auto mpdata_C_adf(
-    const arr_t &psi, 
-    const rng_t &i, const rng_t &j,
-    const arrvec_t &C
-  ) return_macro(
-    abs(C[d](pi<d>(i+h, j))) 
-    * (1 - abs(C[d](pi<d>(i+h, j)))) 
-    * mpdata_A<d>(psi, i, j) 
-    - C[d](pi<d>(i+h, j)) 
-    * mpdata_C_bar<d>(C[d-1], i, j)
-    * mpdata_B<d>(psi, i, j)
-  ) 
 //listing19
 template<int n_iters, class bcx_t, class bcy_t>
 struct solver_mpdata : solver<bcx_t, bcy_t>

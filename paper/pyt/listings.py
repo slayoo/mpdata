@@ -34,6 +34,68 @@ class shift():
 one = shift(1,1) 
 hlf = shift(0,1)
 #listing05
+def pi(d, *idx): 
+  return (idx[d], idx[d-1])
+#listing06
+def f(psi_l, psi_r, C):
+  return (
+    (C + abs(C)) * psi_l + 
+    (C - abs(C)) * psi_r
+  ) / 2
+#listing07
+def donorcell(d, psi, C, i, j):
+  return (
+    f(
+      psi[pi(d, i,     j)], 
+      psi[pi(d, i+one, j)], 
+        C[pi(d, i+hlf, j)]
+    ) - 
+    f(
+      psi[pi(d, i-one, j)], 
+      psi[pi(d, i,     j)], 
+        C[pi(d, i-hlf, j)]
+    ) 
+  )
+#listing08
+def donorcell_op(psi, n, C, i, j):
+  psi[n+1][i,j] = (psi[n][i,j] 
+    - donorcell(0, psi[n], C[0], i, j)
+    - donorcell(1, psi[n], C[1], j, i)
+  )
+#listing09
+def mpdata_frac(nom, den):
+  return numpy.where(den > 0, nom/den, 0)
+#listing10
+def mpdata_A(d, psi, i, j):
+  return mpdata_frac(
+    psi[pi(d, i+one, j)] - psi[pi(d, i, j)],
+    psi[pi(d, i+one, j)] + psi[pi(d, i, j)]
+  )
+#listing11
+def mpdata_B(d, psi, i, j):
+  return mpdata_frac( 
+    psi[pi(d, i+one, j+one)] + psi[pi(d, i, j+one)] -
+    psi[pi(d, i+one, j-one)] - psi[pi(d, i, j-one)],
+    psi[pi(d, i+one, j+one)] + psi[pi(d, i, j+one)] +
+    psi[pi(d, i+one, j-one)] + psi[pi(d, i, j-one)]
+  ) / 2
+#listing12
+def mpdata_C_bar(d, C, i, j):
+  return (
+    C[pi(d, i+one, j+hlf)] + C[pi(d, i,  j+hlf)] +
+    C[pi(d, i+one, j-hlf)] + C[pi(d, i,  j-hlf)] 
+  ) / 4
+#listing13
+def mpdata_C_adf(d, psi, i, j, C):
+  return (
+    abs(C[d][pi(d, i+hlf, j)]) 
+    * (1 - abs(C[d][pi(d, i+hlf, j)])) 
+    * mpdata_A(d, psi, i, j)
+    - C[d][pi(d, i+hlf, j)] 
+    * mpdata_C_bar(d, C[d-1], i, j)
+    * mpdata_B(d, psi, i, j)
+  )
+#listing14
 def ext(r, n):
   if (type(n) == int) & (n == 1): 
     n = one
@@ -41,10 +103,7 @@ def ext(r, n):
     (r - n).start, 
     (r + n).stop
   )
-#listing06
-def pi(d, *idx): 
-  return (idx[d], idx[d-1])
-#listing07
+#listing15
 class solver(object):
   # ctor-like method
   def __init__(self, bcx, bcy, nx, ny, hlo):
@@ -101,7 +160,7 @@ class solver(object):
       self.advop() 
       self.cycle()
   
-#listing08
+#listing16
 class cyclic(object):
   # ctor
   def __init__(self, d, i, hlo): 
@@ -120,33 +179,7 @@ class cyclic(object):
       psi[pi(self.d, self.left_edge, j)]
     )
 
-#listing09
-def f(psi_l, psi_r, C):
-  return (
-    (C + abs(C)) * psi_l + 
-    (C - abs(C)) * psi_r
-  ) / 2
-#listing10
-def donorcell(d, psi, C, i, j):
-  return (
-    f(
-      psi[pi(d, i,     j)], 
-      psi[pi(d, i+one, j)], 
-        C[pi(d, i+hlf, j)]
-    ) - 
-    f(
-      psi[pi(d, i-one, j)], 
-      psi[pi(d, i,     j)], 
-        C[pi(d, i-hlf, j)]
-    ) 
-  )
-#listing11
-def donorcell_op(psi, n, C, i, j):
-  psi[n+1][i,j] = (psi[n][i,j] 
-    - donorcell(0, psi[n], C[0], i, j)
-    - donorcell(1, psi[n], C[1], j, i)
-  )
-#listing12
+#listing17
 class solver_donorcell(solver):
   def __init__(self, bcx, bcy, nx, ny):
     solver.__init__(self, bcx, bcy, nx, ny, 1)
@@ -156,39 +189,6 @@ class solver_donorcell(solver):
       self.psi, self.n, 
       self.C, self.i, self.j
     )
-#listing13
-def mpdata_frac(nom, den):
-  return numpy.where(den > 0, nom/den, 0)
-#listing14
-def mpdata_A(d, psi, i, j):
-  return mpdata_frac(
-    psi[pi(d, i+one, j)] - psi[pi(d, i, j)],
-    psi[pi(d, i+one, j)] + psi[pi(d, i, j)]
-  )
-#listing15
-def mpdata_B(d, psi, i, j):
-  return mpdata_frac( 
-    psi[pi(d, i+one, j+one)] + psi[pi(d, i, j+one)] -
-    psi[pi(d, i+one, j-one)] - psi[pi(d, i, j-one)],
-    psi[pi(d, i+one, j+one)] + psi[pi(d, i, j+one)] +
-    psi[pi(d, i+one, j-one)] + psi[pi(d, i, j-one)]
-  ) / 2
-#listing16
-def mpdata_C_bar(d, C, i, j):
-  return (
-    C[pi(d, i+one, j+hlf)] + C[pi(d, i,  j+hlf)] +
-    C[pi(d, i+one, j-hlf)] + C[pi(d, i,  j-hlf)] 
-  ) / 4
-#listing17
-def mpdata_C_adf(d, psi, i, j, C):
-  return (
-    abs(C[d][pi(d, i+hlf, j)]) 
-    * (1 - abs(C[d][pi(d, i+hlf, j)])) 
-    * mpdata_A(d, psi, i, j)
-    - C[d][pi(d, i+hlf, j)] 
-    * mpdata_C_bar(d, C[d-1], i, j)
-    * mpdata_B(d, psi, i, j)
-  )
 #listing18
 class solver_mpdata(solver):
   def __init__(self, n_iters, bcx, bcy, nx, ny):

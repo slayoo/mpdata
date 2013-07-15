@@ -2,9 +2,14 @@
 %\documentclass[final,5p,times,twocolumn]{elsarticle}
 %%%%% </arXiv>
 
-%%%%% <gmd>
-\documentclass[gmd]{copernicus}%_discussions}
-%%%%% </gmd>
+%%%%% <sciprog>
+\documentclass[twocolumn]{article}
+\usepackage{lineno,authblk,latexsym,amsmath,float}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage[hmargin=.55in,vmargin=.75in]{geometry}
+\usepackage[numbers]{natbib}
+\setlength{\columnsep}{1cm}
+%%%%% </sciprog>
 
 % input encoding assuring proper handling of Polish characters (surnames!)
 \usepackage[utf8]{inputenc}
@@ -23,11 +28,15 @@
 \usepackage{enumitem}
 \setitemize{noitemsep,itemsep=1pt,topsep=1pt,parsep=0pt,partopsep=0pt}
 
+% fr compact section headers
+\usepackage[compact]{titlesec}
+\titlespacing*{\section}{0pt}{*0}{0pt}
+
 % for source code listings
 \usepackage{fancyvrb}
 \fvset{
   frame=single,
-  fontsize=\relscale{.666},
+  fontsize=\relscale{.6},
   fontfamily=courier,
   framerule=.2mm,
   framesep=.7mm,
@@ -58,6 +67,7 @@
 \newcommand*\FancyVerbStopString{}
 
 \newcommand{\codecpp}[4]{%
+  \linespread{.8}
   \addtocounter{lstnocpp}{1}%
   \renewcommand*\FancyVerbStartString{\PY{c+c1}{//#2}}%
   \renewcommand*\FancyVerbStopString{\PY{c+c1}{//#3}}%
@@ -65,8 +75,11 @@
   \fvset{label={listing~C.\thelstnocpp~(C++)},rulecolor=\color{black},stepnumber=#4}%
   \input{#1}%
   \setcounter{linenocpp}{\value{FancyVerbLine}}%
+  \vspace{-1.5ex}
+  \linespread{2}
 }
 \newcommand{\codepyt}[4]{%
+  \linespread{.8}
   \addtocounter{lstnopyt}{1}%
   \renewcommand*\FancyVerbStartString{\PY{c}{\PYZsh{}#2}}
   \renewcommand*\FancyVerbStopString{\PY{c}{\PYZsh{}#3}}
@@ -74,8 +87,11 @@
   \fvset{label={listing~P.\thelstnopyt~(Python)},rulecolor=\color{blue},stepnumber=#4}%
   \input{#1}%
   \setcounter{linenopyt}{\value{FancyVerbLine}}%
+  \vspace{-1.5ex}
+  \linespread{2}
 }
 \newcommand{\codefor}[4]{%
+  \linespread{.8}
   \addtocounter{lstnofor}{1}%
   \renewcommand*\FancyVerbStartString{\PY{c}{!#2}}
   \renewcommand*\FancyVerbStopString{\PY{c}{!#3}}
@@ -83,11 +99,13 @@
   \fvset{label={listing~F.\thelstnofor~(Fortran)},rulecolor=\color{red},stepnumber=#4}%
   \input{#1}%
   \setcounter{linenofor}{\value{FancyVerbLine}}%
+  \vspace{-1.5ex}
+  \linespread{2}
 }
 
 \newcommand{\prog}[1]{{\rm\bf#1}}
 
-\journal{Computer Physics Communications}
+\linespread{2}
 
 \begin{document}
     \linenumbers
@@ -96,7 +114,7 @@
       Formula translation in C++, Python and modern Fortran: a~case~study~of~the~language~choice tradeoffs
     }
 
-    \author[1]{Sylwester Arabas}
+    \author[1]{Sylwester Arabas\footnote{Corresponence to: S. Arabas -- sarabas@igf.fuw.edu.pl -- 0048225546827 -- University of Warsaw, Pasteura 7, 02-093 Warszawa, Poland}}
     \author[1]{Dorota Jarecka}
     \author[1]{Anna Jaruga}
     \author[2]{Maciej Fijałkowski}
@@ -104,10 +122,7 @@
     \affil[1]{Institute of Geophysics, Faculty of Physics, University of Warsaw}
     \affil[2]{PyPy Team}
 
-    \correspondence{Sylwester Arabas (sarabas@igf.fuw.edu.pl)}
-    \runningauthor{Arabas, Jarecka et al.}
-    \runningtitle{Formula translation in C++, Python \& Fortran}
-
+    \onecolumn
     \maketitle
 
     \begin{abstract}
@@ -125,14 +140,17 @@
         In the case of Python, a significant performance gain is observed when switching from the standard 
           interpreter (CPython) to the PyPy implementation of Python.
         Entire source code of all three implementations is embedded in the text and is licensed
-          under the terms of the GNU GPL license. 
+          under the terms of the GNU GPL license.
+  
+        ~\\
+        {\bf Keywords:} object-oriented programming, advection equation, MPDATA, C++, Fortran, Python
     \end{abstract}
 
-%    \begin{keyword}
-%      object-oriented programming, advection equation, MPDATA, C++, Fortran, Python
-%    \end{keyword}
+  \twocolumn
+ 
+  \tableofcontents
 
-  \introduction
+  \section{Introduction}
 
   Object oriented programming (OOP) {\em ''has become recognised as the almost unique successful 
     paradigm for creating complex software''} \citep[][Sec.~1.3]{Press_et_al_2007}.
@@ -157,46 +175,39 @@
   The importance of reproducing the mathematical notation in the code lays primarily
     in the fact that code readability and brevity \citep[and not the language choice itself,][]{Seeley_2004}
     significantly contribute to code maintainability \citep{Wilson_et_al_2012}.
-  Code maintainability, in turn, plays a vital role in community programming efforts 
-    and hence geoscientific model development in particular.
 
   The key aim of this paper is to show how OOP techniques can be used to faithfully
     reproduce within the code what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012}.
   For this purpose, a sample implementation of a numerical scheme for solving
-    the advection equation is introduced in in C++, Python and modern Fortran --
+    the advection equation is introduced in C++, Python and modern Fortran --
     OOP languages commonly used in scientific computing \citep[see e.g.][chapt.~8]{Einarsson_2005}. 
-  Presented benchmark tests, although quite simplistic, together with the experience gained 
-    from the development of codes in three different
-    languages provide a basis for discussion on the tradeoffs of programming language choice.
+  Presented implementations and the results of benchmark tests
+    provide a basis for discussion on the tradeoffs of programming language choice.
   The discussion concerns in principle the development of finite-difference solvers for 
-    partial differential equations, but is likely applicable to some extent to the scientific software in general.
+    partial differential equations, but is likely applicable to some extent to the scientific programming in general.
 
   All three programs include an equally structured implementation of the two-dimensional version of the 
     Multidimensional Positive Definite Advective Transport Algorithm \citep[MPDATA;][]{Smolarkiewicz_1984}.
   MPDATA is an example of a numerical procedure used in weather, climate, ocean and solar simulation systems
     \citep[e.g.][respectively]{Ziemianski_et_al_2011,Abiodun_et_al_2011,Ezer_et_al_2002,Charbonneau_and_Smolarkiewicz_2013}.
-  Even in its most basic form presented herein, MPDATA is complex enough to contain
+  The basic MPDATA scheme presented herein is complex enough to contain
     a wide range of mathematical abstractions that can be represented using OOP constructs, 
     yet it is simple enough to allow inclusion of the entire source code within the paper text.
   All relevant MPDATA formul\ae~are given in the text alongside corresponding code fragments
     allowing comparison of the relevant syntax with the mathematical notation.
   In compliance with the article focus, these formul\ae~are presented without derivation or detailed discussion
-    \citep[see][for a recent review of MPDATA-based techniques including an introductory description 
-    of the algorithm and an exhaustive list of references]{Smolarkiewicz_2006}.
+    (see~\citep{Smolarkiewicz_2006} for a recent review of MPDATA-based techniques including an introductory description 
+    of the algorithm and an exhaustive list of references).
 
   The paper is structured as follows.
-  In section~\ref{sec:impl} we introduce the three implementations
+  In section~\ref{sec:impl} we introduce the ''formula translation'' part of the three implementations
     briefly describing the algorithm itself and
-    discussing where and how the OOP techniques may be applied in its implementation.
-  Subsections \ref{sec:array}-\ref{sec:solver} describe all three implementations,
-    while subsequent sections \ref{sec:cyclic}-\ref{sec:example} cover discussion of C++ code only.
-  The relevant parts of Python and Fortran codes do not differ significantly, and for readability reasons 
-    are presented in appendices \ref{app:P} and \ref{app:F}, respectively.
-  Section~\ref{sec:perf} of this paper covers performance evaluation of the three implementations.
+    discussing where and how the OOP techniques were applied in its implementation.
+  The remaining part of the implementations -- the solver logic -- is
+    presented in appendix~\ref{sec:app}.
+  Section~\ref{sec:perf} covers performance evaluation of the three implementations.
   Section~\ref{sec:tradeoffs} covers discussion of the tradeoffs of the programming language choice.
-  Section~\ref{sec:concl} section closes the article with a brief summary.
-  Those readers not interested in technical details may wish to skip to section~\ref{sec:perf} or
-    \ref{sec:tradeoffs}.
+  Section~\ref{sec:concl} closes the article with a brief summary.
 
   The entire code is licensed under the terms of the GNU General Public License version 3 \citep{GPLv3}.
   All listings include line numbers printed to the left of the source code, with separate numbering for
@@ -209,7 +220,7 @@
   Programming language constructs when inlined in the text are 
     typeset in bold, e.g. \prog{GOTO 2}.
 
-  \section{Implementation}\label{sec:impl}
+  \section{Implementation: the formul\ae}\label{sec:impl}
 
   Double precision floating-point format is used in all three implementations.
   The codes begin with the following definitions:
@@ -229,13 +240,15 @@
 
   \subsection{Array containers}\label{sec:array}
 
-  MPDATA is a solver for systems of advection equations of the following form:
+  MPDATA is, in its most basic form presented herein, a solver for systems of advection equations of the following form:
+
+  \vspace{-5ex}
   \begin{equation}\label{eq:adv}
     \input{formulae_adv}
   \end{equation}
   that describe evolution of a scalar field $\psi$ transported by the fluid flow with velocity $\vec{v}$.
-  Solution of equation (\ref{eq:adv}) using MPDATA implies discretisation onto a grid of the $\psi$ and 
-    the Courant number $\vec{C}=\vec{v}\cdot\frac{\Delta t}{\Delta x}$ fields, where $\Delta t$ is the 
+  Solution of equation (\ref{eq:adv}) using MPDATA implies discretisation onto a grid of~the~$\psi$~and~the~Courant 
+    number $\vec{C}=\vec{v}\cdot\frac{\Delta t}{\Delta x}$ fields, where $\Delta t$ is the 
     solver timestep and $\Delta x$ is the grid spacing.
 
   Presented C++ implementation of MPDATA is built upon the Blitz++ 
@@ -424,7 +437,7 @@
   It is implemented here by declaring a \prog{shift} class with the adequate operator overloads:
   \codepyt{code-pyt-listings.py}{listing03}{listing04}{1}
     and two instances of it to represent unity and half
-    in expressions like \prog{i+one}, \prog{i+hlf}, where \prog{i} is an instance of \prog{slice}
+    in expressions like \prog{i+one}, \prog{i+hlf}, where \prog{i} is an instance of \prog{slice}%
     \footnote{\label{fnt:slice}One could argue that not using an own implementation of a slice-representing class
     in NumPy is a design flaw -- being able to modify behaviour of a hypothetical numpy.slice class 
     through inheritance would allow to implement the same behaviour as obtained in listing P.3 without the need to represent 
@@ -436,30 +449,13 @@
     operator overloads:
   \codefor{code-for-listings.f}{listing03}{listing04}{1}
 
-  \subsection{Halo regions}
-
-  The MPDATA formul\ae~defining $\psi^{[n+1]}_{[i,j]}$ as a function of $\psi^{[n]}_{[i,j]}$
-    (discussed in the following sections) feature terms such as $\psi_{[i-1,j-1]}$.
-  One way of assuring validity of these formul\ae~on the edges of the domain (e.g. for i=0) 
-    is to introduce the so-called halo region surrounding the domain.
-  The method of populating the halo region with data depends on the boundary condition type.
-  Employment of the halo-region logic implies repeated usage of array range 
-    extensions in the code such as $i \leadsto i \pm halo$.
-
-  An \prog{ext()} function is defined in all three implementation, in order to simplify 
-    coding of array range extensions:
-  \codecpp{code-cpp-listings.hpp}{listing06}{listing07}{1}
-  \codepyt{code-pyt-listings.py}{listing05}{listing06}{1}
-  \codefor{code-for-listings.f}{listing04}{listing05}{1}
-  Consequently, a range depicted by $i\pm1/2$ may be expressed in the code as \prog{ext(i, h)}.
-  In all three implementations the \prog{ext()} function accept the second
-    argument to be an integer or a ''half'' (cf. section \ref{sec:grid}).
-
   \subsection{Array index permutations}\label{sec:pi}
   Hereinafter, the $\pi_{a,b}^{d}$ symbol is used to denote a  
     cyclic permutation of an order $d$ of a set $\{a,b\}$.
   It is used to generalise the MPDATA formul\ae~into multiple dimensions
     using the following notation:
+
+  \vspace{-5ex}
   \begin{equation*}\label{eq:pi}
     \input{formulae_pi}
   \end{equation*}
@@ -471,21 +467,21 @@
   In order to ensure compile-time evaluation, the permutation order is passed 
     via the template parameter \prog{d}
     (note the different order of \prog{i} and \prog{j} arguments in the two template specialisations):
-  \codecpp{code-cpp-listings.hpp}{listing07}{listing08}{1}
+  \codecpp{code-cpp-listings.hpp}{listing06}{listing07}{1}
 
   NumPy uses tuples of slices for addressing multi-dimensional array with a
     single object.
-  Therefore, the following definition of function \prog{pi()} suffices to represent $\pi$:
-  \codepyt{code-pyt-listings.py}{listing06}{listing07}{1}
+  Therefore, the following definition of function \prog{pi()} suffices to represent~$\pi$:
+  \codepyt{code-pyt-listings.py}{listing05}{listing06}{1}
   
   In the Fortran implementation \prog{pi()} returns a pointer to the array elements specified
     by \prog{i} and \prog{j} interpreted as (i,j) or
     (j,i) depending on the value of the argument \prog{d}.
   In addition to \prog{pi()}, a helper \prog{span()} function returning the 
     length of one of the vectors passed as argument is defined:
-  \codefor{code-for-listings.f}{listing05}{listing06}{1}
+  \codefor{code-for-listings.f}{listing04}{listing05}{1}
   The \prog{span()} function is used to shorten the declarations of arrays to be returned 
-    from functions in the Fortran implementation (see listings F.11 and F.17--F.20).
+    from functions in the Fortran implementation (see listings F.7 and F.12--F.15).
 
   It is worth noting here that the C++ implementation of \prog{pi()} is
     branchless thanks to employment of template specialisation.
@@ -493,138 +489,63 @@
     within \prog{pi()} that depends on value of \prog{d} which is always known 
     at compile time.
 
-  \subsection{Prototype solver}\label{sec:solver}
+  \subsection{Donor-cell formul\ae}\label{sec:donor}
 
-  The tasks to be handled by a prototype advection equation solver proposed herein are:
-  \begin{enumerate}[label=(\roman*), leftmargin=*, widest=iii]
-    \item{storing arrays representing the $\psi$ and $\vec{C}$ fields and any required housekeeping data,}
-    \item{allocating and deallocating the required memory,}
-    \item{providing access to the solver state,}
-    \item{performing the integration by invoking the advection-operator and
-      boundary-condition handling routines.}
-  \end{enumerate}
-  In the following C++ definition of the \prog{solver} structure, task (i) is represented with the definition of the structure
-    member fields; task (ii) is split between the \prog{solver}'s constructor and the destructors of \prog{arrvec\_t};
-    task (iii) is handled by the accessor methods; task (iv) is handled within the \prog{solve} method:
-  \codecpp{code-cpp-listings.hpp}{listing08}{listing09}{1}
-  The \prog{solver} structure is an abstract definition (containing a pure virtual method) 
-     requiring its descendants to implement at least
-     the \prog{advop()} method which is expected to fill \prog{psi[n+1]} with an updated (advected)
-     values of \prog{psi[n]}.
-  The two template parameters \prog{bcx\_t} and \prog{bcy\_t} allow the solver to operate with 
-    any kind of boundary condition structures that fulfil the requirements implied by the calls to the 
-    methods of \prog{bcx} and \prog{bcy}, respectively.
-
-  The donor-cell and MPDATA schemes both require only the previous state of an advected field
-    in order to advance the solution.
-  Consequently, memory for two time levels ($\psi^{[n]}$ and $\psi^{[n+1]}$) is allocated in the
-    constructor.
-  The sizes of the arrays representing the two time levels of $\psi$ 
-    are defined by the domain size ({\em nx}$~\times$~{\em ny}) plus the halo region.
-  The size of the halo region is an argument of the constructor.
-  The \prog{cycle()} method is used to swap the time levels without copying any data.
-
-  The arrays representing the $C^{[x]}$ and $C^{[y]}$ components of $\vec{C}$,
-    require ({\em nx+1})~$\times$~{\em ny} 
-    and {\em nx}$~\times$~({\em ny+1}) elements, respectively
-    (being laid out on the Arakawa-C staggered grid).
-  
-  Python definition of the \prog{solver} class follows closely the C++ structure definition:
-  \codepyt{code-pyt-listings.py}{listing07}{listing08}{1}
-  The key difference stems from the fact that, unlike Blitz++, NumPy does not allow an array
-    to have arbitrary index base -- in NumPy the first element is always addressed with 0.
-  Consequently, while in C++ (and Fortran) the computational domain is chosen to start at (i=0, j=0)
-    and hence a part of the halo region to have negative indices, in Python the halo region starts 
-    at (0,0)\footnote{The reason to allow the domain to begin at an arbitrary index
-    is mainly to ease debugging in case the code would be used in parallel computations
-    using domain decomposition where each subdomain could have its own index base corresponding to
-    the location within the computational domain}.
-  However, since the whole halo logic is hidden within the solver, such details are not exposed to the
-    user.
-  The \prog{bcx} and \prog{bcy} boundary-condition specifications are passed to the solver through
-    constructor-like \prog{\_\_init\_\_()} method as opposed to template parameters in C++.
-
-  The above C++ and Python prototype solvers in principle allow to operate with any boundary condition
-    objects that implement methods called from within the solver.
-  This requirement is checked at compile-time in the case of C++, and at run-time in the case of Python.
-  In order to obtain an analogous behaviour with Fortran, it is required to
-    define, prior to definition of a solver type, 
-    an abstract type with deferred procedures having abstract interfaces 
-    \citep[sic!, see Table 2.1 in][for a summary of approximate correspondence of OOP 
-      nomenclature between Fortran and C++]{Rouson_et_al_2012}:
-  \codefor{code-for-listings.f}{listing06}{listing07}{1}
-  Having defined the abstract type for boundary-condition objects, 
-    a definition of a solver class following closely the C++ and Python counterparts may be provided:
-  \codefor{code-for-listings.f}{listing07}{listing08}{1}
-
-  \subsection{Periodic boundaries (C++)}\label{sec:cyclic}
-
-  From this point, only C++ implementation is explained in the main text. 
-  The Python and Fortran implementations are included in appendices A and B.  
-
-  The solver definition described in section~\ref{sec:solver} requires a given
-    boundary condition object to implement a \prog{fill\_halos()} method.
-  An implementation of periodic boundary conditions in C++ is provided in the following listing:
-  \codecpp{code-cpp-listings.hpp}{listing09}{listing10}{1}
-
-  As hinted by the member field names, the \prog{fill\_halos()} methods
-    fill the left/right halo regions with data from the right/left edges of the domain.
-  Thanks to employment of the function \prog{pi()} described in section~\ref{sec:pi}
-    the same code may be applied in any dimension (here being a template parameter).
-
-  Listings P.8 and F.8 contain the Python and Fortran counterparts to listing C.9.
-
-  \subsection{Donor-cell formul\ae~(C++)}\label{sec:donor}
   MPDATA is an iterative algorithm in which each iteration takes the form of the 
     so-called donor-cell formula (which itself is a first-order advection scheme).
 
   MPDATA and donor-cell are explicit forward-in-time algorithms -- they allow to predict $\psi^{[n+1]}$ as a
     function of $\psi^{[n]}$ where $n$ and $n+1$ denote two adjacent time levels.
   The donor-cell scheme may be written as \citep[eq. 2 in][]{Smolarkiewicz_1984}:
+
+  \vspace{-5ex}
   \begin{equation}\label{eq:donor}
     \input{formulae_donor}
   \end{equation}
   where $N$ is the number of dimensions, 
     and F is the so-called flux function \citep[][eq.~3]{Smolarkiewicz_1984}:
+
+  \vspace{-5ex}
   \begin{equation}\label{eq:donor:F}
     \input{formulae_donor-F}
   \end{equation}
 
   \noindent The flux function takes the following form in C++:
-  \codecpp{code-cpp-listings.hpp}{listing10}{listing11}{1}
-
-  \noindent 
+  \codecpp{code-cpp-listings.hpp}{listing07}{listing08}{1}
+  \vspace{-3.5ex}
   Equation~\ref{eq:donor} is split into the terms under the summation 
     (effectively the 1-dimensional donor-cell formula):
-  \codecpp{code-cpp-listings.hpp}{listing11}{listing12}{1}
+  \codecpp{code-cpp-listings.hpp}{listing08}{listing09}{1}
+  \vspace{-3.5ex}
+  and the actual two-dimensional donor-cell formula:
+  \codecpp{code-cpp-listings.hpp}{listing09}{listing10}{1}
+  \vspace{-3.5ex}
+  The same formul\ae~are expressed as follows in Python:
+  \codepyt{code-pyt-listings.py}{listing06}{listing07}{1}
+  \codepyt{code-pyt-listings.py}{listing07}{listing08}{1}
+  \codepyt{code-pyt-listings.py}{listing08}{listing09}{1}
+  \vspace{-3.5ex}
+  The Fortran counterparts are: 
+  \codefor{code-for-listings.f}{listing05}{listing06}{1}
+  \codefor{code-for-listings.f}{listing06}{listing07}{1}
+  \codefor{code-for-listings.f}{listing07}{listing08}{1}
+  \codefor{code-for-listings.f}{listing08}{listing09}{1}
+  \codefor{code-for-listings.f}{listing09}{listing10}{1}
 
-  \noindent and the actual two-dimensional donor-cell formula:
-
-  \codecpp{code-cpp-listings.hpp}{listing12}{listing13}{1}
-
-  Listings P.9-P11 and F.9-F.13 contain the Python and Fortran counterparts to listings C.12-C.15.
-
-  \subsection{Donor-cell solver (C++)}\label{sec:donorcell_solver}
-  
-  As mentioned in the previous section, the donor-cell formula
-    constitutes an advection scheme, hence we may use it to create
-    a \prog{solver\_donorcell} implementation of the abstract \prog{solver} class: 
-  \codecpp{code-cpp-listings.hpp}{listing13}{listing14}{1}
-  The above definition is given as an example only.
-  In the following sections an MPDATA solver of the same structure is defined.
-
-  Listings P.12 and F.14 contain the Python and Fortran counterparts to listing C.16.
-
-  \subsection{MPDATA formul\ae~(C++)}\label{sec:mpdata}
+  \subsection{MPDATA formul\ae}\label{sec:mpdata}
 
   MPDATA introduces corrective steps to the algorithm defined by equation~\ref{eq:donor} and \ref{eq:donor:F}.
   Each corrective step is a donor-cell step (eq.~\ref{eq:donor}) with the Courant number
     fields corresponding to the MPDATA antidiffusive velocities of the following 
     form \citep[eqs~13,~14~in][]{Smolarkiewicz_1984}:
+
+  \vspace{-5ex}
   \begin{equation}\label{eq:antidiff1}
     \input{formulae_antidiff1}
   \end{equation}
   where $\psi$ and $C$ represent values from the previous iteration and where:
+
+  \vspace{-5ex}
   \begin{equation}\label{eq:antidiff2}
     \input{formulae_antidiff2}
   \end{equation}
@@ -634,6 +555,8 @@
     See \citet[Sec. 4.2]{Smolarkiewicz_2006} for description of adaptation of the 
     formul\ae~for advection of fields of variable sign
   }:
+
+  \vspace{-5ex}
   \begin{equation}\label{eq:A}
     \input{formulae_A}
   \end{equation}
@@ -643,96 +566,36 @@
 
   If the denominator in equations \ref{eq:A} or \ref{eq:B} equals zero for a given {\em i} and {\em j}, 
     the corresponding $A_{[i,j]}$ and $B_{[i,j]}$ are set to zero what may be conveniently 
-    represented with the \prog{where} construct (available in all three considered languages):
-  \codecpp{code-cpp-listings.hpp}{listing14}{listing15}{1}
+    represented with the \prog{where} construct in all three considered languages:
+  \codecpp{code-cpp-listings.hpp}{listing10}{listing11}{1}
+  \codepyt{code-pyt-listings.py}{listing09}{listing10}{1}
+  \codefor{code-for-listings.f}{listing10}{listing11}{1}
+  \codefor{code-for-listings.f}{listing11}{listing12}{1}
 
   The $A$ term defined in equation \ref{eq:A} takes the following form:
-  \codecpp{code-cpp-listings.hpp}{listing15}{listing16}{1}
+  \codecpp{code-cpp-listings.hpp}{listing11}{listing12}{1}
+  \codepyt{code-pyt-listings.py}{listing10}{listing11}{1}
+  \codefor{code-for-listings.f}{listing12}{listing13}{1}
 
   The $B$ term defined in equation \ref{eq:B} takes the following form:
-  \codecpp{code-cpp-listings.hpp}{listing16}{listing17}{1}
+  \codecpp{code-cpp-listings.hpp}{listing12}{listing13}{1}
+  \codepyt{code-pyt-listings.py}{listing11}{listing12}{1}
+  \codefor{code-for-listings.f}{listing13}{listing14}{1}
 
   Equation \ref{eq:antidiff2} takes the following form:
-  \codecpp{code-cpp-listings.hpp}{listing17}{listing18}{1}
+  \codecpp{code-cpp-listings.hpp}{listing13}{listing14}{1}
+  \codepyt{code-pyt-listings.py}{listing12}{listing13}{1}
+  \codefor{code-for-listings.f}{listing14}{listing15}{1}
 
-  Equation \ref{eq:antidiff1} take the following form:
-  \codecpp{code-cpp-listings.hpp}{listing18}{listing19}{1}
-
-  Listings P.13-P.17 and F.15-F.21 contain the Python and Fortran counterparts to listing C.16-C.22.
-
-  \subsection{MPDATA solver (C++)}\label{sec:mpdatasolver}
-
-  An MPDATA solver may be now constructed by inheriting from \prog{solver} class
-    with the following definition in C++:
-  \codecpp{code-cpp-listings.hpp}{listing19}{listing20}{1}
-  The array of sequences of temporary arrays \prog{tmp} allocated in the constructor
-    is used to store the antidiffusive velocities from the present and optionally 
-    previous timestep (if using more than two iterations). 
-
-  The \prog{advop()} method controlls the MPDATA iterations within one timestep.
-  The first (step = 0) iteration of MPDATA is an unmodified donor-cell step (compare listing C.15).
-  Subsequent iterations begin with calculation of the antidiffusive Courant fields using 
-    formula \ref{eq:antidiff1}.
-  In order to calculate values spanning an (i\mhlf~... i+\phlf) range using a formula
-    for $C_{[i+\phlf,\ldots]}$ only, the formula is evaluated using extended
-    index ranges \prog{im} and \prog{jm}.
-  In the second (step=1) iteration the uncorrected Courant field (\prog{C\_unco}) points
-    to the original \prog{C} field, and the antidiffusive Courant field is written into
-    \prog{C\_corr} which points to \prog{tmp[1]}.
-  In the third (step=2) iteration \prog{C\_unco} points to \prog{tmp[1]} while \prog{C\_corr}
-    points to \prog{tmp[0]}.
-  In subsequent iterations \prog{tmp[0]} and \prog{tmp[1]} are alternately swapped.
-
-  Listings P.18 and F.22 contain the Python and Fortran counterparts to listing C.23.
- 
-  \subsection{Usage example (C++)}\label{sec:example}
-
-  The following listing provides an example of how the MPDATA solver
-    defined in section~\ref{sec:mpdatasolver} may be used together
-    with the cyclic boundary conditions defined in section~\ref{sec:cyclic}.
-  In the example a Gaussian signal is advected in a 2D domain 
-    defined over a grid of 24$\times$24 cells.
-  The program first plots the initial condition, then performs
-    the integration for 75 timesteps with three different 
-    settings of the number of iterations used in MPDATA.
-  The velocity field is constant in time and space (although it is
-    not assumed in the presented implementations).
-  The signal shape at the end of each simulation is plotted as well.
-  Plotting is done with the help of the gnuplot-iostream library\footnote{gnuplot-iostream
-    is a header-only C++ library allowing gnuplot to be controlled from C++, see \url{http://stahlke.org/dan/gnuplot-iostream/}. 
-    Gnuplot is a portable command-line driven graphing utility, see \url{http://gnuplot.info/}}.
-
-  The resultant plot is presented herein as Figure~\ref{fig:mpdata}.
-  The top panel depicts the initial condition. 
-  The three other panels show a snapshot of the field after 75 timesteps.
-  The donor-cell solution is characterised by strongest numerical diffusion
-    resulting in significant drop in the signal amplitude.
-  The signals advected using MPDATA show smaller numerical diffusion with
-    the solution obtained with more iterations preserving the signal altitude 
-    more accurately.
-  In all of the simulations the signal maintains its positive definiteness.
-  The domain periodicity is apparent in the plots as the maximum of the signal 
-    after 75 timesteps is located near the domain walls.
-
-  Listings P.19 and F.23-F.24 contain the Python and Fortran 
-    counterparts to listing C.24 (with the set-up and plotting logic omitted).
-
-  \codecpp{code-cpp-plot.cpp}{listing20}{listing21}{1}
-
-  \begin{figure}
-    \includegraphics[height=.9\textheight]{demo}
-    \caption{\label{fig:mpdata}
-      Plot generated by the program given in listing~C.24.
-      The top panel shows initial signal shape (at time t=0).
-      The subsequent panels show snapshots of the advected field after 75 timesteps
-        from three different simulations: donorcell (or 1 MPDATA iteration), MPDATA
-        with two iterations and MPDATA with 44 iterations.
-      The colour scale and the wire-frame surface correspond to signal amplitude.
-      See section~\ref{sec:example} for discussion.
-    }
-  \end{figure}
+  Equation \ref{eq:antidiff1} takes the following form:
+  \codecpp{code-cpp-listings.hpp}{listing14}{listing15}{1}
+  \codepyt{code-pyt-listings.py}{listing13}{listing14}{1}
+  \codefor{code-for-listings.f}{listing15}{listing16}{1}
+  \codefor{code-for-listings.f}{listing16}{listing17}{1}
 
   \section{Performance evaluation}\label{sec:perf}
+
+  \subsection{Set up}
 
   The three introduced implementations of MPDATA were tested with the following set-ups 
     employing free and open-source tools:
@@ -800,7 +663,7 @@
   The tests were run multiple times; program start-up, data loading, and output verification times were
     subtracted from the reported values (see caption of Figure~\ref{fig:cpu-eyrie} for details).
 
-  \begin{figure}[t]
+  \begin{figure}[h!]
     \center
     \includegraphics[height=.45\textwidth,angle=-90]{skua-mem}
     \caption{\label{fig:mem}
@@ -812,6 +675,8 @@
         of temporary storage requirements.
     }
   \end{figure}
+ 
+  \subsection{Results}
 
   Figure \ref{fig:mem} presents a plot of the peak memory use\footnote{The resident set size (rss)
     as reported by GNU time (version 1.7-24)} (identical for both considered CPUs)
@@ -830,7 +695,7 @@
   This confirms the effectiveness of the just-in-time compilation (PyPy) and the expression-templates (Blitz++) techniques
     for elimination of temporary storage during array operations.
 
-  \begin{figure}[t]
+  \begin{figure}[h!]
     \center
     \includegraphics[height=.45\textwidth,angle=-90]{laptok-cpu}
     \caption{\label{fig:cpu-eyrie}
@@ -846,7 +711,7 @@
         Core\textsuperscript{\texttrademark} i5 1.6 GHz processor.
     }
   \end{figure}
-  \begin{figure}[t]
+  \begin{figure}[th!]
     \center
     \includegraphics[height=.45\textwidth,angle=-90]{skua-cpu}
     \caption{\label{fig:cpu-skua}
@@ -881,22 +746,22 @@
     performance\footnote{Both Blitz++ and NumPy support Fortran's column-major ordering as well, 
     however this feature is still missing from PyPy's built-in NumPy implementation as of PyPy 1.9}.
 
-  \section{Discussion on the tradeoffs of language choice}\label{sec:tradeoffs}
+  \section{The tradeoffs of language choice}\label{sec:tradeoffs}
 
-  \subsection{OOP for blackboard abstractions}
+  \subsection{Representability of blackboard abstractions}
 
   It was shown in section~\ref{sec:impl} that C++11/Blitz++, Python/NumPy and Fortran 2008
     provide comparable functionalities in terms of matching the blackboard abstractions
     within the program code.
   Taking into account solely the part of code representing particular formul\ae~
-    (e.g. listings C.21, P.17, F.20 and equation \ref{eq:antidiff1}) all three
+    (e.g. listings C.14, P.13, F.15 and equation \ref{eq:antidiff1}) all three
     languages allow to match (or surpass) \LaTeX~in its brevity of formula translation syntax.
   All three languages were shown to be capable of providing mechanisms to compactly represent such abstractions as:
   \begin{itemize}
     \item{loop-free array arithmetics;}
-    \item{definitions of functions returning array-valued expressions;}
+    \item{functions returning array-valued expressions;}
     \item{permutations of array indices allowing dimension-independent definitions
-      of functions (see e.g. listings C.12 and C.13, P.10 and P.11, F.11 and F.12);}
+      of functions (see e.g. listings C.8 and C.9, P.7 and P.8, F.7 and F.8);}
     \item{fractional indexing of arrays corresponding to employment of a staggered grid.}
   \end{itemize}
   
@@ -913,11 +778,11 @@
     were observed:
   \begin{itemize}
     \item{Fortran does not feature a mechanism allowing to reuse a single piece of code (algorithm)
-      with different data types (compare e.g. listings C.6, P.5 and F.4) such as
+      with different data types (compare e.g. listings C.15, P.14 and F.17) such as
       templates in C++ and the so-called duck typing in Python;}
     \item{Fortran does not allow function calls to appear on the left hand side
       of assignment (see e.g. how the \prog{ptr} pointers were used as a workaround in the \prog{cyclic\_fill\_halos}
-      method in listing F.8);}
+      method in listing F.20);}
     \item{Fortran lacks support for arrays of arrays (cf. Sect. \ref{sec:sequence}).}
   \end{itemize}
   Interestingly, the limitation in extendability via inheritance was found to
@@ -986,7 +851,7 @@
   In contrast, Blitz++ ensures temporary-array-free computations by design
     \citep{Veldhuizen_et_al_1997} avoiding unintentional performance loss.
 
-  \subsection{Added values}
+  \subsection{User- and code-base}
 
   The size of the programmers' community of a given language 
     influences the availability of trained personnel, 
@@ -1009,7 +874,7 @@
   In contrast, the NumPy package became a de facto standard solution for Python.
   Consequently, numerous Python libraries adopted NumPy but
     there are apparently very few C++ libraries offering Blitz++ support out of the box
-    (the gnuplot-iostream used in listing C.24 being a much-appreciated counterexample).
+    (the gnuplot-iostream used in listing C.20 being a much-appreciated counterexample).
   However, Blitz++ allows to interface with virtually any library (including Fortran libraries), 
     by resorting to referencing the underlying memory with raw pointers.
  
@@ -1032,7 +897,7 @@
   The CPython and PyPy implementations of Python do not offer any
     built-in solution for multi-threading. 
   
-  \conclusions[Summary and outlook]\label{sec:concl}
+  \section{Summary and outlook}\label{sec:concl}
 
   Three implementations of a prototype solver 
     for the advection equation were introduced.
@@ -1098,67 +963,186 @@
 %%%%%% </arXiv>
   \appendix
 
-  %\setcounter{section}{15} 
-  \section{Python code for sections \ref{sec:cyclic}--\ref{sec:mpdatasolver}}\label{app:P}
+  \section{Implementation: the solvers}\label{sec:app}
+  \subsection{Halo regions}
 
-  \subsection*{{\bf Periodic Boundaries} (cf. Sect. \ref{sec:cyclic})}
-  \noindent 
-  \codepyt{code-pyt-listings.py}{listing08}{listing09}{1}
+  The MPDATA formul\ae~defining $\psi^{[n+1]}_{[i,j]}$ as a function of $\psi^{[n]}_{[i,j]}$
+    (discussed in the following sections) feature terms such as $\psi_{[i-1,j-1]}$.
+  One way of assuring validity of these formul\ae~on the edges of the domain (e.g. for i=0) 
+    is to introduce the so-called halo region surrounding the domain.
+  The method of populating the halo region with data depends on the boundary condition type.
+  Employment of the halo-region logic implies repeated usage of array range 
+    extensions in the code such as $i \leadsto i \pm halo$.
 
-  \subsection*{{\bf Donor-cell formul\ae}~(cf. Sect. \ref{sec:donor})}
-  \codepyt{code-pyt-listings.py}{listing09}{listing10}{1}
-  \codepyt{code-pyt-listings.py}{listing10}{listing11}{1}
-  \codepyt{code-pyt-listings.py}{listing11}{listing12}{1}
-
-  \subsection*{{\bf Donor-cell solver} (cf. Sect. \ref{sec:donorcell_solver})}
-  \codepyt{code-pyt-listings.py}{listing12}{listing13}{1}
-
-  \subsection*{{\bf MPDATA formul\ae}~(cf. Sect. \ref{sec:mpdata})}
-  \codepyt{code-pyt-listings.py}{listing13}{listing14}{1}
+  An \prog{ext()} function is defined in all three implementation, in order to simplify 
+    coding of array range extensions:
+  \codecpp{code-cpp-listings.hpp}{listing15}{listing16}{1}
   \codepyt{code-pyt-listings.py}{listing14}{listing15}{1}
-  \codepyt{code-pyt-listings.py}{listing15}{listing16}{1}
-  \codepyt{code-pyt-listings.py}{listing16}{listing17}{1}
-  \codepyt{code-pyt-listings.py}{listing17}{listing18}{1}
-
-  \subsection*{{\bf An MPDATA solver} (cf. Sect. \ref{sec:mpdatasolver})}
-  \codepyt{code-pyt-listings.py}{listing18}{listing19}{1}
-
-  \subsection*{{\bf Usage example} (cf. Sect. \ref{sec:example})}
-  \codepyt{code-pyt-test.py}{listing19}{listing20}{1}
-
-  %\setcounter{section}{5} 
-  \section{Fortran code for sections \ref{sec:cyclic}--\ref{sec:mpdatasolver}}\label{app:F}
-
-  \subsection*{{\bf Periodic boundaries} (cf. Sect. \ref{sec:cyclic})}
-  \codefor{code-for-listings.f}{listing08}{listing09}{1}
-
-  \subsection*{{\bf Donor-cell formul\ae}~(cf. Sect. \ref{sec:donor})}
-  \codefor{code-for-listings.f}{listing09}{listing10}{1}
-  \codefor{code-for-listings.f}{listing10}{listing11}{1}
-  \codefor{code-for-listings.f}{listing11}{listing12}{1}
-  \codefor{code-for-listings.f}{listing12}{listing13}{1}
-  \codefor{code-for-listings.f}{listing13}{listing14}{1}
-
-  \subsection*{{\bf Donor-cell solver} (cf. Sect. \ref{sec:donorcell_solver})}
-  \codefor{code-for-listings.f}{listing14}{listing15}{1}
-
-  \subsection*{{\bf MPDATA formul\ae}~(cf. Sect. \ref{sec:mpdata})}
-  \codefor{code-for-listings.f}{listing15}{listing16}{1}
-  \codefor{code-for-listings.f}{listing16}{listing17}{1}
   \codefor{code-for-listings.f}{listing17}{listing18}{1}
+  Consequently, a range depicted by $i\pm1/2$ may be expressed in the code as \prog{ext(i, h)}.
+  In all three implementations the \prog{ext()} function accept the second
+    argument to be an integer or a ''half'' (cf. section \ref{sec:grid}).
+
+  \subsection{Prototype solver}\label{sec:solver}
+
+  The tasks to be handled by a prototype advection equation solver proposed herein are:
+  \begin{enumerate}[label=(\roman*), leftmargin=*, widest=iii]
+    \item{storing arrays representing the $\psi$ and $\vec{C}$ fields and any required housekeeping data,}
+    \item{allocating and deallocating the required memory,}
+    \item{providing access to the solver state,}
+    \item{performing the integration by invoking the advection-operator and
+      boundary-condition handling routines.}
+  \end{enumerate}
+  In the following C++ definition of the \prog{solver} structure, task (i) is represented with the definition of the structure
+    member fields; task (ii) is split between the \prog{solver}'s constructor and the destructors of \prog{arrvec\_t};
+    task (iii) is handled by the accessor methods; task (iv) is handled within the \prog{solve} method:
+  \codecpp{code-cpp-listings.hpp}{listing16}{listing17}{1}
+  The \prog{solver} structure is an abstract definition (containing a pure virtual method) 
+     requiring its descendants to implement at least
+     the \prog{advop()} method which is expected to fill \prog{psi[n+1]} with an updated (advected)
+     values of \prog{psi[n]}.
+  The two template parameters \prog{bcx\_t} and \prog{bcy\_t} allow the solver to operate with 
+    any kind of boundary condition structures that fulfil the requirements implied by the calls to the 
+    methods of \prog{bcx} and \prog{bcy}, respectively.
+
+  The donor-cell and MPDATA schemes both require only the previous state of an advected field
+    in order to advance the solution.
+  Consequently, memory for two time levels ($\psi^{[n]}$ and $\psi^{[n+1]}$) is allocated in the
+    constructor.
+  The sizes of the arrays representing the two time levels of $\psi$ 
+    are defined by the domain size ({\em nx}$~\times$~{\em ny}) plus the halo region.
+  The size of the halo region is an argument of the constructor.
+  The \prog{cycle()} method is used to swap the time levels without copying any data.
+
+  The arrays representing the $C^{[x]}$ and $C^{[y]}$ components of $\vec{C}$,
+    require ({\em nx+1})~$\times$~{\em ny} 
+    and {\em nx}$~\times$~({\em ny+1}) elements, respectively
+    (being laid out on the Arakawa-C staggered grid).
+  
+  Python definition of the \prog{solver} class follows closely the C++ structure definition:
+  \codepyt{code-pyt-listings.py}{listing15}{listing16}{1}
+  The key difference stems from the fact that, unlike Blitz++, NumPy does not allow an array
+    to have arbitrary index base -- in NumPy the first element is always addressed with 0.
+  Consequently, while in C++ (and Fortran) the computational domain is chosen to start at (i=0, j=0)
+    and hence a part of the halo region to have negative indices, in Python the halo region starts 
+    at (0,0)\footnote{The reason to allow the domain to begin at an arbitrary index
+    is mainly to ease debugging in case the code would be used in parallel computations
+    using domain decomposition where each subdomain could have its own index base corresponding to
+    the location within the computational domain}.
+  However, since the whole halo logic is hidden within the solver, such details are not exposed to the
+    user.
+  The \prog{bcx} and \prog{bcy} boundary-condition specifications are passed to the solver through
+    constructor-like \prog{\_\_init\_\_()} method as opposed to template parameters in C++.
+
+  The above C++ and Python prototype solvers in principle allow to operate with any boundary condition
+    objects that implement methods called from within the solver.
+  This requirement is checked at compile-time in the case of C++, and at run-time in the case of Python.
+  In order to obtain an analogous behaviour with Fortran, it is required to
+    define, prior to definition of a solver type, 
+    an abstract type with deferred procedures having abstract interfaces 
+    \citep[sic!, see Table 2.1 in][for a summary of approximate correspondence of OOP 
+      nomenclature between Fortran and C++]{Rouson_et_al_2012}:
   \codefor{code-for-listings.f}{listing18}{listing19}{1}
+  Having defined the abstract type for boundary-condition objects, 
+    a definition of a solver class following closely the C++ and Python counterparts may be provided:
   \codefor{code-for-listings.f}{listing19}{listing20}{1}
+
+  \subsection{Periodic boundaries}\label{sec:cyclic}
+
+  The solver definition described in section~\ref{sec:solver} requires a given
+    boundary condition object to implement a \prog{fill\_halos()} method.
+  An implementation of periodic boundary conditions in C++ is provided in the following listing:
+  \codecpp{code-cpp-listings.hpp}{listing17}{listing18}{1}
+
+  As hinted by the member field names, the \prog{fill\_halos()} methods
+    fill the left/right halo regions with data from the right/left edges of the domain.
+  Thanks to employment of the function \prog{pi()} described in section~\ref{sec:pi}
+    the same code may be applied in any dimension (here being a template parameter).
+
+  The following listings contain the Python and Fortran counterparts to listing C.17.
+  \codepyt{code-pyt-listings.py}{listing16}{listing17}{1}
   \codefor{code-for-listings.f}{listing20}{listing21}{1}
-  \codefor{code-for-listings.f}{listing21}{listing22}{1}
 
-  \subsection*{{\bf An MPDATA solver} (cf. Sect. \ref{sec:mpdatasolver})}
+  \subsection{Donor-cell solver}\label{sec:donorcell_solver}
+  
+  As mentioned in the previous section, the donor-cell formula
+    constitutes an advection scheme, hence we may use it to create
+    a \prog{solver\_donorcell} implementation of the abstract \prog{solver} class: 
+  \codecpp{code-cpp-listings.hpp}{listing18}{listing19}{1}
+  The above definition is given as an example only.
+  In the following sections an MPDATA solver of the same structure is defined.
+
+  The following listings contain the Python and Fortran counterparts to listing C.18.
+  \codepyt{code-pyt-listings.py}{listing17}{listing18}{1}
+  \codefor{code-for-listings.f}{listing21}{listing2}{1}
+
+  \subsection{MPDATA solver}\label{sec:mpdatasolver}
+
+  An MPDATA solver may be now constructed by inheriting from \prog{solver} class
+    with the following definition in C++:
+  \codecpp{code-cpp-listings.hpp}{listing19}{listing20}{1}
+  The array of sequences of temporary arrays \prog{tmp} allocated in the constructor
+    is used to store the antidiffusive velocities from the present and optionally 
+    previous timestep (if using more than two iterations). 
+
+  The \prog{advop()} method controlls the MPDATA iterations within one timestep.
+  The first (step = 0) iteration of MPDATA is an unmodified donor-cell step.
+  Subsequent iterations begin with calculation of the antidiffusive Courant fields using 
+    formula \ref{eq:antidiff1}.
+  In order to calculate values spanning an (i\mhlf~... i+\phlf) range using a formula
+    for $C_{[i+\phlf,\ldots]}$ only, the formula is evaluated using extended
+    index ranges \prog{im} and \prog{jm}.
+  In the second (step=1) iteration the uncorrected Courant field (\prog{C\_unco}) points
+    to the original \prog{C} field, and the antidiffusive Courant field is written into
+    \prog{C\_corr} which points to \prog{tmp[1]}.
+  In the third (step=2) iteration \prog{C\_unco} points to \prog{tmp[1]} while \prog{C\_corr}
+    points to \prog{tmp[0]}.
+  In subsequent iterations \prog{tmp[0]} and \prog{tmp[1]} are alternately swapped.
+
+  The following listings contain the Python and Fortran counterparts to listing C.19.
+  \codepyt{code-pyt-listings.py}{listing18}{listing19}{1}
   \codefor{code-for-listings.f}{listing22}{listing23}{1}
+ 
+  \subsection{Usage example}\label{sec:example}
 
-  \subsection*{{\bf Usage example} (cf. Sect. \ref{sec:example})}
+  The following listing provides an example of how the MPDATA solver
+    defined in section~\ref{sec:mpdatasolver} may be used together
+    with the cyclic boundary conditions defined in section~\ref{sec:cyclic}.
+  In the example a Gaussian signal is advected in a 2D domain 
+    defined over a grid of 24$\times$24 cells.
+  The program first plots the initial condition, then performs
+    the integration for 75 timesteps with three different 
+    settings of the number of iterations used in MPDATA.
+  The velocity field is constant in time and space (although it is
+    not assumed in the presented implementations).
+  The signal shape at the end of each simulation is plotted as well.
+  Plotting is done with the help of the gnuplot-iostream library\footnote{gnuplot-iostream
+    is a header-only C++ library allowing gnuplot to be controlled from C++, see \url{http://stahlke.org/dan/gnuplot-iostream/}. 
+    Gnuplot is a portable command-line driven graphing utility, see \url{http://gnuplot.info/}}.
+
+  The resultant plot is presented herein as Figure~\ref{fig:mpdata}.
+  The top panel depicts the initial condition. 
+  The three other panels show a snapshot of the field after 75 timesteps.
+  The donor-cell solution is characterised by strongest numerical diffusion
+    resulting in significant drop in the signal amplitude.
+  The signals advected using MPDATA show smaller numerical diffusion with
+    the solution obtained with more iterations preserving the signal altitude 
+    more accurately.
+  In all of the simulations the signal maintains its positive definiteness.
+  The domain periodicity is apparent in the plots as the maximum of the signal 
+    after 75 timesteps is located near the domain walls.
+  \codecpp{code-cpp-plot.cpp}{listing20}{listing21}{1}
+
+  The following listings contain the Python and Fortran 
+    counterparts to listing C.20 (with the set-up and plotting logic omitted).
+  \codepyt{code-pyt-test.py}{listing19}{listing20}{1}
   \codefor{code-for-test.f}{listing23}{listing24}{1}
   \codefor{code-for-test.f}{listing25}{listing26}{1}
 
-  \begin{acknowledgements}
+  \small
+
+  \section*{Acknowledgements}
+  {
     We thank Piotr Smolarkiewicz and Hanna Pawłowska for their help throughout the project.
     This study was partly inspired by the lectures of Lech Łobocki.
 
@@ -1176,9 +1160,22 @@
     The visit was funded by the Foundation for Polish Science (START programme).
  
     Development of NumPy support in PyPy was led by Alex Gaynor, Matti Picus and MF.
-  \end{acknowledgements}
+  }
 
-  \bibliographystyle{copernicus}
+  \bibliographystyle{plainnat}
   \bibliography{paper}
   
+  \begin{figure}[bh!]
+    \caption{\label{fig:mpdata}
+      Plot generated by the program given in listing~C.20.
+      The top panel shows initial signal shape (at time t=0).
+      The subsequent panels show snapshots of the advected field after 75 timesteps
+        from three different simulations: donorcell (or 1 MPDATA iteration), MPDATA
+        with two iterations and MPDATA with 44 iterations.
+      The colour scale and the wire-frame surface correspond to signal amplitude.
+      See section~\ref{sec:example} for discussion.
+    }
+  \end{figure}
+  \includegraphics[height=\textheight]{demo}
+
 \end{document}
