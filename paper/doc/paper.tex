@@ -114,13 +114,14 @@
       Formula translation in C++, Python and modern Fortran: a~case~study~of~the~language~choice tradeoffs
     }
 
-    \author[1]{Sylwester Arabas\footnote{Corresponence to: S. Arabas -- sarabas@igf.fuw.edu.pl -- 0048225546827 -- University of Warsaw, Pasteura 7, 02-093 Warszawa, Poland}}
-    \author[1]{Dorota Jarecka}
-    \author[1]{Anna Jaruga}
-    \author[2]{Maciej Fijałkowski}
+    \author{~}
+%    \author[1]{Sylwester Arabas\footnote{Correspondence to: S. Arabas -- sarabas@igf.fuw.edu.pl -- 0048225546827 -- University of Warsaw, Pasteura 7, 02-093 Warszawa, Poland}}
+%    \author[1]{Dorota Jarecka}
+%    \author[1]{Anna Jaruga}
+%    \author[2]{Maciej Fijałkowski}
 
-    \affil[1]{Institute of Geophysics, Faculty of Physics, University of Warsaw}
-    \affil[2]{PyPy Team}
+%    \affil[1]{Institute of Geophysics, Faculty of Physics, University of Warsaw}
+%    \affil[2]{PyPy Team}
 
     \onecolumn
     \maketitle
@@ -161,7 +162,7 @@
     make extensive use of OOP techniques\footnote{
   Fortran has been the language of choice in oceanic \citep{Griffies_et_al_2000}, 
     weather-prediction \citep{Sundberg_2009} and Earth system \citep{Legutke_2012} modelling, 
-    and none of its 20-century editions were object-oriented languages \citep[see e.g.][for discussion]{Norton_et_al_2007}}.
+    and none of its 20\textsuperscript{th}-century editions were object-oriented languages \citep[see e.g.][for discussion]{Norton_et_al_2007}}.
 
   Application of OOP techniques in development of numerical modelling software may help to:
   \begin{enumerate}[label=(\roman*), leftmargin=*, widest=ii]
@@ -174,7 +175,8 @@
   The first application is attainable, yet arguably cumbersome, with procedural programming.
   The latter, virtually impossible to obtain with procedural programming, is the focus of this paper.
   The importance of reproducing the mathematical notation in the code lays primarily
-    in the fact that code readability and brevity \citep[and not the language choice itself,][]{Seeley_2004}
+    in the fact that code readability and brevity 
+    %\citep[and not the language choice itself,][]{Seeley_2004}
     significantly contribute to code maintainability \citep{Wilson_et_al_2012}.
 
   The key aim of this paper is to show how OOP techniques can be used to faithfully
@@ -196,7 +198,7 @@
     yet it is simple enough to allow inclusion of the entire source code within the paper text.
   All relevant MPDATA formul\ae~are given in the text alongside corresponding code fragments
     allowing comparison of the relevant syntax with the mathematical notation.
-  In compliance with the article focus, these formul\ae~are presented without derivation or detailed discussion
+  These formul\ae~are presented without derivation or detailed discussion
     (see~\citep{Smolarkiewicz_2006} for a recent review of MPDATA-based techniques including an introductory description 
     of the algorithm and an exhaustive list of references).
 
@@ -205,7 +207,8 @@
     briefly describing the algorithm itself and
     discussing where and how the OOP techniques were applied in its implementation.
   The remaining part of the implementations -- the solver logic -- is
-    presented in appendix~\ref{sec:app}.
+    presented in appendix~\ref{app:solver}.
+  A usage example is given in appendix~\ref{app:usage}
   Section~\ref{sec:perf} covers performance evaluation of the three implementations.
   Section~\ref{sec:tradeoffs} covers discussion of the tradeoffs of the programming language choice.
   Section~\ref{sec:concl} closes the article with a brief summary.
@@ -221,7 +224,7 @@
   Programming language constructs when inlined in the text are 
     typeset in bold, e.g. \prog{GOTO 2}.
 
-  \section{Implementation: the formul\ae}\label{sec:impl}
+  \section{Implementation of the formul\ae}\label{sec:impl}
 
   Double precision floating-point format is used in all three implementations.
   The codes begin with the following definitions:
@@ -427,7 +430,7 @@
   This way, the arrays representing vector field components can be indexed using
     \prog{(i+h,j)}, \prog{(i-h,j)} etc. where \prog{h}~represents the half.
 
-  In NumPy in order to prevent copying of array data during slicing one needs to operate on the
+  In NumPy, in order to prevent copying of array data during slicing, one needs to operate on the
     so-called array views.
   Array views are obtained when indexing the arrays with objects of the Python's
     built-it \prog{slice} type (or tuples of such objects in case of multi-dimensional arrays).
@@ -475,9 +478,12 @@
   Therefore, the following definition of function \prog{pi()} suffices to represent~$\pi$:
   \codepyt{code-pyt-listings.py}{listing05}{listing06}{1}
   
-  In the Fortran implementation \prog{pi()} returns a pointer to the array elements specified
+  Fortran does not feature an analogous mechanism for specifying array ranges in multiple
+    dimensions using a single entity.
+  As a workaround, in in the Fortran implementation, \prog{pi()} returns a pointer to the array elements specified
     by \prog{i} and \prog{j} interpreted as (i,j) or
     (j,i) depending on the value of the argument \prog{d}.
+% TODO: disucss creation of temporary arrays and disabling of vectorisation due to employment of POINTERS
   In addition to \prog{pi()}, a helper \prog{span()} function returning the 
     length of one of the vectors passed as argument is defined:
   \codefor{code-for-listings.f}{listing04}{listing05}{1}
@@ -533,6 +539,18 @@
   \codefor{code-for-listings.f}{listing08}{listing09}{1}
   \codefor{code-for-listings.f}{listing09}{listing10}{1}
 
+  The brevity of the code in the above listings as well as its similarity
+    to the mathematical notation is the main point of this paper.
+  The ''formula translation'' features include:
+  \begin{itemize}
+    \item{loop-free notation;}
+    \item{array-valued functions enabling reuse of sub-expressions;}
+    \item{fractional indexing obtained with the help of operator overloading;}
+    \item{dimension-independent indexing with the help of \prog{pi} permutation functions.}
+  \end{itemize}
+  The same features are applied to translation of more complex formul\ae~in the
+    following section.
+
   \subsection{MPDATA formul\ae}\label{sec:mpdata}
 
   MPDATA introduces corrective steps to the algorithm defined by equation~\ref{eq:donor} and \ref{eq:donor:F}.
@@ -565,7 +583,8 @@
     \input{formulae_B}
   \end{equation}
 
-  If the denominator in equations \ref{eq:A} or \ref{eq:B} equals zero for a given {\em i} and {\em j}, 
+  If the (positive-defined) denominator in equations \ref{eq:A} or \ref{eq:B} 
+    equals zero for a given {\em i} and {\em j}, %TODO: >0 in the code
     the corresponding $A_{[i,j]}$ and $B_{[i,j]}$ are set to zero what may be conveniently 
     represented with the \prog{where} construct in all three considered languages:
   \codecpp{code-cpp-listings.hpp}{listing10}{listing11}{1}
@@ -593,6 +612,10 @@
   \codepyt{code-pyt-listings.py}{listing13}{listing14}{1}
   \codefor{code-for-listings.f}{listing15}{listing16}{1}
   \codefor{code-for-listings.f}{listing16}{listing17}{1}
+
+  The above listings conclude the formula-translation part of this paper.
+  Implementation of a prototype MPDATA solver using the above code
+    is presented in appendix~\ref{app:solver}.
 
   \section{Performance evaluation}\label{sec:perf}
 
@@ -636,7 +659,7 @@
   In addition to the standard Python implementation CPython,
     the Python code was tested with PyPy.
   PyPy is an alternative implementation of Python featuring a just-in-time compiler. 
-  PyPy includes an experimental partial reimplementation of NumPy that compiles NumPy expressions into native assembler.
+  PyPy includes an experimental partial re-implementation of NumPy that compiles NumPy expressions into native assembler.
   Thanks to employment of lazy evaluation of array expressions (cf. Sect. \ref{sec:array})
     PyPy allows to eliminate the use of temporary matrices for storing intermediate results,
     and to perform multiple operations on the arrays within a single array index traversal
@@ -654,13 +677,13 @@
   
   The same set of tests was run with all four set-ups.
   Each test set consisted of 16 program runs.
-  The test programs are analogous to the example code presented in section~\ref{sec:example}.
+  The test programs are analogous to the example code presented in appendix~\ref{app:usage}.
   The tests were run with different grid sizes ranging from 64$\times$64 to 2048$\times$2048.
   The Gaussian impulse was advected for $nt=2^{24}/(nx\cdot ny)$ timesteps ($2^{24}$ chosen arbitrarily), 
     in order to assure comparable timing accuracy for all grid sizes.
   Three MPDATA iterations were used (i.e. two corrective steps).
-  The initial condition was loaded from a text file, and the final values were compared at the end of the test
-    with values loaded from another text file assuring the same results were obtained with all four set-ups.
+  %The initial condition was loaded from a text file, and the final values were compared at the end of the test
+  %  with values loaded from another text file assuring the same results were obtained with all four set-ups.
   The tests were run multiple times; program start-up, data loading, and output verification times were
     subtracted from the reported values (see caption of Figure~\ref{fig:cpu-eyrie} for details).
 
@@ -720,7 +743,7 @@
     }
   \end{figure}
 
-  The CPU time statistics presented in Figures \ref{fig:cpu-eyrie} and \ref{fig:cpu-skua} reveal
+  The CPU time statistics presented in Figures \ref{fig:cpu-eyrie} and~\ref{fig:cpu-skua} reveal
     minor differences between results obtained with the two different processors.
   Presented results lead to the following observations
     (where by referring to language names, only the results obtained with the herein considered
@@ -778,6 +801,9 @@
     resulted in employment of a more repetitive or cumbersome syntax than in C++ or Python
     were observed:
   \begin{itemize}
+    \item{Fortran lacks support for specifying array ranges in multiple dimensions
+      with a single entity (cf. tuples of slices in Python and blitz::RectDomain in C++);
+    }
     \item{Fortran does not feature a mechanism allowing to reuse a single piece of code (algorithm)
       with different data types (compare e.g. listings C.15, P.14 and F.17) such as
       templates in C++ and the so-called duck typing in Python;}
@@ -846,13 +872,13 @@
   Support for the OOP features of Fortran among free and open source compilers, 
     debuggers and other programming aids remains immature.
     
-  With both Fortran and Python, the memory footprint caused by employment
+  Blitz++ ensures temporary-array-free computations by design
+    \citep{Veldhuizen_et_al_1997} avoiding unintentional performance loss.
+  In contrast, with both Fortran and Python, the memory footprint caused by employment
     of temporary objects in array arithmetics is dependant on compiler choice or
     the level of optimisations.
-  In contrast, Blitz++ ensures temporary-array-free computations by design
-    \citep{Veldhuizen_et_al_1997} avoiding unintentional performance loss.
 
-  \subsection{User- and code-base}
+  \subsection{Developers' community and libraries}%User- and code-base}
 
   The size of the programmers' community of a given language 
     influences the availability of trained personnel, 
@@ -892,7 +918,7 @@
     is the lack of standard exception handling mechanism, a feature
     long and {\em much requested by the numerical community} \citep[][Foreword]{Press_et_al_1996}.
 
-  Finally, the three languages differ as well with regard to availability of 
+  The three languages differ as well with regard to availability of 
     mechanisms for leveraging shared-memory parallelisation (e.g. with multi-core processors).
   GCC supports OpenMP with Fortran and C++.
   The CPython and PyPy implementations of Python do not offer any
@@ -945,6 +971,8 @@
     \end{itemize}
   The three equally-structured implementations required ca. 200, 300, and 500 lines of code 
     in Python, C++ and Fortran, respectively.  
+  It is the authors' impression that these figures are somehow indicative of the programming 
+    effort.
 
   In addition to the source code presented within the text,
     a set of tests and build-/test-automation scripts
@@ -964,7 +992,11 @@
 %%%%%% </arXiv>
   \appendix
 
-  \section{Implementation: the solvers}\label{sec:app}
+  \section{Prototype solvers}\label{app:solver}
+
+  The following sections provide a complete description of a minimal example of application
+    of the formul\ae~''translated'' into C++, Python and Fortran in the main body of the paper.
+
   \subsection{Halo regions}
 
   The MPDATA formul\ae~defining $\psi^{[n+1]}_{[i,j]}$ as a function of $\psi^{[n]}_{[i,j]}$
@@ -1086,7 +1118,7 @@
     is used to store the antidiffusive velocities from the present and optionally 
     previous timestep (if using more than two iterations). 
 
-  The \prog{advop()} method controlls the MPDATA iterations within one timestep.
+  The \prog{advop()} method controls the MPDATA iterations within one timestep.
   The first (step = 0) iteration of MPDATA is an unmodified donor-cell step.
   Subsequent iterations begin with calculation of the antidiffusive Courant fields using 
     formula \ref{eq:antidiff1}.
@@ -1104,7 +1136,7 @@
   \codepyt{code-pyt-listings.py}{listing18}{listing19}{1}
   \codefor{code-for-listings.f}{listing22}{listing23}{1}
  
-  \subsection{Usage example}\label{sec:example}
+  \section{Usage example}\label{app:usage}
 
   The following listing provides an example of how the MPDATA solver
     defined in section~\ref{sec:mpdatasolver} may be used together
@@ -1140,7 +1172,7 @@
   \codefor{code-for-test.f}{listing23}{listing24}{1}
   \codefor{code-for-test.f}{listing25}{listing26}{1}
 
-  \small
+  \footnotesize
 
   \section*{Acknowledgements}
   {
@@ -1174,7 +1206,7 @@
         from three different simulations: donorcell (or 1 MPDATA iteration), MPDATA
         with two iterations and MPDATA with 44 iterations.
       The colour scale and the wire-frame surface correspond to signal amplitude.
-      See section~\ref{sec:example} for discussion.
+      See appendix~\ref{app:usage} for discussion.
     }
   \end{figure}
   \includegraphics[height=\textheight]{demo}

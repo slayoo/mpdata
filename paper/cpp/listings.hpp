@@ -81,9 +81,10 @@ void donorcell_op(
   const arrvec_t &C, 
   const rng_t &i, const rng_t &j
 ) { 
-  psi[n+1](i,j) = psi[n](i,j)
-    - donorcell<0>(psi[n], C[0], i, j)
-    - donorcell<1>(psi[n], C[1], j, i); 
+  psi[n+1](i,j) = psi[n](i,j) - (
+    donorcell<0>(psi[n], C[0], i, j) +
+    donorcell<1>(psi[n], C[1], j, i)
+  ); 
 }
 //listing10
 template<class nom_t, class den_t>

@@ -157,9 +157,10 @@ module donorcell_m
     
     real(real_t), pointer :: ptr(:,:)
     ptr => pi(0, psi%at(n+1)%p%a, i, j)
-    ptr = pi(0, psi%at(n)%p%a, i, j)                   &
-      - donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j) &
-      - donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)
+    ptr = pi(0, psi%at(n)%p%a, i, j) - (               &
+      donorcell(0, psi%at(n)%p%a, C%at(0)%p%a, i, j) + &
+      donorcell(1, psi%at(n)%p%a, C%at(1)%p%a, j, i)   &
+    )
   end subroutine
 !listing09
 end module

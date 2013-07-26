@@ -58,9 +58,9 @@ def donorcell(d, psi, C, i, j):
   )
 #listing08
 def donorcell_op(psi, n, C, i, j):
-  psi[n+1][i,j] = (psi[n][i,j] 
-    - donorcell(0, psi[n], C[0], i, j)
-    - donorcell(1, psi[n], C[1], j, i)
+  psi[n+1][i,j] = psi[n][i,j] - (
+    donorcell(0, psi[n], C[0], i, j) +
+    donorcell(1, psi[n], C[1], j, i)
   )
 #listing09
 def mpdata_frac(nom, den):
