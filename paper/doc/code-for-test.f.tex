@@ -5,7 +5,7 @@
   \PY{k}{implicit }\PY{k}{none}
 
 \PY{k}{  }\PY{k}{if} \PY{p}{(}\PY{n+nb}{command\PYZus{}argument\PYZus{}count}\PY{p}{(}\PY{p}{)} \PY{o}{/}\PY{o}{=} \PY{p}{(}\PY{l+m+mi}{9}\PY{p}{)}\PY{p}{)} \PY{k}{then}
-\PY{k}{    }\PY{k}{print}\PY{o}{*}\PY{p}{,} \PY{l+s+s2}{"expecting 9 arguments (nx, ny, Cx, Cy, nt, it, f.in, f.out, dec)"}
+\PY{k}{    }\PY{k}{print}\PY{o}{*}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}expecting 9 arguments (nx, ny, Cx, Cy, nt, it, f.in, f.out, dec)\PYZdq{}}
     \PY{k}{stop }\PY{l+m+mi}{1}
   \PY{k}{end }\PY{k}{if}
 
@@ -52,9 +52,9 @@
       \PY{k}{allocate}\PY{p}{(}\PY{n+nv}{tmp}\PY{p}{(}\PY{n+nv}{nx}\PY{p}{,}\PY{n+nv}{ny}\PY{p}{)}\PY{p}{)}
       \PY{k}{call }\PY{n+nb}{get\PYZus{}command\PYZus{}argument}\PY{p}{(}\PY{l+m+mi}{8}\PY{p}{,} \PY{n+nv}{fname}\PY{p}{)}
       \PY{k}{call }\PY{n+nv}{read\PYZus{}file}\PY{p}{(}\PY{n+nv}{fname}\PY{p}{,} \PY{n+nv}{tmp}\PY{p}{)}
-      \PY{n+nv}{diff} \PY{o}{=} \PY{n+nb}{maxval}\PY{p}{(}\PY{n+nb}{abs}\PY{p}{(}\PY{n+nv}{slv}\PY{p}{\PYZpc{}}\PY{n+nv}{state}\PY{p}{(}\PY{p}{)} \PY{o}{-} \PY{n+nv}{tmp}\PY{p}{)}\PY{p}{)}
-      \PY{k}{print}\PY{o}{*}\PY{p}{,} \PY{l+s+s2}{"diff="}\PY{p}{,} \PY{n+nv}{diff}
-      \PY{k}{if} \PY{p}{(}\PY{n+nv}{diff} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{l+m+mf}{.5} \PY{o}{*} \PY{l+m+mi}{1}\PY{l+m+mf}{0.}\PY{o}{**}\PY{p}{(}\PY{o}{-}\PY{n+nv}{dec}\PY{p}{)}\PY{p}{)} \PY{n+nv}{error} \PY{o}{=} \PY{n+nb}{.TRUE.}
+      \PY{n+nv}{diff} \PY{o}{=} \PY{n+nb}{maxval}\PY{p}{(}\PY{n+nb}{abs}\PY{p}{(}\PY{n+nv}{slv}\PY{p}{\PYZpc{}}\PY{n+nv}{state}\PY{p}{(}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{n+nv}{tmp}\PY{p}{)}\PY{p}{)}
+      \PY{k}{print}\PY{o}{*}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}diff=\PYZdq{}}\PY{p}{,} \PY{n+nv}{diff}
+      \PY{k}{if} \PY{p}{(}\PY{n+nv}{diff} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{l+m+mf}{.5} \PY{o}{*} \PY{l+m+mi}{1}\PY{l+m+mf}{0.}\PY{o}{**}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{n+nv}{dec}\PY{p}{)}\PY{p}{)} \PY{n+nv}{error} \PY{o}{=} \PY{n+nb}{.TRUE.}
       \PY{k}{deallocate}\PY{p}{(}\PY{n+nv}{tmp}\PY{p}{)}
       \PY{k}{if} \PY{p}{(}\PY{n+nv}{error}\PY{p}{)} \PY{k}{then}
         \PY{c}{!print*, slv\PYZpc{}state()}
@@ -86,7 +86,7 @@
     \PY{k+kt}{character} \PY{p}{(}\PY{n+nb}{len}\PY{o}{=}\PY{o}{*}\PY{p}{)}\PY{p}{,} \PY{k}{intent} \PY{p}{(}\PY{n+nv}{in}\PY{p}{)} \PY{k+kd}{::} \PY{n+nv}{fname}
     \PY{k+kt}{real}\PY{p}{(}\PY{n+nv}{real\PYZus{}t}\PY{p}{)}\PY{p}{,} \PY{k}{pointer} \PY{k+kd}{::} \PY{k}{array}\PY{p}{(}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{p}{)}
     \PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{un}
-    \PY{k}{open}\PY{p}{(}\PY{n+nv}{newunit}\PY{o}{=}\PY{n+nv}{un}\PY{p}{,} \PY{n+nv}{file}\PY{o}{=}\PY{n+nv}{fname}\PY{p}{,} \PY{n+nv}{status}\PY{o}{=}\PY{l+s+s1}{'old'}\PY{p}{,} \PY{n+nv}{action}\PY{o}{=}\PY{l+s+s1}{'read'} \PY{p}{)}
+    \PY{k}{open}\PY{p}{(}\PY{n+nv}{newunit}\PY{o}{=}\PY{n+nv}{un}\PY{p}{,} \PY{n+nv}{file}\PY{o}{=}\PY{n+nv}{fname}\PY{p}{,} \PY{n+nv}{status}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}old\PYZsq{}}\PY{p}{,} \PY{n+nv}{action}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}read\PYZsq{}} \PY{p}{)}
     \PY{k}{block    }
 \PY{k}{      }\PY{k+kt}{integer} \PY{k+kd}{::} \PY{n+nv}{i}\PY{p}{,} \PY{n+nv}{j}
       \PY{k}{do }\PY{n+nv}{i}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nv}{size}\PY{p}{(}\PY{k}{array}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}

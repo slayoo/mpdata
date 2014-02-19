@@ -11,9 +11,16 @@
 \setlength{\columnsep}{1cm}
 %%%%% </sciprog>
 
+% highlighting (or not) the modified portions of the text
+\newcommand{\changed}[1]{{\color{blue}#1}}
+%\newcommand{\changed}[1]{#1}
+
+\usepackage{soul}
+\newcommand{\removed}[1]{{\color{blue}\st{#1}}}
+
 % input encoding assuring proper handling of Polish characters (surnames!)
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+\usepackage{fontenc}
 
 \usepackage{type1cm}
 \usepackage{relsize}
@@ -111,7 +118,7 @@
     \linenumbers
 
     \title{
-      Formula translation in C++, Python and modern Fortran: a~case~study~of~the~language~choice tradeoffs
+      Formula translation in \changed{Blitz++, NumPy} and modern Fortran: a~case~study~of~the~language~choice tradeoffs
     }
 
     \author{~}
@@ -154,7 +161,7 @@
 
   \section{Introduction}
 
-  Object oriented programming (OOP) {\em ''has become recognised as the almost unique successful 
+  Object oriented programming (OOP) {\em ``has become recognised as the almost unique successful 
     paradigm for creating complex software''} \citep[][Sec.~1.3]{Press_et_al_2007}.
   It is intriguing that, while the quoted statement comes from the very book subtitled 
    {\em The Art of Scientific Computing}, hardly any (if not none) of the currently operational 
@@ -181,6 +188,10 @@
 
   The key aim of this paper is to show how OOP techniques can be used to faithfully
     reproduce within the code what can be referred to as {\em blackboard abstractions} \citep{Rouson_et_al_2012}.
+  \changed{These may relate to several levels of mathematical abstraction. 
+    Object-oriented logic can be used to make the code resemble analytical formul\ae~\citep[e.g.][]{Weller_et_al_1998}
+    and/or numerical algorithms, the latter being exemplified in this paper.
+    }
   For this purpose, a sample implementation of a numerical scheme for solving
     the advection equation is introduced in C++, Python and modern Fortran --
     OOP languages commonly used in scientific computing \citep[see e.g.][chapt.~8]{Einarsson_2005}. 
@@ -203,7 +214,7 @@
     of the algorithm and an exhaustive list of references).
 
   The paper is structured as follows.
-  In section~\ref{sec:impl} we introduce the ''formula translation'' part of the three implementations
+  In section~\ref{sec:impl} we introduce the ``formula translation'' part of the three implementations
     briefly describing the algorithm itself and
     discussing where and how the OOP techniques were applied in its implementation.
   The remaining part of the implementations -- the solver logic -- is
@@ -231,7 +242,8 @@
   \codecpp{code-cpp-listings.hpp}{listing01}{listing02}{1}
   \codepyt{code-pyt-listings.py}{listing01}{listing02}{1}
   \codefor{code-for-listings.f}{listing01}{listing02}{1}
-  which provide a convenient way of switching to different precision.
+  which provide a convenient way of switching to different precision\footnote{Fortran's
+    \prog{selected\_real\_kind()}" intrinsic function may be used instead to improve portability.}.
 
   All codes are structured in a way allowing compilation of the code 
     in exactly the same order as presented in the text within one source file,
@@ -239,7 +251,7 @@
 
   The language syntax and OOP nomenclature are used without introduction in the paper,
     for an overview of OOP in context of C++, Python and Fortran, consult for example
-    \citep[][Part~II]{Stroustrup_2000}, \citep[][Chapter~5]{Pilgrim_2004} and
+    \citep[][Part~III]{Stroustrup_2013}, \citep[][Chapter~5]{Pilgrim_2004} and
     \citep[][Chapter~11]{Markus_2012}, respectively.
 
   \subsection{Array containers}\label{sec:array}
@@ -269,7 +281,7 @@
 
   The power of Blitz++ comes from the ability to express array expressions as objects.
   In particular, it is possible to define a function that returns an array expression;
-    i.e. not the resultant array, but an object representing a ,,recipe'' defining the operations
+    i.e. not the resultant array, but an object representing a ``recipe'' defining the operations
     to be performed on the arguments.
   As a consequence, the return types of such functions become unintelligible.
   Luckily, the \prog{auto} return type declaration from the C++11 standard allows to simplify the code significantly,
@@ -282,12 +294,12 @@
     \prog{auto~f(arr\_t~x)~return\_macro(2*x)}.
   This is the only preprocessor macro defined herein.
 
-  For the Python implementation of MPDATA the NumPy\footnote{NumPy is a Python package
+  For the Python implementation of MPDATA, the NumPy\footnote{NumPy is a Python package
     for scientific computing offering support for multi-dimensional arrays and a library
     of numerical algorithms, see \url{http://numpy.org/}} package is used.
   In order to make the code compatible with both the standard CPython
     as well as the alternative PyPy implementation of Python \citep[][]{Bolz_et_al_2011},
-    the Python code includes the following sequence of \prog{import} statements:
+    the Python code includes the following sequence of \prog{import} statements: 
   \codepyt{code-pyt-listings.py}{listing02}{listing03}{1}
   First, the PyPy's built-in NumPy implementation named \prog{numpypy} is imported if applicable (i.e. if running PyPy), 
     and the lazy evaluation mode is turned on through the \prog{set\_invalidation(False)} call.
@@ -302,8 +314,9 @@
 
   Among the three considered languages only Fortran is equipped with built-in
     array handling facilities of practical use in high-performance computing. 
-  Therefore, there is no need for using an external package as with C++ and Python.
-  Fortran array-handling features are not object-oriented, though.
+  Therefore, there is no need for using an external package as with C++ and Python.  
+  Fortran array-handling features are not object-oriented, though \changed{(e.g. it is impossible
+    to overload array operators or to provide constructor-like initialisation logic)}. 
 
   \subsection{Containers for sequences of arrays}\label{sec:sequence}
 
@@ -320,7 +333,7 @@
   Second, the order of dimensions would need to be different for different languages to assure that
     the contiguous dimension is used for one of the space dimensions and not for time levels.
 
-  In the C++ implementation the Boost\footnote{
+  In the C++ implementation, the Boost\footnote{
     Boost is a free and open-source collection of peer-reviewed C++ libraries available at \url{http://www.boost.org/}.
     Several parts of Boost have been integrated into or inspired new additions to the C++ standard.
   } \prog{ptr\_vector} class is used to represent sequences of Blitz++ arrays 
@@ -424,7 +437,7 @@
   OOP offers a convenient way to implement such notation
     by overloading the \prog{+} and \prog{-} operators for objects representing array indices. 
 
-  In the C++ implementation first a global instance \prog{h} of an empty structure 
+  In the C++ implementation, first a global instance \prog{h} of an empty structure 
     \prog{hlf\_t} is defined, and then the plus and minus operators for \prog{hlf\_t} and \prog{rng\_t} are overloaded:
   \codecpp{code-cpp-listings.hpp}{listing05}{listing06}{1}
   This way, the arrays representing vector field components can be indexed using
@@ -480,10 +493,9 @@
   
   Fortran does not feature an analogous mechanism for specifying array ranges in multiple
     dimensions using a single entity.
-  As a workaround, in in the Fortran implementation, \prog{pi()} returns a pointer to the array elements specified
+  As a workaround, in the Fortran implementation, \prog{pi()} returns a pointer to the array elements specified
     by \prog{i} and \prog{j} interpreted as (i,j) or
     (j,i) depending on the value of the argument \prog{d}.
-% TODO: disucss creation of temporary arrays and disabling of vectorisation due to employment of POINTERS
   In addition to \prog{pi()}, a helper \prog{span()} function returning the 
     length of one of the vectors passed as argument is defined:
   \codefor{code-for-listings.f}{listing04}{listing05}{1}
@@ -541,7 +553,7 @@
 
   The brevity of the code in the above listings as well as its similarity
     to the mathematical notation is the main point of this paper.
-  The ''formula translation'' features include:
+  The ``formula translation'' features include:
   \begin{itemize}
     \item{loop-free notation;}
     \item{array-valued functions enabling reuse of sub-expressions;}
@@ -584,7 +596,7 @@
   \end{equation}
 
   If the (positive-defined) denominator in equations \ref{eq:A} or \ref{eq:B} 
-    equals zero for a given {\em i} and {\em j}, %TODO: >0 in the code
+    equals zero for a given {\em i} and {\em j},
     the corresponding $A_{[i,j]}$ and $B_{[i,j]}$ are set to zero what may be conveniently 
     represented with the \prog{where} construct in all three considered languages:
   \codecpp{code-cpp-listings.hpp}{listing10}{listing11}{1}
@@ -653,7 +665,7 @@
   For both C++ and Fortran the GCC compilers were invoked with the \prog{-Ofast} and the 
     \prog{-march=native} options.
   The Clang compiler was invoked with the \prog{-O3}, the \prog{-mllvm -vectorize}, the \prog{-ffast-math} 
-    and the \prog{-march=native} options.
+    and the \prog{-march=native} options\footnote{Clang 3.4 enables vectorisation by default and supports the \prog{-Ofast} option}.
   The CPython interpreter was invoked with the \prog{-OO} option.
 
   In addition to the standard Python implementation CPython,
@@ -682,8 +694,6 @@
   The Gaussian impulse was advected for $nt=2^{24}/(nx\cdot ny)$ timesteps ($2^{24}$ chosen arbitrarily), 
     in order to assure comparable timing accuracy for all grid sizes.
   Three MPDATA iterations were used (i.e. two corrective steps).
-  %The initial condition was loaded from a text file, and the final values were compared at the end of the test
-  %  with values loaded from another text file assuring the same results were obtained with all four set-ups.
   The tests were run multiple times; program start-up, data loading, and output verification times were
     subtracted from the reported values (see caption of Figure~\ref{fig:cpu-eyrie} for details).
 
@@ -763,7 +773,7 @@
     the three considered languages have some inherent differences influencing the execution times.
   Notably, while Fortran and Blitz++ offer runtime array-bounds and array-shape checks as options
     not intended for use in production binaries, NumPy performs them always.
-  Additionally, the C++ and Fortran set-ups may, in principle, benefit from GCC's auto-vectorisation
+  Additionally, the C++ and Fortran set-ups may, in principle, benefit from auto-vectorisation
     features which do not have yet counterparts in CPython or PyPy.
   Finally, Fortran uses different ordering for storing array elements in memory, but since
     all tests were carried out using square grids, this should not have had any impact on the
@@ -772,10 +782,19 @@
 
   \section{The tradeoffs of language choice}\label{sec:tradeoffs}
 
+  \changed{
+  The timing and memory usage statistics presented in figures \ref{fig:mem}-\ref{fig:cpu-skua}
+    reveal that, in the presented case, no single language/library/compiler set-up 
+    corresponds to both shortest execution time and smallest memory footprint.
+  Yet, performance is not the only criterion for the selection of a given language.
+  Presented case study allows as well to assess other language characteristics 
+    that define the tradeoffs of language choice.
+  }
+
   \subsection{Representability of blackboard abstractions}
 
   It was shown in section~\ref{sec:impl} that C++11/Blitz++, Python/NumPy and Fortran 2008
-    provide comparable functionalities in terms of matching the blackboard abstractions
+    provide comparable functionality in terms of matching the blackboard abstractions
     within the program code.
   Taking into account solely the part of code representing particular formul\ae~
     (e.g. listings C.14, P.13, F.15 and equation \ref{eq:antidiff1}) all three
@@ -805,8 +824,8 @@
       with a single entity (cf. tuples of slices in Python and blitz::RectDomain in C++);
     }
     \item{Fortran does not feature a mechanism allowing to reuse a single piece of code (algorithm)
-      with different data types (compare e.g. listings C.15, P.14 and F.17) such as
-      templates in C++ and the so-called duck typing in Python;}
+      with different data \removed{types} \changed{structures} (compare e.g. listings C.15, P.14 and F.17) such as
+      templates in C++ and the so-called duck typing in Python;} 
     \item{Fortran does not allow function calls to appear on the left hand side
       of assignment (see e.g. how the \prog{ptr} pointers were used as a workaround in the \prog{cyclic\_fill\_halos}
       method in listing F.20);}
@@ -819,65 +838,6 @@
     as one of the key deficiencies of Fortran when compared with C++ in context 
     of applicability to object-oriented scientific programming.
 
-  \subsection{Performance}
-  
-  The timing and memory usage statistics presented in figures \ref{fig:mem}-\ref{fig:cpu-skua}
-    reveal that no single language/library/compiler set-up 
-    corresponded to both shortest execution time and smallest memory footprint.
-
-  One may consider performance measures addressing not only the program efficiency but also 
-    the factors influencing the development and maintenance time/cost 
-    \citep[of particular importance in scientific computing,][]{Wilson_2006}.
-  Taking into account such measures as code length or coding time,
-    the Python environment gains significantly \citep[see also discussion in][]{Lin_2012}.
-  Presented Python code is shorter than the C++ and Fortran counterparts,
-    and is simpler in terms of syntax and usage (see discussion below).
-
-  Employment of the PyPy drop-in replacement for the standard Python implementation brings 
-    Python's performance significantly closer to those of C++ and Fortran, in some
-    cases making it the least memory consuming set-up.
-  Python has already been the language of choice for scientific software projects having code clarity 
-    or ease of use as the first requirement \citep[see e.g.][]{Barnes_and_Jones_2011}.
-  PyPy's capability to improve performance of unmodified Python code may 
-    make Python a favourable choice even if high performance is important, especially
-    if a combined measure of performance and development cost is to be considered. 
-
-  \subsection{Ease of use and abuse}
-
-  Using the number of lines of code or the number of distinct language keywords
-    needed to implement the MPDATA-based
-    solver presented in section \ref{sec:impl} as measures of syntax 
-    brevity, Python clearly surpasses its rivals.
-  Python was developed with emphasis on code readability and object-orientation.
-  Arguably, taking it to the extreme - Python uses line indentation to define 
-    blocks of code and treats even single integers as objects.
-  As a consequence Python is easy to learn and easy to teach.
-  It is also much harder to abuse Python than C++ or Fortran
-    (for instance with \prog{goto} statements, employment of the preprocessor,
-    or the implicit typing in Fortran).
-
-  Python implementations do not expose users to compilation or linking processes. 
-  As a result, Python-written software is easier to deploy and share, especially 
-    if multiple architectures and operating systems are targeted.
-  However, there exist tools such as CMake\footnote{CMake is a family of open-source, cross-platform
-    tools automating building, testing and packaging of C/C++/Fortran software,
-    see \url{http://cmake.org/}}
-    that allow to efficiently automate 
-    building, testing and packaging of C++ and Fortran programs.
-
-  Python is definitely easiest to debug among the three languages.
-  Great debugging tools for C++ do exist, however the debugging and development is 
-    often hindered by indecipherable compiler messages
-    flooded with lengthy type names stemming from employment of templates.
-  Support for the OOP features of Fortran among free and open source compilers, 
-    debuggers and other programming aids remains immature.
-    
-  Blitz++ ensures temporary-array-free computations by design
-    \citep{Veldhuizen_et_al_1997} avoiding unintentional performance loss.
-  In contrast, with both Fortran and Python, the memory footprint caused by employment
-    of temporary objects in array arithmetics is dependant on compiler choice or
-    the level of optimisations.
-
   \subsection{Developers' community and libraries}%User- and code-base}
 
   The size of the programmers' community of a given language 
@@ -889,24 +849,23 @@
   The OOP features of Fortran have not gained
     wide popularity among users \citep{Worth_2008}\footnote{An anecdotal yet significant
     example being the incomplete support for syntax-highlighting of modern Fortran in Vim and Emacs editors}.
-  Fortran is no longer routinely taught at the universities \citep{Kendall_et_al_2008},
-    in contrast to C++ and Python.
+  Fortran is no longer routinely taught at the \changed{university computer science
+    departments} \citep{Kendall_et_al_2008}, in contrast to C++ and Python.
   An example of decreasing popularity of Fortran in academia 
-    is the discontinuation of Fortran printed editions of the ''Numerical Recipes'' 
-    series of Press et al.
+    is the discontinuation of Fortran printed editions of the ``Numerical Recipes'' 
+    series of Press et al. \changed{(as of the third edition, the C++ version is the only one)}.
  
   Blitz++ is one of several packages that offer high-performance object-oriented
     array manipulation functionality with C++ (and is not necessarily optimal for every
     purpose \citep{Iglberger_et_al_2012}).
-  In contrast, the NumPy package became a de facto standard solution for Python.
+  In contrast, the NumPy package became a de-facto standard solution for Python.
   Consequently, numerous Python libraries adopted NumPy but
     there are apparently very few C++ libraries offering Blitz++ support out of the box
     (the gnuplot-iostream used in listing C.20 being a much-appreciated counterexample).
   However, Blitz++ allows to interface with virtually any library (including Fortran libraries), 
     by resorting to referencing the underlying memory with raw pointers.
  
-  The availability and quality of libraries 
-    that offer object-oriented interfaces
+  The availability and quality of libraries that offer object-oriented interfaces
     differs among the three considered languages.
   The built-in standard libraries of Python and C++ are richer than
     those of Fortran and offer versatile data types, collections of
@@ -914,16 +873,81 @@
   In the authors' experience, the small popularity of OOP techniques among
     Fortran users is reflected in the library designs (including the Fortran's
     built-in library routines).
-  What makes correct use of external libraries more difficult with Fortran
+  What makes correct use of external libraries \changed{less convenient} with Fortran 
     is the lack of standard exception handling mechanism, a feature
     long and {\em much requested by the numerical community} \citep[][Foreword]{Press_et_al_1996}.
 
+  \changed{
   The three languages differ as well with regard to availability of 
-    mechanisms for leveraging shared-memory parallelisation (e.g. with multi-core processors).
-  GCC supports OpenMP with Fortran and C++.
-  The CPython and PyPy implementations of Python do not offer any
-    built-in solution for multi-threading. 
+    mechanisms \changed{(either built-in or available in external libraries)}
+    for handling concurrent computations.
+  For instance, GCC supports OpenMP with Fortran and C++ what allows to easily
+    leverage shared-memory parallelisation possibilities of multi-core processors.
+  There is no equivalent built-in solution for multi-threading in
+    CPython or PyPy.
+  Fortan 2008 standard includes the ``coarray'' built-in parallel programming model for
+    which counterparts are available as external libraries in case of C++ and Python.
+  Implementations of the Message Passing Interface (MPI) for handling communication 
+    in distributed-memory set-ups are available for all three languages.
+  } 
+
+  \subsection{\changed{Productivity, ease of use and misuse}}
   
+  \changed{
+  The factors influencing the development and maintenance time/cost \changed{are}
+    of particular importance in scientific computing \citep{Wilson_2006}.
+  Among the three compared environments, 
+    Python gains significantly if code length or coding time
+    is prioritised \citep[see also discussion in][]{Lin_2012}.
+  Python has already been the language of choice for scientific software projects having code clarity 
+    or ease of use as the first requirement \citep[see e.g.][]{Barnes_and_Jones_2011}.
+  PyPy's capability to improve performance of unmodified Python code may 
+    make Python a favourable choice even if high performance is important, especially
+    if a combined measure of performance and development cost is to be considered. 
+
+  Using the number of lines of code or the number of distinct language keywords
+    needed to implement a given logic as measures of syntax 
+    brevity, Python clearly surpasses its rivals.
+  Python was developed with emphasis on code readability and object-orientation.
+  Arguably, taking it to the extreme - Python uses line indentation to define 
+    blocks of code and treats even single integers as objects.
+  As a consequence Python is \changed{relatively} easy to learn and to teach.
+
+  Fortran's lack of exception mechanism poses a misuse risk when using 
+    both internal and external library calls.
+  The lack of exceptions results in a default policy to ignore 
+    recoverable errors. 
+  With no additional error-handling code, a Fortran program may silently continue after an  
+    error - additional code is needed to detect the error. 
+  In C++ and Python such program will stop by default, while additional code may be introduced to recover from the error condition.
+  Python does not feature such notorious mechanisms as
+    the preprocessor in C++ and the implicit typing in Fortran,
+    making it less prone to misuse.
+
+  Python implementations do not expose users to compilation or linking processes. 
+  As a result, Python-written software is easier to deploy and share, especially 
+    if multiple architectures and operating systems are targeted.
+  However, there exist tools such as CMake\footnote{CMake is a family of open-source, cross-platform
+    tools automating building, testing and packaging of C/C++/Fortran software,
+    see \url{http://cmake.org/}}
+    that allow to efficiently automate 
+    building, testing and packaging of C++ and Fortran programs.
+
+  It is worth noting one advantage of the C++/Blitz++ set-up.
+  Blitz++ ensures temporary-array-free computations by design
+    \citep{Veldhuizen_et_al_1997} avoiding unintentional performance loss.
+  In contrast, with both Fortran and Python, the memory footprint caused by employment
+    of temporary objects in array arithmetics is dependant on compiler choice or
+    the level of optimisations.
+
+  Finally, Python is definitely easiest to debug among the three languages.
+  Great debugging tools for C++ do exist, however the debugging and development is 
+    often hindered by indecipherable compiler messages
+    flooded with lengthy type names stemming from employment of templates.
+  Support for the OOP features of Fortran among compilers, 
+    debuggers and other programming aids remains immature at the time of writing.
+  }
+
   \section{Summary and outlook}\label{sec:concl}
 
   Three implementations of a prototype solver 
@@ -995,7 +1019,7 @@
   \section{Prototype solvers}\label{app:solver}
 
   The following sections provide a complete description of a minimal example of application
-    of the formul\ae~''translated'' into C++, Python and Fortran in the main body of the paper.
+    of the formul\ae~``translated'' into C++, Python and Fortran in the main body of the paper.
 
   \subsection{Halo regions}
 
@@ -1014,7 +1038,7 @@
   \codefor{code-for-listings.f}{listing17}{listing18}{1}
   Consequently, a range depicted by $i\pm1/2$ may be expressed in the code as \prog{ext(i, h)}.
   In all three implementations the \prog{ext()} function accept the second
-    argument to be an integer or a ''half'' (cf. section \ref{sec:grid}).
+    argument to be an integer or a ``half'' (cf. section \ref{sec:grid}).
 
   \subsection{Prototype solver}\label{sec:solver}
 
@@ -1183,6 +1207,9 @@
       Arjen Markus, Zbigniew Piotrowski, Davide Del Vento and Janus Weil 
       provided valuable feedback to the initial version of the
       manuscript and/or responses to questions posted to Blitz++ and gfortran mailing lists.
+
+    \changed{The final version of the manuscript benefited from suggestions of two
+      anonymous reviewers.}
     
     SA, AJ and DJ acknowledge funding from the Polish National Science Centre
       (project no. 2011/01/N/ST10/01483).
@@ -1209,6 +1236,6 @@
       See appendix~\ref{app:usage} for discussion.
     }
   \end{figure}
-  \includegraphics[height=\textheight]{demo}
+  \includegraphics[height=.7\textheight]{demo}
 
 \end{document}

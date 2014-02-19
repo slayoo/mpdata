@@ -1,8 +1,8 @@
 \begin{Verbatim}[commandchars=\\\{\}]
 \PY{c+c1}{//listing20}
-\PY{c+cp}{\PYZsh{}}\PY{c+cp}{include "listings.hpp"}
+\PY{c+cp}{\PYZsh{}}\PY{c+cp}{include \PYZdq{}listings.hpp\PYZdq{}}
 \PY{c+cp}{\PYZsh{}}\PY{c+cp}{define GNUPLOT\PYZus{}ENABLE\PYZus{}BLITZ}
-\PY{c+cp}{\PYZsh{}}\PY{c+cp}{include \PYZlt{}gnuplot-iostream}\PY{c+cp}{/}\PY{c+cp}{gnuplot-iostream.h\PYZgt{}}
+\PY{c+cp}{\PYZsh{}}\PY{c+cp}{include \PYZlt{}gnuplot\PYZhy{}iostream}\PY{c+cp}{/}\PY{c+cp}{gnuplot\PYZhy{}iostream.h\PYZgt{}}
 
 \PY{k}{enum} \PY{p}{\PYZob{}}\PY{n}{x}\PY{p}{,} \PY{n}{y}\PY{p}{\PYZcb{}}\PY{p}{;}
 
@@ -12,24 +12,24 @@
   \PY{n}{blitz}\PY{o}{:}\PY{o}{:}\PY{n}{firstIndex} \PY{n}{i}\PY{p}{;}
   \PY{n}{blitz}\PY{o}{:}\PY{o}{:}\PY{n}{secondIndex} \PY{n}{j}\PY{p}{;}
   \PY{n}{solver}\PY{p}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)} \PY{o}{=} \PY{n}{exp}\PY{p}{(}
-    \PY{o}{-}\PY{n}{sqr}\PY{p}{(}\PY{p}{(}\PY{l+m+mf}{.5}\PY{o}{+}\PY{n}{i}\PY{p}{)}\PY{o}{-}\PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{2.}\PY{p}{)} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2}\PY{o}{*}\PY{n}{pow}\PY{p}{(}\PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{10.}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
-    \PY{o}{-}\PY{n}{sqr}\PY{p}{(}\PY{p}{(}\PY{l+m+mf}{.5}\PY{o}{+}\PY{n}{j}\PY{p}{)}\PY{o}{-}\PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{2.}\PY{p}{)} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2}\PY{o}{*}\PY{n}{pow}\PY{p}{(}\PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{10.}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+    \PY{o}{\PYZhy{}}\PY{n}{sqr}\PY{p}{(}\PY{p}{(}\PY{l+m+mf}{.5}\PY{o}{+}\PY{n}{i}\PY{p}{)}\PY{o}{\PYZhy{}}\PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{2.}\PY{p}{)} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2}\PY{o}{*}\PY{n}{pow}\PY{p}{(}\PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{10.}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+    \PY{o}{\PYZhy{}}\PY{n}{sqr}\PY{p}{(}\PY{p}{(}\PY{l+m+mf}{.5}\PY{o}{+}\PY{n}{j}\PY{p}{)}\PY{o}{\PYZhy{}}\PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{2.}\PY{p}{)} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2}\PY{o}{*}\PY{n}{pow}\PY{p}{(}\PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]}\PY{o}{/}\PY{l+m+mf}{10.}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
   \PY{p}{)}\PY{p}{;}  
-  \PY{n}{solver}\PY{p}{.}\PY{n}{courant}\PY{p}{(}\PY{n}{x}\PY{p}{)} \PY{o}{=} \PY{o}{-}\PY{l+m+mf}{.5}\PY{p}{;} 
-  \PY{n}{solver}\PY{p}{.}\PY{n}{courant}\PY{p}{(}\PY{n}{y}\PY{p}{)} \PY{o}{=} \PY{o}{-}\PY{l+m+mf}{.25}\PY{p}{;}
+  \PY{n}{solver}\PY{p}{.}\PY{n}{courant}\PY{p}{(}\PY{n}{x}\PY{p}{)} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mf}{.5}\PY{p}{;} 
+  \PY{n}{solver}\PY{p}{.}\PY{n}{courant}\PY{p}{(}\PY{n}{y}\PY{p}{)} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mf}{.25}\PY{p}{;}
 \PY{p}{\PYZcb{}}
 
 \PY{k}{template} \PY{o}{\PYZlt{}}\PY{k}{class} \PY{n+nc}{T}\PY{o}{\PYZgt{}}
 \PY{k+kt}{void} \PY{n}{plot}\PY{p}{(}\PY{n}{T} \PY{o}{\PYZam{}}\PY{n}{solver}\PY{p}{,} \PY{n}{Gnuplot} \PY{o}{\PYZam{}}\PY{n}{gp}\PY{p}{)}
 \PY{p}{\PYZob{}}
-  \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{splot '-' binary}\PY{l+s}{"} 
+  \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{splot \PYZsq{}\PYZhy{}\PYZsq{} binary}\PY{l+s}{\PYZdq{}} 
      \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{gp}\PY{p}{.}\PY{n}{binfmt}\PY{p}{(}\PY{n}{solver}\PY{p}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)}\PY{p}{)}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{ origin=(.5,.5,-1)}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{ with image notitle}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{, '-' binary}\PY{l+s}{"} 
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{ origin=(.5,.5,\PYZhy{}1)}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{ with image notitle}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{, \PYZsq{}\PYZhy{}\PYZsq{} binary}\PY{l+s}{\PYZdq{}} 
      \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{gp}\PY{p}{.}\PY{n}{binfmt}\PY{p}{(}\PY{n}{solver}\PY{p}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)}\PY{p}{)}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{ origin=(.5,.5,0)}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{ with lines notitle}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}\PY{p}{;}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{ origin=(.5,.5,0)}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{ with lines notitle}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{;}
   \PY{n}{gp}\PY{p}{.}\PY{n}{sendBinary}\PY{p}{(}\PY{n}{solver}\PY{p}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)}\PY{p}{.}\PY{n}{copy}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{;}
   \PY{n}{gp}\PY{p}{.}\PY{n}{sendBinary}\PY{p}{(}\PY{n}{solver}\PY{p}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)}\PY{p}{.}\PY{n}{copy}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{;}
 \PY{p}{\PYZcb{}}
@@ -38,28 +38,28 @@
 \PY{p}{\PYZob{}}
   \PY{k+kt}{int} \PY{n}{n}\PY{p}{[}\PY{p}{]} \PY{o}{=} \PY{p}{\PYZob{}}\PY{l+m+mi}{24}\PY{p}{,} \PY{l+m+mi}{24}\PY{p}{\PYZcb{}}\PY{p}{,} \PY{n}{nt} \PY{o}{=} \PY{l+m+mi}{75}\PY{p}{;}
   \PY{n}{Gnuplot} \PY{n}{gp}\PY{p}{;}
-  \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set term pdf size 10cm, 30cm}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"} 
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set output 'figure.pdf'}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}     
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set multiplot layout 4,1}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"} 
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set border 4095}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set xtics out}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set ytics out}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{unset ztics}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}    
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set xlabel 'x/dx'}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set ylabel 'y/dy'}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set xrange [0:}\PY{l+s}{"} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}   
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set yrange [0:}\PY{l+s}{"} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}   
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set zrange [-1:1]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}   
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set cbrange [-.025:1.025]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}     
-     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set palette maxcolors 42}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}\PY{p}{;}
+  \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set term pdf size 10cm, 30cm}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}} 
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set output \PYZsq{}figure.pdf\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}     
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set multiplot layout 4,1}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}} 
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set border 4095}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set xtics out}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set ytics out}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{unset ztics}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}    
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set xlabel \PYZsq{}x/dx\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set ylabel \PYZsq{}y/dy\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set xrange [0:}\PY{l+s}{\PYZdq{}} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}   
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set yrange [0:}\PY{l+s}{\PYZdq{}} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}   
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set zrange [\PYZhy{}1:1]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}   
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set cbrange [\PYZhy{}.025:1.025]}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}     
+     \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set palette maxcolors 42}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{;}
   \PY{p}{\PYZob{}}
     \PY{n}{solver\PYZus{}donorcell}\PY{o}{\PYZlt{}}\PY{n}{cyclic}\PY{o}{\PYZlt{}}\PY{n}{x}\PY{o}{\PYZgt{}}\PY{p}{,} \PY{n}{cyclic}\PY{o}{\PYZlt{}}\PY{n}{y}\PY{o}{\PYZgt{}}\PY{o}{\PYZgt{}} 
       \PY{n}{slv}\PY{p}{(}\PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]}\PY{p}{,} \PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]}\PY{p}{)}\PY{p}{;}
     \PY{n}{setup}\PY{p}{(}\PY{n}{slv}\PY{p}{,} \PY{n}{n}\PY{p}{)}\PY{p}{;}
-    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set title 't/dt=0'}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}\PY{p}{;}
+    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set title \PYZsq{}t/dt=0\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{;}
     \PY{n}{plot}\PY{p}{(}\PY{n}{slv}\PY{p}{,} \PY{n}{gp}\PY{p}{)}\PY{p}{;}
     \PY{n}{slv}\PY{p}{.}\PY{n}{solve}\PY{p}{(}\PY{n}{nt}\PY{p}{)}\PY{p}{;}
-    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set title 'donorcell t/dt=}\PY{l+s}{"}\PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}}\PY{n}{nt}\PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}}\PY{l+s}{"}\PY{l+s}{'}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}\PY{p}{;}
+    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set title \PYZsq{}donorcell t/dt=}\PY{l+s}{\PYZdq{}}\PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}}\PY{n}{nt}\PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}}\PY{l+s}{\PYZdq{}}\PY{l+s}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{;}
     \PY{n}{plot}\PY{p}{(}\PY{n}{slv}\PY{p}{,} \PY{n}{gp}\PY{p}{)}\PY{p}{;}
   \PY{p}{\PYZcb{}} 
   \PY{p}{\PYZob{}}
@@ -68,8 +68,8 @@
       \PY{n}{slv}\PY{p}{(}\PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]}\PY{p}{,} \PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]}\PY{p}{)}\PY{p}{;} 
     \PY{n}{setup}\PY{p}{(}\PY{n}{slv}\PY{p}{,} \PY{n}{n}\PY{p}{)}\PY{p}{;} 
     \PY{n}{slv}\PY{p}{.}\PY{n}{solve}\PY{p}{(}\PY{n}{nt}\PY{p}{)}\PY{p}{;}
-    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set title 'mpdata\PYZlt{}}\PY{l+s}{"} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{it} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{\PYZgt{} }\PY{l+s}{"}
-       \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{t/dt=}\PY{l+s}{"} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{nt} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{'}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}\PY{p}{;}
+    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set title \PYZsq{}mpdata\PYZlt{}}\PY{l+s}{\PYZdq{}} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{it} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{\PYZgt{} }\PY{l+s}{\PYZdq{}}
+       \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{t/dt=}\PY{l+s}{\PYZdq{}} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{nt} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{;}
     \PY{n}{plot}\PY{p}{(}\PY{n}{slv}\PY{p}{,} \PY{n}{gp}\PY{p}{)}\PY{p}{;}
   \PY{p}{\PYZcb{}} 
   \PY{p}{\PYZob{}}
@@ -78,8 +78,8 @@
       \PY{n}{slv}\PY{p}{(}\PY{n}{n}\PY{p}{[}\PY{n}{x}\PY{p}{]}\PY{p}{,} \PY{n}{n}\PY{p}{[}\PY{n}{y}\PY{p}{]}\PY{p}{)}\PY{p}{;} 
     \PY{n}{setup}\PY{p}{(}\PY{n}{slv}\PY{p}{,} \PY{n}{n}\PY{p}{)}\PY{p}{;} 
     \PY{n}{slv}\PY{p}{.}\PY{n}{solve}\PY{p}{(}\PY{n}{nt}\PY{p}{)}\PY{p}{;} 
-    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{set title 'mpdata\PYZlt{}}\PY{l+s}{"} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{it} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{\PYZgt{} }\PY{l+s}{"}
-       \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{t/dt=}\PY{l+s}{"} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{nt} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{"}\PY{l+s}{'}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{"}\PY{p}{;}
+    \PY{n}{gp} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{set title \PYZsq{}mpdata\PYZlt{}}\PY{l+s}{\PYZdq{}} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{it} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{\PYZgt{} }\PY{l+s}{\PYZdq{}}
+       \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{t/dt=}\PY{l+s}{\PYZdq{}} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{n}{nt} \PY{o}{\PYZlt{}}\PY{o}{\PYZlt{}} \PY{l+s}{\PYZdq{}}\PY{l+s}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s}{\PYZdq{}}\PY{p}{;}
     \PY{n}{plot}\PY{p}{(}\PY{n}{slv}\PY{p}{,} \PY{n}{gp}\PY{p}{)}\PY{p}{;}
   \PY{p}{\PYZcb{}}
 \PY{p}{\PYZcb{}}

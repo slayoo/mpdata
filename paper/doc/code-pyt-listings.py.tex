@@ -3,7 +3,7 @@
 \PY{c}{\PYZsh{} code licensed under the terms of GNU GPL v3}
 \PY{c}{\PYZsh{} copyright holder: University of Warsaw}
 \PY{c}{\PYZsh{}listing01}
-\PY{n}{real\PYZus{}t} \PY{o}{=} \PY{l+s}{'}\PY{l+s}{float64}\PY{l+s}{'}
+\PY{n}{real\PYZus{}t} \PY{o}{=} \PY{l+s}{\PYZsq{}}\PY{l+s}{float64}\PY{l+s}{\PYZsq{}}
 \PY{c}{\PYZsh{}listing02}
 \PY{k}{try}\PY{p}{:}
   \PY{k+kn}{import} \PY{n+nn}{numpypy}
@@ -13,7 +13,7 @@
   \PY{k}{pass}
 \PY{k+kn}{import} \PY{n+nn}{numpy}
 \PY{k}{try}\PY{p}{:} 
-  \PY{n}{numpy}\PY{o}{.}\PY{n}{seterr}\PY{p}{(}\PY{n+nb}{all}\PY{o}{=}\PY{l+s}{'}\PY{l+s}{ignore}\PY{l+s}{'}\PY{p}{)}
+  \PY{n}{numpy}\PY{o}{.}\PY{n}{seterr}\PY{p}{(}\PY{n+nb}{all}\PY{o}{=}\PY{l+s}{\PYZsq{}}\PY{l+s}{ignore}\PY{l+s}{\PYZsq{}}\PY{p}{)}
 \PY{k}{except} \PY{n+ne}{AttributeError}\PY{p}{:}
   \PY{k}{pass}
 \PY{c}{\PYZsh{}listing03}
@@ -28,20 +28,20 @@
     \PY{p}{)}
   \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}rsub\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{arg}\PY{p}{)}\PY{p}{:} 
     \PY{k}{return} \PY{n+nb}{type}\PY{p}{(}\PY{n}{arg}\PY{p}{)}\PY{p}{(}
-      \PY{n}{arg}\PY{o}{.}\PY{n}{start} \PY{o}{-} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{mnus}\PY{p}{,} 
-      \PY{n}{arg}\PY{o}{.}\PY{n}{stop}  \PY{o}{-} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{mnus}
+      \PY{n}{arg}\PY{o}{.}\PY{n}{start} \PY{o}{\PYZhy{}} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{mnus}\PY{p}{,} 
+      \PY{n}{arg}\PY{o}{.}\PY{n}{stop}  \PY{o}{\PYZhy{}} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{mnus}
     \PY{p}{)}
 \PY{c}{\PYZsh{}listing04}
 \PY{n}{one} \PY{o}{=} \PY{n}{shift}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,}\PY{l+m+mi}{1}\PY{p}{)} 
 \PY{n}{hlf} \PY{o}{=} \PY{n}{shift}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,}\PY{l+m+mi}{1}\PY{p}{)}
 \PY{c}{\PYZsh{}listing05}
 \PY{k}{def} \PY{n+nf}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{o}{*}\PY{n}{idx}\PY{p}{)}\PY{p}{:} 
-  \PY{k}{return} \PY{p}{(}\PY{n}{idx}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{,} \PY{n}{idx}\PY{p}{[}\PY{n}{d}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
+  \PY{k}{return} \PY{p}{(}\PY{n}{idx}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{,} \PY{n}{idx}\PY{p}{[}\PY{n}{d}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
 \PY{c}{\PYZsh{}listing06}
 \PY{k}{def} \PY{n+nf}{f}\PY{p}{(}\PY{n}{psi\PYZus{}l}\PY{p}{,} \PY{n}{psi\PYZus{}r}\PY{p}{,} \PY{n}{C}\PY{p}{)}\PY{p}{:}
   \PY{k}{return} \PY{p}{(}
     \PY{p}{(}\PY{n}{C} \PY{o}{+} \PY{n+nb}{abs}\PY{p}{(}\PY{n}{C}\PY{p}{)}\PY{p}{)} \PY{o}{*} \PY{n}{psi\PYZus{}l} \PY{o}{+} 
-    \PY{p}{(}\PY{n}{C} \PY{o}{-} \PY{n+nb}{abs}\PY{p}{(}\PY{n}{C}\PY{p}{)}\PY{p}{)} \PY{o}{*} \PY{n}{psi\PYZus{}r}
+    \PY{p}{(}\PY{n}{C} \PY{o}{\PYZhy{}} \PY{n+nb}{abs}\PY{p}{(}\PY{n}{C}\PY{p}{)}\PY{p}{)} \PY{o}{*} \PY{n}{psi\PYZus{}r}
   \PY{p}{)} \PY{o}{/} \PY{l+m+mi}{2}
 \PY{c}{\PYZsh{}listing07}
 \PY{k}{def} \PY{n+nf}{donorcell}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{psi}\PY{p}{,} \PY{n}{C}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{:}
@@ -50,18 +50,18 @@
       \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,}     \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{,} 
       \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{,} 
         \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}
-    \PY{p}{)} \PY{o}{-} 
+    \PY{p}{)} \PY{o}{\PYZhy{}} 
     \PY{n}{f}\PY{p}{(}
-      \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{-}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{,} 
+      \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{\PYZhy{}}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{,} 
       \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,}     \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{,} 
-        \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{-}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}
+        \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{\PYZhy{}}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}
     \PY{p}{)} 
   \PY{p}{)}
 \PY{c}{\PYZsh{}listing08}
 \PY{k}{def} \PY{n+nf}{donorcell\PYZus{}op}\PY{p}{(}\PY{n}{psi}\PY{p}{,} \PY{n}{n}\PY{p}{,} \PY{n}{C}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{:}
-  \PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]} \PY{o}{=} \PY{p}{(}\PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{p}{]}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]} 
-    \PY{o}{-} \PY{n}{donorcell}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{p}{]}\PY{p}{,} \PY{n}{C}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}
-    \PY{o}{-} \PY{n}{donorcell}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{p}{]}\PY{p}{,} \PY{n}{C}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{j}\PY{p}{,} \PY{n}{i}\PY{p}{)}
+  \PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{o}{+}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]} \PY{o}{=} \PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{p}{]}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{p}{(}
+    \PY{n}{donorcell}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{p}{]}\PY{p}{,} \PY{n}{C}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)} \PY{o}{+}
+    \PY{n}{donorcell}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{psi}\PY{p}{[}\PY{n}{n}\PY{p}{]}\PY{p}{,} \PY{n}{C}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{j}\PY{p}{,} \PY{n}{i}\PY{p}{)}
   \PY{p}{)}
 \PY{c}{\PYZsh{}listing09}
 \PY{k}{def} \PY{n+nf}{mpdata\PYZus{}frac}\PY{p}{(}\PY{n}{nom}\PY{p}{,} \PY{n}{den}\PY{p}{)}\PY{p}{:}
@@ -69,31 +69,31 @@
 \PY{c}{\PYZsh{}listing10}
 \PY{k}{def} \PY{n+nf}{mpdata\PYZus{}A}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{psi}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{:}
   \PY{k}{return} \PY{n}{mpdata\PYZus{}frac}\PY{p}{(}
-    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]} \PY{o}{-} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{,}
+    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{,}
     \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}
   \PY{p}{)}
 \PY{c}{\PYZsh{}listing11}
 \PY{k}{def} \PY{n+nf}{mpdata\PYZus{}B}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{psi}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{:}
   \PY{k}{return} \PY{n}{mpdata\PYZus{}frac}\PY{p}{(} 
-    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{+}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{o}{+}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{-}
-    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{-}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{-} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{o}{-}\PY{n}{one}\PY{p}{)}\PY{p}{]}\PY{p}{,}
+    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{+}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{o}{+}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{\PYZhy{}}
+    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{\PYZhy{}}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{o}{\PYZhy{}}\PY{n}{one}\PY{p}{)}\PY{p}{]}\PY{p}{,}
     \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{+}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{o}{+}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{+}
-    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{-}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{o}{-}\PY{n}{one}\PY{p}{)}\PY{p}{]}
+    \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{\PYZhy{}}\PY{n}{one}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{psi}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{o}{\PYZhy{}}\PY{n}{one}\PY{p}{)}\PY{p}{]}
   \PY{p}{)} \PY{o}{/} \PY{l+m+mi}{2}
 \PY{c}{\PYZsh{}listing12}
 \PY{k}{def} \PY{n+nf}{mpdata\PYZus{}C\PYZus{}bar}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{C}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{:}
   \PY{k}{return} \PY{p}{(}
     \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{+}\PY{n}{hlf}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,}  \PY{n}{j}\PY{o}{+}\PY{n}{hlf}\PY{p}{)}\PY{p}{]} \PY{o}{+}
-    \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{-}\PY{n}{hlf}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,}  \PY{n}{j}\PY{o}{-}\PY{n}{hlf}\PY{p}{)}\PY{p}{]} 
+    \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{one}\PY{p}{,} \PY{n}{j}\PY{o}{\PYZhy{}}\PY{n}{hlf}\PY{p}{)}\PY{p}{]} \PY{o}{+} \PY{n}{C}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,}  \PY{n}{j}\PY{o}{\PYZhy{}}\PY{n}{hlf}\PY{p}{)}\PY{p}{]} 
   \PY{p}{)} \PY{o}{/} \PY{l+m+mi}{4}
 \PY{c}{\PYZsh{}listing13}
 \PY{k}{def} \PY{n+nf}{mpdata\PYZus{}C\PYZus{}adf}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{psi}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{,} \PY{n}{C}\PY{p}{)}\PY{p}{:}
   \PY{k}{return} \PY{p}{(}
     \PY{n+nb}{abs}\PY{p}{(}\PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{)} 
-    \PY{o}{*} \PY{p}{(}\PY{l+m+mi}{1} \PY{o}{-} \PY{n+nb}{abs}\PY{p}{(}\PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{)}\PY{p}{)} 
+    \PY{o}{*} \PY{p}{(}\PY{l+m+mi}{1} \PY{o}{\PYZhy{}} \PY{n+nb}{abs}\PY{p}{(}\PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]}\PY{p}{)}\PY{p}{)} 
     \PY{o}{*} \PY{n}{mpdata\PYZus{}A}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{psi}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}
-    \PY{o}{-} \PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]} 
-    \PY{o}{*} \PY{n}{mpdata\PYZus{}C\PYZus{}bar}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}
+    \PY{o}{\PYZhy{}} \PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{[}\PY{n}{pi}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{o}{+}\PY{n}{hlf}\PY{p}{,} \PY{n}{j}\PY{p}{)}\PY{p}{]} 
+    \PY{o}{*} \PY{n}{mpdata\PYZus{}C\PYZus{}bar}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}
     \PY{o}{*} \PY{n}{mpdata\PYZus{}B}\PY{p}{(}\PY{n}{d}\PY{p}{,} \PY{n}{psi}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{j}\PY{p}{)}
   \PY{p}{)}
 \PY{c}{\PYZsh{}listing14}
@@ -101,12 +101,12 @@
   \PY{k}{if} \PY{p}{(}\PY{n+nb}{type}\PY{p}{(}\PY{n}{n}\PY{p}{)} \PY{o}{==} \PY{n+nb}{int}\PY{p}{)} \PY{o}{\PYZam{}} \PY{p}{(}\PY{n}{n} \PY{o}{==} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{:} 
     \PY{n}{n} \PY{o}{=} \PY{n}{one}
   \PY{k}{return} \PY{n+nb}{slice}\PY{p}{(}
-    \PY{p}{(}\PY{n}{r} \PY{o}{-} \PY{n}{n}\PY{p}{)}\PY{o}{.}\PY{n}{start}\PY{p}{,} 
+    \PY{p}{(}\PY{n}{r} \PY{o}{\PYZhy{}} \PY{n}{n}\PY{p}{)}\PY{o}{.}\PY{n}{start}\PY{p}{,} 
     \PY{p}{(}\PY{n}{r} \PY{o}{+} \PY{n}{n}\PY{p}{)}\PY{o}{.}\PY{n}{stop}
   \PY{p}{)}
 \PY{c}{\PYZsh{}listing15}
 \PY{k}{class} \PY{n+nc}{solver}\PY{p}{(}\PY{n+nb}{object}\PY{p}{)}\PY{p}{:}
-  \PY{c}{\PYZsh{} ctor-like method}
+  \PY{c}{\PYZsh{} ctor\PYZhy{}like method}
   \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{bcx}\PY{p}{,} \PY{n}{bcy}\PY{p}{,} \PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{,} \PY{n}{hlo}\PY{p}{)}\PY{p}{:}
     \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n} \PY{o}{=} \PY{l+m+mi}{0}
     \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{hlo} \PY{o}{=} \PY{n}{hlo}
@@ -147,7 +147,7 @@
     \PY{k}{return} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{C}\PY{p}{[}\PY{n}{d}\PY{p}{]}\PY{p}{[}\PY{p}{:}\PY{p}{]}
 
   \PY{k}{def} \PY{n+nf}{cycle}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{)}\PY{p}{:}
-    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n}  \PY{o}{=} \PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n} \PY{o}{+} \PY{l+m+mi}{1}\PY{p}{)} \PY{o}{\PYZpc{}} \PY{l+m+mi}{2} \PY{o}{-} \PY{l+m+mi}{2}
+    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n}  \PY{o}{=} \PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n} \PY{o}{+} \PY{l+m+mi}{1}\PY{p}{)} \PY{o}{\PYZpc{}} \PY{l+m+mi}{2} \PY{o}{\PYZhy{}} \PY{l+m+mi}{2}
 
    \PY{c}{\PYZsh{} integration logic}
   \PY{k}{def} \PY{n+nf}{solve}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{nt}\PY{p}{)}\PY{p}{:}
@@ -166,8 +166,8 @@
   \PY{c}{\PYZsh{} ctor}
   \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{d}\PY{p}{,} \PY{n}{i}\PY{p}{,} \PY{n}{hlo}\PY{p}{)}\PY{p}{:} 
     \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{d} \PY{o}{=} \PY{n}{d}
-    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{left\PYZus{}halo} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n}{i}\PY{o}{.}\PY{n}{start}\PY{o}{-}\PY{n}{hlo}\PY{p}{,} \PY{n}{i}\PY{o}{.}\PY{n}{start}    \PY{p}{)}
-    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{rght\PYZus{}edge} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n}{i}\PY{o}{.}\PY{n}{stop} \PY{o}{-}\PY{n}{hlo}\PY{p}{,} \PY{n}{i}\PY{o}{.}\PY{n}{stop}     \PY{p}{)}
+    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{left\PYZus{}halo} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n}{i}\PY{o}{.}\PY{n}{start}\PY{o}{\PYZhy{}}\PY{n}{hlo}\PY{p}{,} \PY{n}{i}\PY{o}{.}\PY{n}{start}    \PY{p}{)}
+    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{rght\PYZus{}edge} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n}{i}\PY{o}{.}\PY{n}{stop} \PY{o}{\PYZhy{}}\PY{n}{hlo}\PY{p}{,} \PY{n}{i}\PY{o}{.}\PY{n}{stop}     \PY{p}{)}
     \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{rght\PYZus{}halo} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n}{i}\PY{o}{.}\PY{n}{stop}\PY{p}{,}      \PY{n}{i}\PY{o}{.}\PY{n}{stop} \PY{o}{+}\PY{n}{hlo}\PY{p}{)}
     \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{left\PYZus{}edge} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n}{i}\PY{o}{.}\PY{n}{start}\PY{p}{,}     \PY{n}{i}\PY{o}{.}\PY{n}{start}\PY{o}{+}\PY{n}{hlo}\PY{p}{)}
 
@@ -194,8 +194,8 @@
 \PY{k}{class} \PY{n+nc}{solver\PYZus{}mpdata}\PY{p}{(}\PY{n}{solver}\PY{p}{)}\PY{p}{:}
   \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{n\PYZus{}iters}\PY{p}{,} \PY{n}{bcx}\PY{p}{,} \PY{n}{bcy}\PY{p}{,} \PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{)}\PY{p}{:}
     \PY{n}{solver}\PY{o}{.}\PY{n}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{bcx}\PY{p}{,} \PY{n}{bcy}\PY{p}{,} \PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}
-    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{im} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{i}\PY{o}{.}\PY{n}{start}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{i}\PY{o}{.}\PY{n}{stop}\PY{p}{)}
-    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{jm} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{j}\PY{o}{.}\PY{n}{start}\PY{o}{-}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{j}\PY{o}{.}\PY{n}{stop}\PY{p}{)}
+    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{im} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{i}\PY{o}{.}\PY{n}{start}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{i}\PY{o}{.}\PY{n}{stop}\PY{p}{)}
+    \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{jm} \PY{o}{=} \PY{n+nb}{slice}\PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{j}\PY{o}{.}\PY{n}{start}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{j}\PY{o}{.}\PY{n}{stop}\PY{p}{)}
 
     \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n\PYZus{}iters} \PY{o}{=} \PY{n}{n\PYZus{}iters}
   

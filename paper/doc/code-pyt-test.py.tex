@@ -4,17 +4,17 @@
 
 \PY{k}{def} \PY{n+nf}{read\PYZus{}file}\PY{p}{(}\PY{n}{fname}\PY{p}{,} \PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{)}\PY{p}{:}
   \PY{n}{tmp} \PY{o}{=} \PY{n}{numpy}\PY{o}{.}\PY{n}{empty}\PY{p}{(}\PY{p}{(}\PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{)}\PY{p}{,} \PY{n}{real\PYZus{}t}\PY{p}{)}
-  \PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{fname}\PY{p}{,} \PY{l+s}{'}\PY{l+s}{r}\PY{l+s}{'}\PY{p}{)} \PY{k}{as} \PY{n}{f}\PY{p}{:}
+  \PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{fname}\PY{p}{,} \PY{l+s}{\PYZsq{}}\PY{l+s}{r}\PY{l+s}{\PYZsq{}}\PY{p}{)} \PY{k}{as} \PY{n}{f}\PY{p}{:}
     \PY{n}{x} \PY{o}{=} \PY{l+m+mi}{0}
     \PY{k}{for} \PY{n}{line} \PY{o+ow}{in} \PY{n}{f}\PY{p}{:}
-      \PY{n}{tmp}\PY{p}{[}\PY{n}{x}\PY{p}{,}\PY{p}{:}\PY{p}{]} \PY{o}{=} \PY{n}{numpy}\PY{o}{.}\PY{n}{fromstring}\PY{p}{(}\PY{n}{line}\PY{p}{,} \PY{n}{dtype}\PY{o}{=}\PY{n}{real\PYZus{}t}\PY{p}{,} \PY{n}{sep}\PY{o}{=}\PY{l+s}{'}\PY{l+s+se}{\PYZbs{}t}\PY{l+s}{'}\PY{p}{)}
+      \PY{n}{tmp}\PY{p}{[}\PY{n}{x}\PY{p}{,}\PY{p}{:}\PY{p}{]} \PY{o}{=} \PY{n}{numpy}\PY{o}{.}\PY{n}{fromstring}\PY{p}{(}\PY{n}{line}\PY{p}{,} \PY{n}{dtype}\PY{o}{=}\PY{n}{real\PYZus{}t}\PY{p}{,} \PY{n}{sep}\PY{o}{=}\PY{l+s}{\PYZsq{}}\PY{l+s+se}{\PYZbs{}t}\PY{l+s}{\PYZsq{}}\PY{p}{)}
       \PY{n}{x} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
   \PY{k}{assert}\PY{p}{(}\PY{n}{x} \PY{o}{==} \PY{n}{nx}\PY{p}{)}
   \PY{k}{return} \PY{n}{tmp}
 
 \PY{k}{def} \PY{n+nf}{main}\PY{p}{(}\PY{p}{)}\PY{p}{:}
   \PY{k}{if} \PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{sys}\PY{o}{.}\PY{n}{argv}\PY{p}{)} \PY{o}{!=} \PY{p}{(}\PY{l+m+mi}{9} \PY{o}{+} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)} \PY{p}{:} 
-    \PY{k}{raise} \PY{n+ne}{Exception}\PY{p}{(}\PY{l+s}{'}\PY{l+s}{expecting 9 arguments (nx, ny, Cx, Cy, nt, it, f.in, f.out, dec)}\PY{l+s}{'}\PY{p}{)}
+    \PY{k}{raise} \PY{n+ne}{Exception}\PY{p}{(}\PY{l+s}{\PYZsq{}}\PY{l+s}{expecting 9 arguments (nx, ny, Cx, Cy, nt, it, f.in, f.out, dec)}\PY{l+s}{\PYZsq{}}\PY{p}{)}
 
   \PY{n}{nx} \PY{o}{=} \PY{n+nb}{int}\PY{p}{(}\PY{n}{sys}\PY{o}{.}\PY{n}{argv}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
   \PY{n}{ny} \PY{o}{=} \PY{n+nb}{int}\PY{p}{(}\PY{n}{sys}\PY{o}{.}\PY{n}{argv}\PY{p}{[}\PY{l+m+mi}{2}\PY{p}{]}\PY{p}{)}
@@ -34,15 +34,15 @@
   \PY{n}{slv}\PY{o}{.}\PY{n}{solve}\PY{p}{(}\PY{n}{nt}\PY{p}{)}
 \PY{c}{\PYZsh{}listing20}
 
-  \PY{n}{diff} \PY{o}{=} \PY{n}{numpy}\PY{o}{.}\PY{n}{amax}\PY{p}{(}\PY{n+nb}{abs}\PY{p}{(}\PY{n}{slv}\PY{o}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)} \PY{o}{-} \PY{n}{read\PYZus{}file}\PY{p}{(}\PY{n}{fout}\PY{p}{,} \PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{)}\PY{p}{)}\PY{p}{)}
-  \PY{k}{print} \PY{l+s}{"}\PY{l+s}{diff=}\PY{l+s}{"}\PY{p}{,} \PY{n}{diff}
-  \PY{k}{if} \PY{p}{(}\PY{n}{diff} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{o}{.}\PY{l+m+mi}{5} \PY{o}{*} \PY{n+nb}{pow}\PY{p}{(}\PY{l+m+mi}{10}\PY{p}{,} \PY{o}{-}\PY{n}{dec}\PY{p}{)}\PY{p}{)}\PY{p}{:} 
+  \PY{n}{diff} \PY{o}{=} \PY{n}{numpy}\PY{o}{.}\PY{n}{amax}\PY{p}{(}\PY{n+nb}{abs}\PY{p}{(}\PY{n}{slv}\PY{o}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{n}{read\PYZus{}file}\PY{p}{(}\PY{n}{fout}\PY{p}{,} \PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+  \PY{k}{print} \PY{l+s}{\PYZdq{}}\PY{l+s}{diff=}\PY{l+s}{\PYZdq{}}\PY{p}{,} \PY{n}{diff}
+  \PY{k}{if} \PY{p}{(}\PY{n}{diff} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{o}{.}\PY{l+m+mi}{5} \PY{o}{*} \PY{n+nb}{pow}\PY{p}{(}\PY{l+m+mi}{10}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{n}{dec}\PY{p}{)}\PY{p}{)}\PY{p}{:} 
     \PY{k}{print} \PY{n}{slv}\PY{o}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)}\PY{o}{.}\PY{n}{dtype}\PY{p}{,} \PY{n}{slv}\PY{o}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)}
     \PY{n}{tmp} \PY{o}{=} \PY{n}{read\PYZus{}file}\PY{p}{(}\PY{n}{fout}\PY{p}{,} \PY{n}{nx}\PY{p}{,} \PY{n}{ny}\PY{p}{)}
     \PY{k}{print} \PY{n}{tmp}\PY{o}{.}\PY{n}{dtype}\PY{p}{,} \PY{n}{tmp}
-    \PY{k}{print} \PY{n}{numpy}\PY{o}{.}\PY{n}{max}\PY{p}{(}\PY{n}{numpy}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{slv}\PY{o}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)} \PY{o}{-} \PY{n}{tmp}\PY{p}{)}\PY{p}{)}
+    \PY{k}{print} \PY{n}{numpy}\PY{o}{.}\PY{n}{max}\PY{p}{(}\PY{n}{numpy}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{slv}\PY{o}{.}\PY{n}{state}\PY{p}{(}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{n}{tmp}\PY{p}{)}\PY{p}{)}
     \PY{k}{raise} \PY{n+ne}{Exception}\PY{p}{(}\PY{p}{)}
 
-\PY{k}{if} \PY{n}{\PYZus{}\PYZus{}name\PYZus{}\PYZus{}} \PY{o}{==} \PY{l+s}{"}\PY{l+s}{\PYZus{}\PYZus{}main\PYZus{}\PYZus{}}\PY{l+s}{"}\PY{p}{:}
+\PY{k}{if} \PY{n}{\PYZus{}\PYZus{}name\PYZus{}\PYZus{}} \PY{o}{==} \PY{l+s}{\PYZdq{}}\PY{l+s}{\PYZus{}\PYZus{}main\PYZus{}\PYZus{}}\PY{l+s}{\PYZdq{}}\PY{p}{:}
     \PY{n}{main}\PY{p}{(}\PY{p}{)}
 \end{Verbatim}
