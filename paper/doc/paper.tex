@@ -1,22 +1,13 @@
-%%%%% <arXiv>
-%\documentclass[final,5p,times,twocolumn]{elsarticle}
-%%%%% </arXiv>
-
-%%%%% <sciprog>
 \documentclass[twocolumn]{article}
-\usepackage{lineno,authblk,latexsym,amsmath,float}
-\usepackage[colorlinks=true]{hyperref}
+\usepackage{authblk,latexsym,amsmath,float}
+\usepackage[runin]{abstract}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
 \usepackage[hmargin=.55in,vmargin=.75in]{geometry}
 \usepackage[numbers]{natbib}
-\setlength{\columnsep}{1cm}
-%%%%% </sciprog>
 
-% highlighting (or not) the modified portions of the text
-\newcommand{\changed}[1]{{\color{blue}#1}}
-%\newcommand{\changed}[1]{#1}
-
-\usepackage{soul}
-\newcommand{\removed}[1]{{\color{blue}\st{#1}}}
+% do-nothing commands
+\newcommand{\changed}[1]{#1}
+\newcommand{\removed}[1]{#1}
 
 % input encoding assuring proper handling of Polish characters (surnames!)
 \usepackage[utf8]{inputenc}
@@ -35,15 +26,14 @@
 \usepackage{enumitem}
 \setitemize{noitemsep,itemsep=1pt,topsep=1pt,parsep=0pt,partopsep=0pt}
 
-% fr compact section headers
+% for compact section headers
 \usepackage[compact]{titlesec}
-\titlespacing*{\section}{0pt}{*0}{0pt}
 
 % for source code listings
 \usepackage{fancyvrb}
 \fvset{
   frame=single,
-  fontsize=\relscale{.6},
+  fontsize=\relscale{.66},
   fontfamily=courier,
   framerule=.2mm,
   framesep=.7mm,
@@ -74,7 +64,6 @@
 \newcommand*\FancyVerbStopString{}
 
 \newcommand{\codecpp}[4]{%
-  \linespread{.8}
   \addtocounter{lstnocpp}{1}%
   \renewcommand*\FancyVerbStartString{\PY{c+c1}{//#2}}%
   \renewcommand*\FancyVerbStopString{\PY{c+c1}{//#3}}%
@@ -82,11 +71,8 @@
   \fvset{label={listing~C.\thelstnocpp~(C++)},rulecolor=\color{black},stepnumber=#4}%
   \input{#1}%
   \setcounter{linenocpp}{\value{FancyVerbLine}}%
-  \vspace{-1.5ex}
-  \linespread{2}
 }
 \newcommand{\codepyt}[4]{%
-  \linespread{.8}
   \addtocounter{lstnopyt}{1}%
   \renewcommand*\FancyVerbStartString{\PY{c}{\PYZsh{}#2}}
   \renewcommand*\FancyVerbStopString{\PY{c}{\PYZsh{}#3}}
@@ -94,11 +80,8 @@
   \fvset{label={listing~P.\thelstnopyt~(Python)},rulecolor=\color{blue},stepnumber=#4}%
   \input{#1}%
   \setcounter{linenopyt}{\value{FancyVerbLine}}%
-  \vspace{-1.5ex}
-  \linespread{2}
 }
 \newcommand{\codefor}[4]{%
-  \linespread{.8}
   \addtocounter{lstnofor}{1}%
   \renewcommand*\FancyVerbStartString{\PY{c}{!#2}}
   \renewcommand*\FancyVerbStopString{\PY{c}{!#3}}
@@ -106,58 +89,55 @@
   \fvset{label={listing~F.\thelstnofor~(Fortran)},rulecolor=\color{red},stepnumber=#4}%
   \input{#1}%
   \setcounter{linenofor}{\value{FancyVerbLine}}%
-  \vspace{-1.5ex}
-  \linespread{2}
 }
 
 \newcommand{\prog}[1]{{\rm\bf#1}}
 
-\linespread{2}
-
 \begin{document}
-    \linenumbers
 
     \title{
       Formula translation in \changed{Blitz++, NumPy} and modern Fortran: a~case~study~of~the~language~choice tradeoffs
     }
 
-    \author{~}
-%    \author[1]{Sylwester Arabas\footnote{Correspondence to: S. Arabas -- sarabas@igf.fuw.edu.pl -- 0048225546827 -- University of Warsaw, Pasteura 7, 02-093 Warszawa, Poland}}
-%    \author[1]{Dorota Jarecka}
-%    \author[1]{Anna Jaruga}
-%    \author[2]{Maciej Fijałkowski}
+    \date{}
 
-%    \affil[1]{Institute of Geophysics, Faculty of Physics, University of Warsaw}
-%    \affil[2]{PyPy Team}
+    \author[1]{Sylwester Arabas}%\footnote{Correspondence to: S. Arabas -- sarabas@igf.fuw.edu.pl -- University of Warsaw, Pasteura 7, 02-093 Warszawa, Poland}}
+    \author[1]{Dorota Jarecka}
+    \author[1]{Anna Jaruga}
+    \author[2]{Maciej Fijałkowski}
 
-    \onecolumn
-    \maketitle
+    \affil[1]{Institute of Geophysics, Faculty of Physics, University of Warsaw}
+    \affil[2]{PyPy Team}
 
-    \begin{abstract}
-        Three object-oriented implementations of a prototype solver of the advection equation are introduced.
-        The presented programs are based on Blitz++ (C++), NumPy (Python), and Fortran's built-in array containers.
-        The solvers constitute implementations of the Multidimensional Positive-Definite 
-          Advective Transport Algorithm (MPDATA).
-        The introduced codes serve as examples for how the application of 
-          object-oriented programming (OOP) techniques and new language constructs from
-          C++11 and Fortran 2008 allow to reproduce the mathematical notation 
-          used in the literature within the program code.
-        A discussion on the tradeoffs of the programming language choice is presented.
-        The main angles of comparison are code brevity and syntax clarity
-          (and hence maintainability and auditability) as well as performance.
-        All performance tests are carried out using free and open-source compilers.
-        In the case of Python, a significant performance gain is observed when switching from the standard 
-          interpreter (CPython) to the PyPy implementation of Python.
-        Entire source code of all three implementations is embedded in the text and is licensed
-          under the terms of the GNU GPL license.
-  
-        ~\\
-        {\bf Keywords:} object-oriented programming, advection equation, MPDATA, C++, Fortran, Python
-    \end{abstract}
+    \twocolumn[
+      \maketitle
 
-  \twocolumn
- 
+      \begin{onecolabstract}
+	  Three object-oriented implementations of a prototype solver of the advection equation are introduced.
+	  The presented programs are based on Blitz++ (C++), NumPy (Python), and Fortran's built-in array containers.
+	  The solvers constitute implementations of the Multidimensional Positive-Definite 
+	    Advective Transport Algorithm (MPDATA).
+	  The introduced codes serve as examples for how the application of 
+	    object-oriented programming (OOP) techniques and new language constructs from
+	    C++11 and Fortran 2008 allow to reproduce the mathematical notation 
+	    used in the literature within the program code.
+	  A discussion on the tradeoffs of the programming language choice is presented.
+	  The main angles of comparison are code brevity and syntax clarity
+	    (and hence maintainability and auditability) as well as performance.
+	  All performance tests are carried out using free and open-source compilers.
+	  In the case of Python, a significant performance gain is observed when switching from the standard 
+	    interpreter (CPython) to the PyPy implementation of Python.
+	  Entire source code of all three implementations is embedded in the text and is licensed
+	    under the terms of the GNU GPL license.
+    
+	  ~\\
+	  {\bf Keywords:} object-oriented programming, advection equation, MPDATA, C++, Fortran, Python
+	  ~\\
+      \end{onecolabstract}
+  ]
+
   \tableofcontents
+  \newpage
 
   \section{Introduction}
 
@@ -258,7 +238,6 @@
 
   MPDATA is, in its most basic form presented herein, a solver for systems of advection equations of the following form:
 
-  \vspace{-5ex}
   \begin{equation}\label{eq:adv}
     \input{formulae_adv}
   \end{equation}
@@ -472,7 +451,6 @@
   It is used to generalise the MPDATA formul\ae~into multiple dimensions
     using the following notation:
 
-  \vspace{-5ex}
   \begin{equation*}\label{eq:pi}
     \input{formulae_pi}
   \end{equation*}
@@ -517,33 +495,27 @@
     function of $\psi^{[n]}$ where $n$ and $n+1$ denote two adjacent time levels.
   The donor-cell scheme may be written as \citep[eq. 2 in][]{Smolarkiewicz_1984}:
 
-  \vspace{-5ex}
   \begin{equation}\label{eq:donor}
     \input{formulae_donor}
   \end{equation}
   where $N$ is the number of dimensions, 
     and F is the so-called flux function \citep[][eq.~3]{Smolarkiewicz_1984}:
 
-  \vspace{-5ex}
   \begin{equation}\label{eq:donor:F}
     \input{formulae_donor-F}
   \end{equation}
 
   \noindent The flux function takes the following form in C++:
   \codecpp{code-cpp-listings.hpp}{listing07}{listing08}{1}
-  \vspace{-3.5ex}
   Equation~\ref{eq:donor} is split into the terms under the summation 
     (effectively the 1-dimensional donor-cell formula):
   \codecpp{code-cpp-listings.hpp}{listing08}{listing09}{1}
-  \vspace{-3.5ex}
   and the actual two-dimensional donor-cell formula:
   \codecpp{code-cpp-listings.hpp}{listing09}{listing10}{1}
-  \vspace{-3.5ex}
   The same formul\ae~are expressed as follows in Python:
   \codepyt{code-pyt-listings.py}{listing06}{listing07}{1}
   \codepyt{code-pyt-listings.py}{listing07}{listing08}{1}
   \codepyt{code-pyt-listings.py}{listing08}{listing09}{1}
-  \vspace{-3.5ex}
   The Fortran counterparts are: 
   \codefor{code-for-listings.f}{listing05}{listing06}{1}
   \codefor{code-for-listings.f}{listing06}{listing07}{1}
@@ -570,13 +542,11 @@
     fields corresponding to the MPDATA antidiffusive velocities of the following 
     form \citep[eqs~13,~14~in][]{Smolarkiewicz_1984}:
 
-  \vspace{-5ex}
   \begin{equation}\label{eq:antidiff1}
     \input{formulae_antidiff1}
   \end{equation}
   where $\psi$ and $C$ represent values from the previous iteration and where:
 
-  \vspace{-5ex}
   \begin{equation}\label{eq:antidiff2}
     \input{formulae_antidiff2}
   \end{equation}
@@ -587,7 +557,6 @@
     formul\ae~for advection of fields of variable sign
   }:
 
-  \vspace{-5ex}
   \begin{equation}\label{eq:A}
     \input{formulae_A}
   \end{equation}
@@ -1011,9 +980,7 @@
     supporting integration in one to three dimensions, handling systems of equations with source terms, 
     providing miscellaneous options of MPDATA and several parallel processing approaches.
 
-%%%%%% <arXiv>
-%  \clearpage
-%%%%%% </arXiv>
+  \newpage
   \appendix
 
   \section{Prototype solvers}\label{app:solver}
@@ -1236,6 +1203,8 @@
       See appendix~\ref{app:usage} for discussion.
     }
   \end{figure}
-  \includegraphics[height=.7\textheight]{demo}
+  \begin{center}
+    \includegraphics[height=.83\textheight]{demo}
+  \end{center}
 
 \end{document}
